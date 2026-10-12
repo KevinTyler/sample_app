@@ -1,0 +1,91 @@
+<% content_for :title, "New message · #{@event.title}" %>
+<div class="container--form">
+  <%= link_to "Messages", event_messages_path(@event), class: "back-link" %>
+  <div class="page-header"><div><h1>Message your guests</h1>
+    <p class="page-header__meta">Guests get it by email (or text) and also see it on their invitation page under “Updates from the host”.</p></div></div>
+
+  <div class="panel">
+    <%= form_with model: @message, url: event_messages_path(@event), class: "form",
+          data: { controller: "audience-count", audience_count_url_value: audience_count_event_messages_path(@event) } do |f| %>
+      <%= form_errors(@message) %>
+      <%= hidden_field_tag :idempotency_key, SecureRandom.uuid %>
+
+      <div class="field">
+        <span class="field__label">Type</span>
+        <div class="cluster">
+          <label class="checkbox"><%= f.radio_button :kind, "update" %> Update (news, changes, details)</label>
+          <label class="checkbox"><%= f.radio_button :kind, "reminder" %> Reminder</label>
+        </div>
+      </div>
+
+      <fieldset data-action="change->audience-count#refresh">
+        <legend>Who gets it</legend>
+        <div class="form">
+          <div class="field">
+            <span class="field__label">RSVP status <span class="field__optional">(none ticked = everyone)</span></span>
+            <div class="cluster">
+              <% { "yes" => "Attending", "maybe" => "Maybe", "pending" => "Awaiting reply", "no" => "Declined" }.each do |status, label| %>
+                <label class="checkbox"><%= check_box_tag "message[audience][statuses][]", status, @message.audience.statuses.include?(status), id: "audience_status_#{status}" %> <%= label %></label>
+              <% end %>
+            </div>
+          </div>
+          <% if (groups = @event.group_names).any? %>
+            <div class="field">
+              <span class="field__label">Groups <span class="field__optional">(none ticked = all groups)</span></span>
+              <div class="cluster">
+                <% groups.each_with_index do |group, i| %>
+                  <label class="checkbox"><%= check_box_tag "message[audience][groups][]", group, @message.audience.groups.include?(group), id: "audience_group_#{i}" %> <%= group %></label>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          <div class="field">
+            <span class="field__label">Send by</span>
+            <div class="cluster">
+              <label class="checkbox"><%= check_box_tag "message[channels][]", "email", @message.channels.include?("email"), id: "channel_email" %> Email</label>
+              <% if Messaging.sms_enabled? %>
+                <label class="checkbox"><%= check_box_tag "message[channels][]", "sms", @message.channels.include?("sms"), id: "channel_sms" %> Text message (SMS)<% if Messaging.sms_provider == "outbox" %> <span class="field__optional">— dev outbox</span><% end %></label>
+              <% else %>
+                <span class="field__hint">Text messages aren't set up yet (see README).</span>
+              <% end %>
+            </div>
+          </div>
+          <p class="callout small m-0" aria-live="polite">
+            <span class="callout__icon">✉</span>
+            <span data-audience-count-target="output">Updates and reminders go to guests who were invited or have replied.</span>
+          </p>
+        </div>
+      </fieldset>
+
+      <div class="field">
+        <%= f.label :subject %>
+        <%= f.text_field :subject, maxlength: 150, required: true %>
+      </div>
+      <div class="field">
+        <%= f.label :body, "Message" %>
+        <%= f.text_area :body, rows: 7, maxlength: 5000, required: true %>
+        <p class="field__hint">Each guest's email opens with “Hi {first name},” and ends with a button to their invitation. Texts are shortened to fit.</p>
+      </div>
+
+      <fieldset data-controller="schedule-toggle">
+        <legend>When</legend>
+        <div class="form">
+          <div class="cluster">
+            <label class="checkbox"><%= radio_button_tag :send_at, "now", @message.scheduled_for_local.blank?, data: { action: "schedule-toggle#update" } %> Send now</label>
+            <label class="checkbox"><%= radio_button_tag :send_at, "later", @message.scheduled_for_local.present?, data: { action: "schedule-toggle#update" } %> Schedule</label>
+          </div>
+          <div class="field" data-schedule-toggle-target="when">
+            <%= f.label :scheduled_for_local, "Send at (#{@event.zone.tzinfo.name.tr('_', ' ')} time)" %>
+            <%= f.datetime_local_field :scheduled_for_local, value: @message.scheduled_for_local %>
+            <p class="field__hint">Recipients are decided when it sends, so guests who reply before then are included or left out accordingly.</p>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="form-actions">
+        <%= f.submit "Send", class: "btn btn--primary", data: { turbo_submits_with: "Sending…" } %>
+        <%= link_to "Cancel", event_messages_path(@event), class: "btn btn--ghost" %>
+      </div>
+    <% end %>
+  </div>
+</div>

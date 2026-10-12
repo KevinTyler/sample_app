@@ -462,3 +462,4 @@ input[type="color"] { width: 100%; height: 46px; padding: 4px; border: 1px solid
 .table__check input { width: 18px; height: 18px; accent-color: var(--larkspur); }
 @media (max-width: 759px) { .table--responsive td.table__check { padding-bottom: 0; } }
 .pagination { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 16px; }
+.pre-line { white-space: pre-line; }

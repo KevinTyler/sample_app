@@ -12,7 +12,7 @@
 class Message < ApplicationRecord
   KINDS = %w[invitation update reminder cancellation rsvp_confirmation].freeze
   CHANNELS = %w[email sms].freeze
-  STATUSES = %w[draft scheduled dispatched].freeze
+  STATUSES = %w[draft scheduled dispatching dispatched].freeze
 
   belongs_to :event
   belongs_to :author, class_name: "User", optional: true
@@ -25,7 +25,10 @@ class Message < ApplicationRecord
   validates :body, length: { maximum: 5000 }
   validates :subject, :body, presence: true, if: -> { kind.in?(%w[update reminder]) }
   validate :channels_supported
-  validate :schedule_in_future, if: -> { status == "scheduled" }
+  validate :schedule_in_future, if: -> { status == "scheduled" }, on: :create
+  validate :schedule_parses
+
+  before_validation :resolve_scheduled_for
 
   scope :due, -> { where(status: "scheduled").where(scheduled_for: ..Time.current) }
   scope :for_guests, -> { where(kind: %w[update reminder cancellation]) }
@@ -93,6 +96,31 @@ class Message < ApplicationRecord
     status == "scheduled"
   end
 
+  # The compose form takes the send time as wall-clock time in the event's time zone.
+  def scheduled_for_local
+    @scheduled_for_local || scheduled_for&.in_time_zone(event.zone)&.strftime("%Y-%m-%dT%H:%M")
+  end
+
+  def scheduled_for_local=(value)
+    @scheduled_for_local = value.to_s.strip.presence
+  end
+
+  # Called by the scheduler (and safe to call from several workers at once): only the caller that
+  # moves the message out of "scheduled" gets to dispatch it.
+  def dispatch_scheduled!
+    now = Time.current
+    claimed = self.class.where(id: id, status: "scheduled").where(scheduled_for: ..now)
+      .update_all(status: "dispatching", updated_at: now)
+    return false unless claimed == 1
+
+    reload.dispatch!
+    true
+  end
+
+  def enqueue_scheduled_dispatch
+    DispatchScheduledMessageJob.set(wait_until: scheduled_for).perform_later(id)
+  end
+
   def subject_line
     subject.presence || default_subject
   end
@@ -127,6 +155,17 @@ class Message < ApplicationRecord
 
     def schedule_in_future
       errors.add(:scheduled_for, "must be in the future") if scheduled_for.nil? || scheduled_for <= Time.current
+    end
+
+    def resolve_scheduled_for
+      return unless instance_variable_defined?(:@scheduled_for_local)
+
+      raw = @scheduled_for_local
+      self.scheduled_for = raw && event && raw.match?(Event::LOCAL_TIME_FORMAT) ? event.zone.parse(raw) : nil
+    end
+
+    def schedule_parses
+      errors.add(:scheduled_for, "is not a valid date and time") if @scheduled_for_local && scheduled_for.nil?
     end
 
     def log_activity

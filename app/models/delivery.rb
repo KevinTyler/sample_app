@@ -9,8 +9,8 @@
 # stays in "sending" and is surfaced to the host as "unconfirmed" rather than being
 # re-sent automatically — we prefer at-most-once for guest-facing messages.
 class Delivery < ApplicationRecord
-  STATUSES = %w[queued sending sent failed bounced].freeze
-  LIVE_STATUSES = %w[queued sending sent].freeze
+  STATUSES = %w[queued sending sent delivered failed bounced].freeze
+  LIVE_STATUSES = %w[queued sending sent delivered].freeze
   CLAIMABLE_STATUSES = %w[queued failed].freeze
   MAX_ATTEMPTS = 5
   STALE_SENDING_AFTER = 15.minutes
@@ -65,6 +65,18 @@ class Delivery < ApplicationRecord
 
   def mark_failed!(error)
     update_columns(status: "failed", error_message: error.message.to_s.truncate(250), updated_at: Time.current)
+  end
+
+  # Provider feedback (webhooks). Only moves forward: a late "delivered" can't undo a bounce.
+  def record_provider_event!(event, reason: nil)
+    case event
+    when :delivered
+      update!(status: "delivered", delivered_at: Time.current) if status == "sent"
+    when :bounced, :failed
+      update!(status: event == :bounced ? "bounced" : "failed", error_message: reason.to_s.truncate(250).presence || "Rejected by the recipient's server")
+    when :complained
+      guest.update!(unsubscribed_at: Time.current) unless guest.unsubscribed?
+    end
   end
 
   def stale?

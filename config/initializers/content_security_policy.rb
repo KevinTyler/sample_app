@@ -20,8 +20,12 @@ Rails.application.configure do
 
   # The nonce must stay the same across Turbo Drive visits (Turbo swaps in new <body> content under
   # the original page's CSP), so it is derived from the session id, as Rails recommends for Turbo.
+  # For first-time visitors this creates the session (and its id) in the same response, so their
+  # first page and later Turbo visits share a nonce that no other visitor can predict.
   config.content_security_policy_nonce_generator = ->(request) {
-    Digest::SHA256.base64digest("csp-nonce:#{request.session.id}").first(24)
+    request.session[:csp] = 1 unless request.session.key?(:csp)
+    session_id = request.session.id.to_s
+    session_id.present? ? Digest::SHA256.base64digest("csp-nonce:#{session_id}").first(24) : SecureRandom.base64(18)
   }
   config.content_security_policy_nonce_directives = %w[script-src style-src]
 end

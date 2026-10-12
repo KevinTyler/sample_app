@@ -63,15 +63,21 @@
         <% if @uninvited_count > 0 %>
           <%= form_with url: event_invitation_send_path(@event), method: :post, class: "form" do |f| %>
             <%= f.hidden_field :idempotency_key, value: SecureRandom.uuid %>
-            <p class="small muted m-0"><strong><%= pluralize(@uninvited_count, "guest") %></strong> with an email address <%= @uninvited_count == 1 ? "hasn't" : "haven't" %> been invited yet. Each gets a personal RSVP link. Guests already invited won't get a second copy.</p>
+            <p class="small muted m-0"><strong><%= pluralize(@uninvited_count, "guest") %></strong> <%= @uninvited_count == 1 ? "hasn't" : "haven't" %> been invited yet. Each gets a personal RSVP link. Guests already invited won't get a second copy.</p>
             <div class="field">
               <%= f.label :personal_note do %>Personal note <span class="field__optional">(optional, appears in the email)</span><% end %>
               <%= f.text_area :personal_note, rows: 3, maxlength: 1000, placeholder: "Can't wait to celebrate with you!" %>
             </div>
-            <div class="form-actions"><%= f.submit "Send #{pluralize(@uninvited_count, 'invitation')}", class: "btn btn--primary", data: { turbo_submits_with: "Sending…" } %></div>
+            <% if Messaging.sms_enabled? %>
+              <div class="cluster">
+                <label class="checkbox"><%= check_box_tag "channels[]", "email", true, id: "invite_channel_email" %> Email</label>
+                <label class="checkbox"><%= check_box_tag "channels[]", "sms", false, id: "invite_channel_sms" %> Text message (guests with a phone number)</label>
+              </div>
+            <% end %>
+            <div class="form-actions"><%= f.submit Messaging.sms_enabled? ? "Send invitations" : "Send #{pluralize(@uninvited_count, 'invitation')}", class: "btn btn--primary", data: { turbo_submits_with: "Sending…" } %></div>
           <% end %>
         <% else %>
-          <p class="small muted m-0">Everyone with an email address has been invited. Guests without email can still get their personal link from the guest list below.</p>
+          <p class="small muted m-0">Everyone who can be reached has been invited. Guests without contact details can still get their personal link from the guest list below (Manage → Copy).</p>
         <% end %>
       </section>
     <% end %>
@@ -232,6 +238,24 @@
         <%= button_to "Revoke & create new link", regenerate_share_link_event_path(@event), class: "btn btn--small btn--ghost mt-s", form: { data: { turbo_confirm: "The current share link will stop working. Continue?" } } %>
       <% end %>
     </section>
+
+    <% if policy.can?(:send_messages) && !@event.draft? %>
+      <section class="panel" id="messages">
+        <div class="panel__header"><h3>Messages</h3><%= link_to "All", event_messages_path(@event), class: "btn btn--small btn--ghost" %></div>
+        <div class="cluster">
+          <%= link_to "Send an update", new_event_message_path(@event), class: "btn btn--small btn--primary" %>
+          <% if @summary[:pending] > 0 %><%= link_to "Remind non-responders", new_event_message_path(@event, preset: "nudge"), class: "btn btn--small" %><% end %>
+          <% if @event.starts_at && @event.starts_at > 1.day.from_now %><%= link_to "Day-before reminder", new_event_message_path(@event, preset: "day_before"), class: "btn btn--small" %><% end %>
+        </div>
+        <% if @recent_messages.any? %>
+          <ul class="activity mt-s">
+            <% @recent_messages.each do |message| %>
+              <li><%= link_to "#{MessagesHelper::KIND_LABELS[message.kind]}: #{message.subject_line}", event_message_path(@event, message) %><time><%= message_status_text(message) %></time></li>
+            <% end %>
+          </ul>
+        <% end %>
+      </section>
+    <% end %>
 
     <section class="panel" id="questions">
       <div class="panel__header">

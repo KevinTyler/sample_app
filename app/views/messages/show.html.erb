@@ -1,0 +1,49 @@
+<% content_for :title, @message.subject_line %>
+<%= link_to "Messages", event_messages_path(@event), class: "back-link" %>
+<div class="page-header">
+  <div>
+    <div class="cluster"><%= message_kind_badge(@message) %><span class="muted small"><%= message_status_text(@message) %></span></div>
+    <h1><%= @message.subject_line %></h1>
+    <p class="page-header__meta"><%= @message.audience.description %> · <%= @message.channels.map { |c| channel_label(c) }.join(" + ") %></p>
+  </div>
+  <div class="page-header__actions">
+    <% if @message.scheduled? %>
+      <%= button_to "Cancel scheduled message", event_message_path(@event, @message), method: :delete, class: "btn btn--danger", form: { data: { turbo_confirm: "Cancel this message? It won't be sent." } } %>
+    <% end %>
+    <% if @deliveries.any? { |d| d.status == "failed" } %>
+      <%= button_to "Retry failed", retry_failed_event_message_path(@event, @message), class: "btn" %>
+    <% end %>
+  </div>
+</div>
+
+<% if @message.body.present? %>
+  <div class="panel"><p class="m-0 pre-line"><%= @message.body %></p></div>
+<% end %>
+
+<section class="panel mt-m" aria-labelledby="deliveries-heading">
+  <div class="panel__header"><h2 id="deliveries-heading">Deliveries</h2>
+    <span class="small muted"><%= @deliveries.group_by(&:status).map { |status, list| "#{list.size} #{MessagesHelper::DELIVERY_LABELS.fetch(status, status).downcase}" }.join(" · ") %></span>
+  </div>
+  <% if @deliveries.empty? %>
+    <p class="muted m-0"><%= @message.scheduled? ? "Nothing sent yet — #{pluralize(@message.recipients.count, 'guest')} currently match." : "No guests matched (or none had a way to be reached)." %></p>
+  <% else %>
+    <div class="table-wrap">
+      <table class="table table--responsive">
+        <thead><tr><th scope="col">Guest</th><th scope="col">Via</th><th scope="col">Status</th><th scope="col">Sent</th><th scope="col">Opened invitation since</th></tr></thead>
+        <tbody>
+          <% @deliveries.each do |delivery| %>
+            <tr>
+              <td data-label="Guest"><span class="table__primary"><%= delivery.guest.name %></span>
+                <% if policy.can?(:view_contacts) %><div class="table__secondary table__secondary--contact"><%= delivery.recipient %></div><% end %></td>
+              <td data-label="Via"><%= channel_label(delivery.channel) %></td>
+              <td data-label="Status"><%= delivery_status_badge(delivery) %>
+                <% if delivery.error_message.present? %><div class="table__secondary"><%= delivery.error_message %></div><% end %></td>
+              <td data-label="Sent"><%= delivery.sent_at ? "#{time_ago_in_words(delivery.sent_at)} ago" : "—" %></td>
+              <td data-label="Opened"><%= delivery.guest.last_viewed_at && delivery.sent_at && delivery.guest.last_viewed_at > delivery.sent_at ? "Yes" : "—" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</section>

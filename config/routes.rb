@@ -35,6 +35,10 @@ Rails.application.routes.draw do
       collection { get :template }
     end
     resource :invitation_send, only: :create
+    resources :messages, only: %i[index new create show destroy] do
+      member { post :retry_failed }
+      collection { get :audience_count }
+    end
     resources :questions, except: %i[index show] do
       member { patch :move }
     end
@@ -53,6 +57,13 @@ Rails.application.routes.draw do
     get "/", action: :show, as: ""
     post "rsvp", action: :rsvp, as: :rsvp
     get "calendar.ics", action: :calendar, as: :calendar, format: false
+  end
+
+  # Provider callbacks (authenticated by shared token / Twilio signature).
+  namespace :webhooks do
+    post "email" => "email#create"
+    post "twilio/status" => "twilio#status"
+    post "twilio/inbound" => "twilio#inbound"
   end
 
   # Local development outbox: captured emails and SMS.

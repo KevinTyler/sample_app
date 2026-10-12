@@ -28,6 +28,7 @@ class EventsController < ApplicationController
     @questions = @event.questions.to_a
     @activities = @event.activities.recent.includes(:guest, :user).limit(12)
     @uninvited_count = invitation_preview.recipients.count
+    @recent_messages = @event.messages.where.not(kind: "rsvp_confirmation").order(created_at: :desc).limit(3)
   end
 
   def new
@@ -123,7 +124,7 @@ class EventsController < ApplicationController
     end
 
     def invitation_preview
-      @event.messages.new(kind: "invitation", channels: %w[email], audience: {})
+      @event.messages.new(kind: "invitation", channels: Messaging.sms_enabled? ? %w[email sms] : %w[email], audience: {})
     end
 
     def update_notice

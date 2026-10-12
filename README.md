@@ -141,8 +141,28 @@ What works:
 - Custom RSVP questions shipped in Stage 1 (short answer, paragraph, multiple choice; required or not;
   everyone or attending guests only; reorderable; tallies on the dashboard).
 
-### ⏳ Stage 4 — messaging
-Updates and reminders to selected groups/RSVP statuses, scheduled sends, SMS via the adapter.
+### ✅ Stage 4 — messaging, reminders & delivery status
+
+What works:
+
+- **Updates and reminders** (*Messages* on the event page) to guests filtered by RSVP status and/or
+  group, by email and/or SMS. Presets: *Remind non-responders* and a *Day-before reminder* for attending
+  guests. A live count shows how many guests the message will reach; sending to nobody is refused.
+  Only guests who were invited or have replied ever receive updates.
+- **Scheduling**: send now or at a time in the event's time zone; cancel before it goes out. Recipients
+  are resolved at send time. A scheduled job plus a once-a-minute sweep (`config/recurring.yml`) send it;
+  an atomic claim guarantees it goes out once even if both fire (`bin/rails messages:dispatch_due` runs
+  the sweep manually in development).
+- **Delivery reports** per message: queued / sending / sent / delivered / failed / bounced /
+  unconfirmed per guest and channel, error reasons, whether the guest opened their invitation since,
+  and *Retry failed*.
+- **SMS** for invitations and messages when a provider is configured (development uses the outbox):
+  short composed texts with the personal link and "Reply STOP to opt out".
+- **Provider webhooks** — `POST /webhooks/email` (bounces, deliveries, spam complaints; generic JSON or
+  SendGrid's event format; bearer-token auth via `EMAIL_WEBHOOK_TOKEN`) and Twilio status + inbound
+  callbacks (`/webhooks/twilio/status`, `/webhooks/twilio/inbound`, verified with `X-Twilio-Signature`;
+  STOP replies stop all messages to that number). Complaints and STOPs unsubscribe the guest.
+- Guests see updates and reminders on their invitation page under "Updates from the host".
 
 ### ⏳ Stage 5 — co-hosts & check-in
 Co-host invitations with roles (owner / editor / check-in staff) and a door check-in screen.
@@ -162,6 +182,8 @@ Ticketed or paid RSVPs through a payment adapter (local fake checkout + Stripe C
 | Messages, audiences, idempotent dispatch | `app/models/message.rb`, `app/models/audience.rb` |
 | Per-recipient delivery state machine | `app/models/delivery.rb`, `app/jobs/delivery_job.rb` |
 | Channel adapters (email, SMS) | `app/services/messaging*.rb`, `app/services/messaging/` |
+| Compose, schedule, reports; scheduled dispatch | `app/controllers/messages_controller.rb`, `app/jobs/dispatch_*` |
+| Provider webhooks | `app/controllers/webhooks/` |
 | Invitation templates & design validation | `app/models/invitation_template.rb`, `app/models/invitation_design.rb` |
 | Template artwork (SVG partials) and the card | `app/views/invitation_artworks/`, `app/views/invitations/_card.html.erb` |
 | Design editor (server + live preview) | `app/controllers/event_designs_controller.rb`, `app/javascript/controllers/design_editor_controller.js` |
@@ -220,6 +242,7 @@ Nothing needs configuring for local development. For production, see `.env.examp
 | `MAIL_FROM` | Sender address for guest email |
 | `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` | Any SMTP provider. Without them, sends fail visibly ("Email is not configured") rather than vanishing. |
 | `SMS_PROVIDER=twilio` + `TWILIO_*` | Enables SMS (see below) |
+| `EMAIL_WEBHOOK_TOKEN` | Shared secret (16+ chars) that enables `POST /webhooks/email` for bounce/delivery feedback |
 | `ENABLE_OUTBOX=1`, `OUTBOX_PASSWORD` | Demo/staging: capture all mail/SMS at `/dev/outbox` behind basic auth |
 | `SECRET_KEY_BASE` | Rails secret (also signs guest links — rotating it invalidates all personal links) |
 
@@ -231,7 +254,10 @@ SMS is a channel adapter with the same interface as email (`deliver(delivery) �
 - `Messaging::Sms::TwilioAdapter` — Twilio Messages API over HTTPS; enable with `SMS_PROVIDER=twilio`
   and `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` (or `TWILIO_MESSAGING_SERVICE_SID`).
   Numbers must be E.164 (`+15551234567`). Without credentials, SMS stays disabled in production and
-  the UI won't offer it.
+  the UI won't offer it. With `APP_HOST` set, each text asks Twilio for status callbacks at
+  `/webhooks/twilio/status`; point your number's incoming-message webhook at `/webhooks/twilio/inbound`
+  so STOP replies are recorded. Only text guests who agreed to receive texts — regulations such as
+  the US TCPA apply to the host.
 
 ### Deploying
 

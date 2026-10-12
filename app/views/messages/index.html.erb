@@ -1,0 +1,41 @@
+<% content_for :title, "Messages · #{@event.title}" %>
+<%= link_to @event.title, event_path(@event), class: "back-link" %>
+<div class="page-header">
+  <div><h1>Messages</h1><p class="page-header__meta">Invitations, updates and reminders sent to your guests.</p></div>
+  <div class="page-header__actions">
+    <%= link_to "Remind non-responders", new_event_message_path(@event, preset: "nudge"), class: "btn" %>
+    <%= link_to "New update", new_event_message_path(@event), class: "btn btn--primary" %>
+  </div>
+</div>
+
+<% if @messages.empty? %>
+  <div class="empty-state"><h2>No messages yet</h2><p class="muted">Send invitations from the event page, or post an update to your guests.</p></div>
+<% else %>
+  <div class="panel">
+    <div class="table-wrap">
+      <table class="table table--responsive">
+        <thead><tr><th scope="col">Message</th><th scope="col">To</th><th scope="col">Status</th><th scope="col">Deliveries</th></tr></thead>
+        <tbody>
+          <% @messages.each do |message| %>
+            <% counts = @counts.select { |(id, _), _| id == message.id }.transform_keys(&:last) %>
+            <tr>
+              <td data-label="Message">
+                <div class="cluster"><%= message_kind_badge(message) %><%= link_to message.subject_line, event_message_path(@event, message), class: "table__primary" %></div>
+                <div class="table__secondary"><%= message.channels.map { |c| channel_label(c) }.join(" + ") %><% if message.author %> · by <%= message.author.name %><% end %></div>
+              </td>
+              <td data-label="To"><%= message.audience.description %></td>
+              <td data-label="Status"><%= message_status_text(message) %></td>
+              <td data-label="Deliveries">
+                <% if counts.any? %>
+                  <%= counts.values.sum %> total<% if (failed = counts.fetch("failed", 0) + counts.fetch("bounced", 0)) > 0 %> · <span class="badge badge--failed"><%= failed %> failed</span><% end %>
+                <% else %>
+                  <span class="muted">—</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>

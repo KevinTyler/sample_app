@@ -23,6 +23,7 @@ module Messaging
         request.basic_auth(account_sid, auth_token)
         params = { "To" => delivery.recipient, "Body" => SmsComposer.new(delivery).body }
         messaging_service_sid.present? ? params["MessagingServiceSid"] = messaging_service_sid : params["From"] = from_number
+        params["StatusCallback"] = status_callback_url if status_callback_url
         request.set_form_data(params)
 
         response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 10) { |http| http.request(request) }
@@ -33,6 +34,12 @@ module Messaging
         when 400..499 then raise Delivery::PermanentError, "Twilio rejected the message: #{body['message'] || response.code}"
         else raise "Twilio error #{response.code}"
         end
+      end
+
+      def status_callback_url
+        return unless ENV["APP_HOST"].present?
+
+        Rails.application.routes.url_helpers.webhooks_twilio_status_url(host: ENV["APP_HOST"], protocol: "https")
       end
 
       def account_sid = ENV["TWILIO_ACCOUNT_SID"]
