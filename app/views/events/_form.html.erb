@@ -1,0 +1,89 @@
+<%= form_with model: event, class: "form", data: { controller: "timezone" } do |f| %>
+  <%= form_errors(event) %>
+
+  <fieldset>
+    <legend>The basics</legend>
+    <div class="form">
+      <div class="field">
+        <%= f.label :title, "Event name" %>
+        <%= f.text_field :title, required: true, maxlength: 120, placeholder: "e.g. Maya's 30th Birthday", autofocus: event.new_record? %>
+      </div>
+      <div class="field">
+        <%= f.label :host_name do %>Hosted by <span class="field__optional">(as shown to guests)</span><% end %>
+        <%= f.text_field :host_name, maxlength: 120, placeholder: "e.g. Jordan & Sam" %>
+      </div>
+      <div class="field">
+        <%= f.label :description do %>Details for guests <span class="field__optional">(optional)</span><% end %>
+        <%= f.text_area :description, rows: 5, maxlength: 5000, placeholder: "Dress code, parking, what to bring…" %>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>When</legend>
+    <div class="form">
+      <div class="form-row form-row--2">
+        <div class="field">
+          <%= f.label :starts_at_local, "Starts" %>
+          <%= f.datetime_local_field :starts_at_local, value: event.starts_at_local %>
+        </div>
+        <div class="field">
+          <%= f.label :ends_at_local do %>Ends <span class="field__optional">(optional)</span><% end %>
+          <%= f.datetime_local_field :ends_at_local, value: event.ends_at_local %>
+        </div>
+      </div>
+      <div class="field">
+        <%= f.label :time_zone, "Time zone" %>
+        <%= f.select :time_zone, time_zone_options(event.time_zone), {}, data: { timezone_target: "select", new_record: event.new_record? } %>
+        <p class="field__hint">Times above are in this zone. Guests also see the time converted to their own zone.</p>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Where</legend>
+    <div class="form">
+      <div class="form-row form-row--2">
+        <div class="field">
+          <%= f.label :location_name do %>Venue <span class="field__optional">(optional)</span><% end %>
+          <%= f.text_field :location_name, maxlength: 120, placeholder: "e.g. The Greenhouse" %>
+        </div>
+        <div class="field">
+          <%= f.label :address do %>Address <span class="field__optional">(optional)</span><% end %>
+          <%= f.text_field :address, maxlength: 300, placeholder: "Street, city" %>
+        </div>
+      </div>
+      <div class="field">
+        <%= f.label :video_url do %>Video call link <span class="field__optional">(for online or hybrid events)</span><% end %>
+        <%= f.url_field :video_url, maxlength: 500, placeholder: "https://…" %>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>RSVPs</legend>
+    <div class="form">
+      <div class="form-row form-row--3">
+        <div class="field">
+          <%= f.label :rsvp_deadline_local do %>RSVP deadline <span class="field__optional">(optional)</span><% end %>
+          <%= f.datetime_local_field :rsvp_deadline_local, value: event.rsvp_deadline_local %>
+        </div>
+        <div class="field">
+          <%= f.label :capacity do %>Capacity <span class="field__optional">(optional)</span><% end %>
+          <%= f.number_field :capacity, min: 1, max: 100000, placeholder: "No limit" %>
+        </div>
+        <div class="field">
+          <%= f.label :default_plus_ones, "Plus-ones per guest" %>
+          <%= f.number_field :default_plus_ones, min: 0, max: 20 %>
+          <p class="field__hint">Default for new guests; adjustable per guest.</p>
+        </div>
+      </div>
+      <label class="checkbox"><%= f.check_box :allow_maybe %> Let guests answer “Maybe”</label>
+    </div>
+  </fieldset>
+
+  <div class="form-actions">
+    <%= f.submit event.new_record? ? "Create event" : "Save changes", class: "btn btn--primary" %>
+    <%= link_to "Cancel", event.new_record? ? events_path : event_path(event), class: "btn btn--ghost" %>
+  </div>
+<% end %>

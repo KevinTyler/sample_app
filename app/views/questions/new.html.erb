@@ -1,0 +1,6 @@
+<% content_for :title, "Add an RSVP question" %>
+<div class="container--form">
+  <%= link_to @event.title, event_path(@event, anchor: "questions"), class: "back-link" %>
+  <div class="page-header"><div><h1>Add an RSVP question</h1></div></div>
+  <div class="panel"><%= render "form", event: @event, question: @question %></div>
+</div>

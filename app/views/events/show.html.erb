@@ -1,0 +1,255 @@
+<% content_for :title, @event.title %>
+<%= link_to "Your events", events_path, class: "back-link" %>
+<div class="page-header">
+  <div>
+    <div class="cluster"><%= event_status_badge(@event) %><span class="muted small">Your role: <%= policy.role %></span></div>
+    <h1><%= @event.title %></h1>
+    <p class="page-header__meta"><%= event_when(@event) %><% if (place = event_where(@event)) %> · <%= place %><% end %></p>
+  </div>
+  <div class="page-header__actions">
+    <% if policy.can?(:edit) %>
+      <%= link_to "Edit details", edit_event_path(@event), class: "btn" %>
+    <% end %>
+    <%= link_to "Preview as guest", preview_event_path(@event), class: "btn", target: "_blank", rel: "noopener" %>
+    <% if @event.draft? && policy.can?(:publish) %>
+      <%= button_to "Publish", publish_event_path(@event), class: "btn btn--primary" %>
+    <% end %>
+  </div>
+</div>
+
+<% if @event.draft? %>
+  <div class="panel panel--warning callout" role="note">
+    <div class="callout__icon">!</div>
+    <div>
+      <strong>This event is a draft.</strong>
+      <p class="small m-0">Guests can't open invitations until you publish. Add guests and questions now; send once it's published.</p>
+    </div>
+  </div>
+<% elsif @event.cancelled? %>
+  <div class="panel panel--danger" role="note">
+    <strong>This event was cancelled<% if @event.cancelled_at %> on <%= @event.local(@event.cancelled_at).strftime("%B %-d, %Y") %><% end %>.</strong>
+    <% if @event.cancellation_note.present? %><p class="small mt-xs"><%= @event.cancellation_note %></p><% end %>
+  </div>
+<% end %>
+
+<section class="stats stats--6 mt-m" aria-label="RSVP summary">
+  <div class="stat"><span class="stat__value"><%= @summary[:invited] %></span><span class="stat__label">On the list</span></div>
+  <div class="stat stat--yes"><span class="stat__value"><%= @summary[:attending] %></span><span class="stat__label">Attending (headcount)</span></div>
+  <div class="stat stat--yes"><span class="stat__value"><%= @summary[:yes] %></span><span class="stat__label">Yes</span></div>
+  <div class="stat stat--maybe"><span class="stat__value"><%= @summary[:maybe] %></span><span class="stat__label">Maybe</span></div>
+  <div class="stat stat--no"><span class="stat__value"><%= @summary[:no] %></span><span class="stat__label">No</span></div>
+  <div class="stat"><span class="stat__value"><%= @summary[:pending] %></span><span class="stat__label">Awaiting reply</span></div>
+</section>
+<% if @summary[:invited] > 0 %>
+  <div class="meter" role="img" aria-label="<%= @summary[:yes] %> yes, <%= @summary[:maybe] %> maybe, <%= @summary[:no] %> no of <%= @summary[:invited] %>">
+    <span class="meter__bar meter__bar--yes" data-width="<%= percent(@summary[:yes], @summary[:invited]) %>"></span>
+    <span class="meter__bar meter__bar--maybe" data-width="<%= percent(@summary[:maybe], @summary[:invited]) %>"></span>
+    <span class="meter__bar meter__bar--no" data-width="<%= percent(@summary[:no], @summary[:invited]) %>"></span>
+  </div>
+<% end %>
+<p class="small muted mt-s">
+  <%= @summary[:sent] %> invited · <%= @summary[:viewed] %> opened their invitation
+  <% if @summary[:maybe_headcount] > 0 %> · <%= @summary[:maybe_headcount] %> more might come<% end %>
+  <% if @event.capacity %> · <strong><%= @event.spots_remaining %></strong> of <%= @event.capacity %> spots left<% end %>
+  <% if @event.rsvp_deadline %> · RSVPs close <%= @event.local(@event.rsvp_deadline).strftime("%b %-d, %-l:%M %p %Z") %><% end %>
+</p>
+
+<div class="grid grid--sidebar mt-l">
+  <div class="stack">
+    <% if @event.published? && policy.can?(:send_messages) %>
+      <section class="panel panel--accent" aria-labelledby="send-heading">
+        <div class="panel__header"><h2 id="send-heading">Send invitations</h2></div>
+        <% if @uninvited_count > 0 %>
+          <%= form_with url: event_invitation_send_path(@event), method: :post, class: "form" do |f| %>
+            <%= f.hidden_field :idempotency_key, value: SecureRandom.uuid %>
+            <p class="small muted m-0"><strong><%= pluralize(@uninvited_count, "guest") %></strong> with an email address <%= @uninvited_count == 1 ? "hasn't" : "haven't" %> been invited yet. Each gets a personal RSVP link. Guests already invited won't get a second copy.</p>
+            <div class="field">
+              <%= f.label :personal_note do %>Personal note <span class="field__optional">(optional, appears in the email)</span><% end %>
+              <%= f.text_area :personal_note, rows: 3, maxlength: 1000, placeholder: "Can't wait to celebrate with you!" %>
+            </div>
+            <div class="form-actions"><%= f.submit "Send #{pluralize(@uninvited_count, 'invitation')}", class: "btn btn--primary", data: { turbo_submits_with: "Sending…" } %></div>
+          <% end %>
+        <% else %>
+          <p class="small muted m-0">Everyone with an email address has been invited. Guests without email can still get their personal link from the guest list below.</p>
+        <% end %>
+      </section>
+    <% end %>
+
+    <section class="panel" id="guests" aria-labelledby="guests-heading">
+      <div class="panel__header">
+        <h2 id="guests-heading">Guest list</h2>
+        <% if policy.can?(:manage_guests) %>
+          <div class="cluster">
+            <%= link_to "Add guest", new_event_guest_path(@event), class: "btn btn--primary btn--small" %>
+          </div>
+        <% end %>
+      </div>
+
+      <%= form_with url: event_path(@event), method: :get, class: "toolbar", data: { turbo_frame: "_top" } do |f| %>
+        <div class="toolbar__search">
+          <%= f.label :q, "Search guests", class: "visually-hidden" %>
+          <%= f.search_field :q, value: @query, placeholder: "Search name, email, phone or group" %>
+        </div>
+        <% if (groups = @event.group_names).any? %>
+          <%= f.label :group, "Group", class: "visually-hidden" %>
+          <%= f.select :group, options_for_select([ [ "All groups", "" ] ] + groups.map { |g| [ g, g ] }, @group_filter) %>
+        <% end %>
+        <%= f.hidden_field :status, value: @status_filter %>
+        <%= f.submit "Search", class: "btn btn--small" %>
+      <% end %>
+
+      <nav class="chip-row mb-s" aria-label="Filter by RSVP">
+        <%= link_to event_path(@event, q: @query.presence, group: @group_filter, anchor: "guests"), class: [ "chip", ("is-active" unless @status_filter) ] do %>All <span class="chip__count"><%= @summary[:invited] %></span><% end %>
+        <% { "yes" => :yes, "maybe" => :maybe, "no" => :no, "pending" => :pending }.each do |status, key| %>
+          <%= link_to event_path(@event, status: status, q: @query.presence, group: @group_filter, anchor: "guests"), class: [ "chip", ("is-active" if @status_filter == status) ] do %><%= RsvpHelper::STATUS_LABELS[status] %> <span class="chip__count"><%= @summary[key] %></span><% end %>
+        <% end %>
+      </nav>
+
+      <% if @guests.empty? %>
+        <p class="muted"><%= @summary[:invited].zero? ? "No guests yet. Add your first guest to get started." : "No guests match these filters." %></p>
+      <% else %>
+        <div class="table-wrap">
+          <table class="table table--responsive">
+            <thead>
+              <tr><th scope="col">Guest</th><th scope="col">Invitation</th><th scope="col">RSVP</th><th scope="col">Party</th><th scope="col">Answers</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+            </thead>
+            <tbody>
+              <% @guests.each do |guest| %>
+                <tr id="<%= dom_id(guest) %>">
+                  <td data-label="Guest">
+                    <div class="table__primary"><%= guest.name %> <% if guest.group_name %><span class="tag"><%= guest.group_name %></span><% end %></div>
+                    <% if policy.can?(:view_contacts) %>
+                      <div class="table__secondary table__secondary--contact"><%= [ guest.email, guest.phone ].compact.join(" · ").presence || "No contact details" %></div>
+                    <% end %>
+                    <% if guest.plus_ones_allowed > 0 %><div class="table__secondary">+<%= guest.plus_ones_allowed %> allowed</div><% end %>
+                    <% if guest.unsubscribed? %><div class="table__secondary">Unsubscribed from emails</div><% end %>
+                  </td>
+                  <td data-label="Invitation"><%= delivery_badge(guest) %></td>
+                  <td data-label="RSVP">
+                    <%= rsvp_badge(guest.rsvp_status) %>
+                    <% if guest.responded_at %><div class="table__secondary"><%= time_ago_in_words(guest.responded_at) %> ago</div><% end %>
+                  </td>
+                  <td data-label="Party"><%= party_label(guest) %></td>
+                  <td data-label="Answers">
+                    <% answers = guest.rsvp_answers.index_by(&:event_question_id) %>
+                    <% if answers.any? || guest.guest_note.present? %>
+                      <ul class="answers">
+                        <% @questions.each do |q| %>
+                          <% if (a = answers[q.id]) %><li><strong><%= q.prompt %>:</strong> <%= a.value %></li><% end %>
+                        <% end %>
+                        <% if guest.guest_note.present? %><li><strong>Note:</strong> <%= guest.guest_note %></li><% end %>
+                      </ul>
+                    <% else %>
+                      <span class="muted">—</span>
+                    <% end %>
+                  </td>
+                  <td class="table__actions" data-label="Actions">
+                    <details class="disclosure">
+                      <summary>Manage</summary>
+                      <div class="stack mt-s manage-menu">
+                        <div class="copy-field" data-controller="clipboard">
+                          <label class="visually-hidden" for="link-<%= guest.id %>">Personal link for <%= guest.name %></label>
+                          <input id="link-<%= guest.id %>" type="text" readonly value="<%= guest_invitation_url(guest.access_token) %>" data-clipboard-target="source">
+                          <button type="button" class="btn btn--small" data-action="clipboard#copy" data-clipboard-target="button">Copy</button>
+                        </div>
+                        <div class="cluster">
+                          <% if policy.can?(:manage_guests) %>
+                            <%= link_to "Edit", edit_event_guest_path(@event, guest), class: "btn btn--small" %>
+                          <% end %>
+                          <% if policy.can?(:send_messages) && @event.published? && guest.emailable? && guest.invited_at %>
+                            <%= button_to "Resend", resend_event_guest_path(@event, guest), params: { idempotency_key: SecureRandom.uuid }, class: "btn btn--small" %>
+                          <% end %>
+                          <% if policy.can?(:manage_guests) %>
+                            <%= button_to "Remove", event_guest_path(@event, guest), method: :delete, class: "btn btn--small btn--danger", form: { data: { turbo_confirm: "Remove #{guest.name} and their RSVP?" } } %>
+                          <% end %>
+                        </div>
+                      </div>
+                    </details>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </section>
+  </div>
+
+  <aside class="stack" aria-label="Event tools">
+    <section class="panel">
+      <div class="panel__header"><h3>Invitation</h3></div>
+      <%= render "invitations/card", event: @event, card_id: "dashboard-card" %>
+      <div class="cluster mt-s">
+        <%= link_to "Preview as guest", preview_event_path(@event), class: "btn btn--small", target: "_blank", rel: "noopener" %>
+      </div>
+    </section>
+
+    <section class="panel" id="questions">
+      <div class="panel__header">
+        <h3>RSVP questions</h3>
+        <% if policy.can?(:edit) %><%= link_to "Add", new_event_question_path(@event), class: "btn btn--small" %><% end %>
+      </div>
+      <% if @questions.empty? %>
+        <p class="small muted m-0">Ask guests things like meal choice, dietary needs or a song request.</p>
+      <% else %>
+        <ul class="question-list">
+          <% @questions.each_with_index do |question, i| %>
+            <li>
+              <div>
+                <strong><%= question.prompt %></strong>
+                <div class="small muted"><%= EventQuestion::KINDS[question.kind] %><%= " · required" if question.required %> · <%= question.applies_to == "all" ? "everyone" : "attending guests" %></div>
+                <% if question.choice? %>
+                  <% tally = question.rsvp_answers.group(:value).count %>
+                  <ul class="tally">
+                    <% total = tally.values.sum %>
+                    <% question.options.each do |option| %>
+                      <li><span><%= option %></span><span><%= tally.fetch(option, 0) %></span><span class="tally__bar"><span class="tally__fill" data-width="<%= percent(tally.fetch(option, 0), total) %>"></span></span></li>
+                    <% end %>
+                  </ul>
+                <% end %>
+              </div>
+              <% if policy.can?(:edit) %>
+                <div class="cluster">
+                  <% if i > 0 %><%= button_to "↑", move_event_question_path(@event, question, direction: "up"), method: :patch, class: "btn btn--small btn--ghost", title: "Move up" %><% end %>
+                  <% if i < @questions.size - 1 %><%= button_to "↓", move_event_question_path(@event, question, direction: "down"), method: :patch, class: "btn btn--small btn--ghost", title: "Move down" %><% end %>
+                  <%= link_to "Edit", edit_event_question_path(@event, question), class: "btn btn--small" %>
+                </div>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </section>
+
+    <section class="panel">
+      <div class="panel__header"><h3>Recent activity</h3></div>
+      <% if @activities.empty? %>
+        <p class="small muted m-0">Nothing yet.</p>
+      <% else %>
+        <ul class="activity">
+          <% @activities.each do |activity| %>
+            <li><span><%= activity_sentence(activity) %></span><time datetime="<%= activity.created_at.iso8601 %>"><%= time_ago_in_words(activity.created_at) %> ago</time></li>
+          <% end %>
+        </ul>
+      <% end %>
+    </section>
+
+    <section class="panel">
+      <div class="panel__header"><h3>More</h3></div>
+      <div class="stack">
+        <% if policy.can?(:edit) %>
+          <%= form_with url: duplicate_event_path(@event), method: :post, class: "form" do |f| %>
+            <label class="checkbox"><%= f.check_box :include_guests, {}, "1", "0" %> Include guest list (fresh, no RSVPs)</label>
+            <%= f.submit "Duplicate event", class: "btn btn--small" %>
+          <% end %>
+        <% end %>
+        <% if !@event.cancelled? && policy.can?(:cancel) %>
+          <%= link_to "Cancel event…", cancellation_event_path(@event), class: "btn btn--small btn--danger" %>
+        <% end %>
+        <% if policy.can?(:destroy) %>
+          <%= button_to "Delete event", event_path(@event), method: :delete, class: "btn btn--small btn--danger", form: { data: { turbo_confirm: "Delete this event, its guest list and every response? This can't be undone." } } %>
+        <% end %>
+      </div>
+    </section>
+  </aside>
+</div>

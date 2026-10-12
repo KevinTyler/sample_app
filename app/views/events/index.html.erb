@@ -1,0 +1,35 @@
+<% content_for :title, "Your events" %>
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Dashboard</p>
+    <h1>Your events</h1>
+  </div>
+  <div class="page-header__actions">
+    <%= link_to "New event", new_event_path, class: "btn btn--primary" %>
+  </div>
+</div>
+
+<% if @upcoming.empty? && @past.empty? && @cancelled.empty? %>
+  <div class="empty-state">
+    <svg class="empty-state__art" viewBox="0 0 120 90" aria-hidden="true">
+      <rect x="18" y="22" width="84" height="56" rx="6" fill="#ECECFC"/>
+      <path d="M18 28l42 28 42-28" fill="none" stroke="#5458D1" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="92" cy="20" r="10" fill="#E8735A"/>
+      <path d="M88 20h8M92 16v8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>
+    <h2>No events yet</h2>
+    <p class="muted">Create an event, pick a design, and invite your guests.</p>
+    <%= link_to "Plan your first event", new_event_path, class: "btn btn--primary" %>
+  </div>
+<% else %>
+  <% [ [ "Upcoming & drafts", @upcoming ], [ "Past", @past ], [ "Cancelled", @cancelled ] ].each do |heading, events| %>
+    <% next if events.empty? %>
+    <section class="stack" aria-label="<%= heading %>">
+      <h2><%= heading %></h2>
+      <div class="event-grid">
+        <%= render partial: "events/event_card", collection: events, as: :event %>
+      </div>
+    </section>
+    <hr>
+  <% end %>
+<% end %>

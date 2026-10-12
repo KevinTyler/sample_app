@@ -1,0 +1,39 @@
+<%= form_with model: [ event, guest ], class: "form" do |f| %>
+  <%= form_errors(guest) %>
+  <div class="field">
+    <%= f.label :name, "Name" %>
+    <%= f.text_field :name, required: true, maxlength: 100, autofocus: guest.new_record?, placeholder: "e.g. Dana Whitfield", autocomplete: "off" %>
+    <p class="field__hint">For a couple or family, use one name like “Dana & Lee Whitfield” and allow plus-ones.</p>
+  </div>
+  <div class="form-row form-row--2">
+    <div class="field">
+      <%= f.label :email do %>Email <span class="field__optional">(to send the invitation)</span><% end %>
+      <%= f.email_field :email, maxlength: 254, autocomplete: "off" %>
+    </div>
+    <div class="field">
+      <%= f.label :phone do %>Phone <span class="field__optional">(optional)</span><% end %>
+      <%= f.telephone_field :phone, maxlength: 25, placeholder: "+1 555 123 4567", autocomplete: "off" %>
+    </div>
+  </div>
+  <div class="form-row form-row--2">
+    <div class="field">
+      <%= f.label :group_name do %>Group <span class="field__optional">(optional)</span><% end %>
+      <%= f.text_field :group_name, maxlength: 60, list: "group-suggestions", placeholder: "e.g. Family, Work, College" %>
+      <datalist id="group-suggestions"><% event.group_names.each do |g| %><option value="<%= g %>"></option><% end %></datalist>
+    </div>
+    <div class="field">
+      <%= f.label :plus_ones_allowed, "Plus-ones allowed" %>
+      <%= f.number_field :plus_ones_allowed, min: 0, max: Guest::MAX_PLUS_ONES %>
+      <p class="field__hint">0 means the invitation is for this guest only.</p>
+    </div>
+  </div>
+  <div class="field">
+    <%= f.label :host_notes do %>Private notes <span class="field__optional">(only hosts see these)</span><% end %>
+    <%= f.text_area :host_notes, rows: 2, maxlength: 2000 %>
+  </div>
+  <div class="form-actions">
+    <%= f.submit guest.new_record? ? "Add guest" : "Save guest", class: "btn btn--primary" %>
+    <% if guest.new_record? %><%= f.submit "Add and add another", name: "add_another", class: "btn" %><% end %>
+    <%= link_to "Cancel", event_path(event, anchor: "guests"), class: "btn btn--ghost" %>
+  </div>
+<% end %>

@@ -1,0 +1,21 @@
+<% content_for :title, "Cancel #{@event.title}" %>
+<div class="container--narrow">
+  <%= link_to @event.title, event_path(@event), class: "back-link" %>
+  <div class="panel panel--danger">
+    <h1>Cancel this event?</h1>
+    <p>Guests opening their invitation will see that the event is cancelled, RSVPs will close, and calendar files will mark it as cancelled. Your guest list and responses are kept.</p>
+    <%= form_with url: cancel_event_path(@event), method: :post, class: "form" do |f| %>
+      <div class="field">
+        <%= f.label :cancellation_note do %>Message to guests <span class="field__optional">(optional)</span><% end %>
+        <%= f.text_area :cancellation_note, rows: 4, maxlength: 2000, placeholder: "We're so sorry to cancel…" %>
+      </div>
+      <% if @event.published? %>
+        <label class="checkbox"><%= f.check_box :notify_guests, { checked: true }, "1", "0" %> Email guests who were invited that the event is cancelled</label>
+      <% end %>
+      <div class="form-actions">
+        <%= f.submit "Cancel event", class: "btn btn--danger" %>
+        <%= link_to "Keep event", event_path(@event), class: "btn btn--ghost" %>
+      </div>
+    <% end %>
+  </div>
+</div>

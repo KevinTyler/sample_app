@@ -1,0 +1,225 @@
+class Event < ApplicationRecord
+  LOCAL_TIME_FIELDS = %i[starts_at ends_at rsvp_deadline].freeze
+  LOCAL_TIME_FORMAT = /\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?\z/
+  DEFAULT_DURATION = 3.hours
+
+  belongs_to :owner, class_name: "User", inverse_of: :owned_events
+  has_many :guests, dependent: :destroy
+  has_many :questions, -> { order(:position, :id) }, class_name: "EventQuestion",
+    dependent: :destroy, inverse_of: :event
+  has_many :messages, dependent: :destroy
+  has_many :activities, dependent: :delete_all
+
+  enum :status, { draft: "draft", published: "published", cancelled: "cancelled" }, default: "draft", validate: true
+
+  has_secure_token :share_token
+
+  normalizes :title, :host_name, :location_name, :address, with: ->(v) { v.squish.presence }
+  normalizes :video_url, with: ->(v) { v.strip.presence }
+
+  validates :title, presence: true, length: { maximum: 120 }
+  validates :host_name, :location_name, length: { maximum: 120 }
+  validates :address, length: { maximum: 300 }
+  validates :description, length: { maximum: 5000 }
+  validates :cancellation_note, length: { maximum: 2000 }
+  validates :capacity, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: 100_000 }, allow_nil: true
+  validates :default_plus_ones, numericality: { only_integer: true, in: 0..20 }
+  validates :video_url, length: { maximum: 500 },
+    format: { with: %r{\Ahttps?://[^\s<>"']+\z}i, message: "must be a full link starting with http:// or https://" },
+    allow_nil: true
+  validates :starts_at, presence: { message: "is required before publishing" }, unless: :draft?
+  validate :time_zone_must_exist
+  validate :local_times_must_parse
+  validate :ends_after_start
+  validate :deadline_before_end
+  validate :starts_in_future, on: :publish
+
+  before_validation :resolve_local_times
+
+  scope :upcoming, -> { where("starts_at IS NULL OR starts_at >= ?", 1.day.ago).order(Arel.sql("starts_at IS NULL, starts_at")) }
+  scope :past, -> { where(starts_at: ...1.day.ago).order(starts_at: :desc) }
+
+  # --- Times -----------------------------------------------------------------
+
+  # Form fields are entered as wall-clock time in the event's own time zone
+  # (e.g. "2026-11-05T19:00" in America/Chicago) and stored in UTC.
+  LOCAL_TIME_FIELDS.each do |field|
+    define_method(:"#{field}_local") do
+      if instance_variable_defined?(:"@#{field}_local")
+        instance_variable_get(:"@#{field}_local")
+      else
+        public_send(field)&.in_time_zone(zone)&.strftime("%Y-%m-%dT%H:%M")
+      end
+    end
+
+    define_method(:"#{field}_local=") do |value|
+      instance_variable_set(:"@#{field}_local", value.to_s.strip.presence)
+    end
+  end
+
+  def zone
+    ActiveSupport::TimeZone[time_zone.to_s] || ActiveSupport::TimeZone["UTC"]
+  end
+
+  def local(time)
+    time&.in_time_zone(zone)
+  end
+
+  def effective_ends_at
+    ends_at || (starts_at && starts_at + DEFAULT_DURATION)
+  end
+
+  def online?
+    video_url.present?
+  end
+
+  def in_person?
+    location_name.present? || address.present?
+  end
+
+  # --- Lifecycle -------------------------------------------------------------
+
+  def publish
+    return false unless draft?
+
+    self.status = "published"
+    self.published_at = Time.current
+    return true if save(context: :publish)
+
+    self.status = "draft"
+    self.published_at = nil
+    false
+  end
+
+  def cancel(note: nil)
+    return false if cancelled?
+
+    update(status: "cancelled", cancelled_at: Time.current, cancellation_note: note.to_s.strip.presence,
+      calendar_sequence: calendar_sequence + 1)
+  end
+
+  # A new draft with the same details, design and questions. Guests are copied only on request,
+  # and always come over fresh: new private links, no RSVP or delivery history.
+  def duplicate(include_guests: false)
+    copy = dup
+    copy.assign_attributes(
+      title: "Copy of #{title}".truncate(120), status: "draft", share_token: self.class.generate_unique_secure_token,
+      published_at: nil, cancelled_at: nil, cancellation_note: nil, calendar_sequence: 0
+    )
+
+    transaction do
+      copy.save!
+      questions.each { |q| copy.questions.create!(q.attributes.slice(*EventQuestion::COPYABLE_ATTRIBUTES)) }
+      if include_guests
+        guests.find_each do |guest|
+          copy.guests.create!(guest.attributes.slice(*Guest::COPYABLE_ATTRIBUTES))
+        end
+      end
+    end
+    copy
+  end
+
+  # Bumped whenever guests' calendar entries should refresh (time/place changes, cancellation).
+  def touch_calendar!
+    increment!(:calendar_sequence)
+  end
+
+  CALENDAR_FIELDS = %w[starts_at ends_at time_zone location_name address video_url title].freeze
+
+  def calendar_details_changed?
+    (saved_changes.keys & CALENDAR_FIELDS).any?
+  end
+
+  # --- RSVPs -----------------------------------------------------------------
+
+  def rsvp_closes_at
+    rsvp_deadline || starts_at
+  end
+
+  def accepting_rsvps?(now = Time.current)
+    published? && (rsvp_closes_at.nil? || now <= rsvp_closes_at)
+  end
+
+  def attending_count(excluding: nil)
+    scope = guests.where(rsvp_status: "yes")
+    scope = scope.where.not(id: excluding.id) if excluding
+    scope.sum(:party_size)
+  end
+
+  def spots_remaining(excluding: nil)
+    return nil unless capacity
+
+    [ capacity - attending_count(excluding: excluding), 0 ].max
+  end
+
+  def rsvp_summary
+    counts = guests.group(:rsvp_status).count
+    {
+      invited: guests.count,
+      yes: counts.fetch("yes", 0),
+      no: counts.fetch("no", 0),
+      maybe: counts.fetch("maybe", 0),
+      pending: counts.fetch("pending", 0),
+      attending: attending_count,
+      maybe_headcount: guests.where(rsvp_status: "maybe").sum(:party_size),
+      viewed: guests.where.not(first_viewed_at: nil).count,
+      sent: guests.where.not(invited_at: nil).count
+    }
+  end
+
+  def group_names
+    guests.where.not(group_name: nil).distinct.order(:group_name).pluck(:group_name)
+  end
+
+  # "owner", "editor", "checkin" or nil. Co-host roles arrive with event memberships.
+  def role_for(user)
+    return nil unless user
+
+    "owner" if owner_id == user.id
+  end
+
+  def display_host_name
+    host_name.presence || owner.name
+  end
+
+  private
+    def resolve_local_times
+      @unparseable_times = []
+      LOCAL_TIME_FIELDS.each do |field|
+        next unless instance_variable_defined?(:"@#{field}_local")
+
+        raw = instance_variable_get(:"@#{field}_local")
+        if raw.nil?
+          public_send(:"#{field}=", nil)
+        elsif raw.match?(LOCAL_TIME_FORMAT) && (parsed = zone.parse(raw))
+          public_send(:"#{field}=", parsed)
+        else
+          @unparseable_times << field
+        end
+      end
+    end
+
+    def time_zone_must_exist
+      errors.add(:time_zone, "is not a recognized time zone") unless ActiveSupport::TimeZone[time_zone.to_s]
+    end
+
+    def local_times_must_parse
+      Array(@unparseable_times).each { |field| errors.add(field, "is not a valid date and time") }
+    end
+
+    def ends_after_start
+      return unless starts_at && ends_at
+
+      errors.add(:ends_at, "must be after the start time") if ends_at <= starts_at
+    end
+
+    def deadline_before_end
+      return unless rsvp_deadline && starts_at
+
+      errors.add(:rsvp_deadline, "must be before the event ends") if rsvp_deadline > effective_ends_at
+    end
+
+    def starts_in_future
+      errors.add(:starts_at, "must be in the future to publish") if starts_at && starts_at <= Time.current
+    end
+end

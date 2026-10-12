@@ -1,0 +1,42 @@
+<%# Shared by the guest RSVP form and the host's "record an RSVP" form. %>
+<% choices = event.allow_maybe ? %w[yes maybe no] : %w[yes no] %>
+<fieldset class="rsvp-choices" data-rsvp-form-target="choices">
+  <legend class="visually-hidden">Will you attend?</legend>
+  <% choices.each do |status| %>
+    <label class="rsvp-choice rsvp-choice--<%= status %>">
+      <%= f.radio_button :status, status, required: true, data: { action: "rsvp-form#update" } %>
+      <span><%= RsvpHelper::GUEST_CHOICE_LABELS[status] %></span>
+    </label>
+  <% end %>
+</fieldset>
+
+<% if guest.max_party_size > 1 %>
+  <div class="field" data-rsvp-form-target="attendingOnly">
+    <%= f.label :party_size, "How many in your party (including you)?" %>
+    <%= f.select :party_size, (1..guest.max_party_size).to_a, {}, class: "party-select" %>
+  </div>
+<% else %>
+  <%= f.hidden_field :party_size, value: 1 %>
+<% end %>
+
+<% event.questions.each do |question| %>
+  <% field_id = "rsvp_answer_#{question.id}" %>
+  <div class="field" <%= 'data-rsvp-form-target=attendingOnly' if question.applies_to == "attending" %>>
+    <label for="<%= field_id %>"><%= question.prompt %><% if question.required %> <span aria-hidden="true">*</span><% else %> <span class="field__optional">(optional)</span><% end %></label>
+    <% value = rsvp.answer_for(question) %>
+    <% case question.kind %>
+    <% when "long_text" %>
+      <%= text_area_tag "rsvp[answers][#{question.id}]", value, id: field_id, rows: 3, maxlength: question.max_answer_length %>
+    <% when "choice" %>
+      <%= select_tag "rsvp[answers][#{question.id}]", options_for_select(question.options, value), include_blank: "Choose one…", id: field_id %>
+    <% else %>
+      <%= text_field_tag "rsvp[answers][#{question.id}]", value, id: field_id, maxlength: question.max_answer_length %>
+    <% end %>
+    <% if question.applies_to == "attending" %><p class="field__hint">Only needed if you're coming.</p><% end %>
+  </div>
+<% end %>
+
+<div class="field">
+  <%= f.label :guest_note do %>A note for the host <span class="field__optional">(optional)</span><% end %>
+  <%= f.text_area :guest_note, rows: 3, maxlength: 1000 %>
+</div>

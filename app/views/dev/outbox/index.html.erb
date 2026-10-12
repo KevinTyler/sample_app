@@ -1,0 +1,20 @@
+<% content_for :title, "Dev outbox" %>
+<div class="page-header">
+  <div><p class="eyebrow">Development</p><h1>Outbox</h1><p class="page-header__meta">Emails and texts the app would have sent. Nothing here left this machine.</p></div>
+  <div class="page-header__actions"><%= button_to "Clear outbox", clear_dev_outbox_index_path, method: :delete, class: "btn btn--danger btn--small" %></div>
+</div>
+<% if @items.empty? %>
+  <div class="empty-state"><h2>Nothing sent yet</h2><p class="muted">Publish an event and send invitations — they'll show up here.</p></div>
+<% else %>
+  <ul class="outbox-list">
+    <% @items.each do |item| %>
+      <li>
+        <%= link_to dev_outbox_path(item) do %>
+          <span class="badge <%= item.channel == 'sms' ? 'badge--warning' : 'badge--sent' %>"><%= item.channel.upcase %></span>
+          <span><strong><%= item.subject.presence || item.text_body.to_s.truncate(70) %></strong><br><span class="small muted">to <%= item.recipient %></span></span>
+          <span class="small muted nowrap"><%= time_ago_in_words(item.created_at) %> ago</span>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

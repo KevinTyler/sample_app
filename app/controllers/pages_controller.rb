@@ -1,14 +1,14 @@
 class PagesController < ApplicationController
-  def home
-    @title = "Home"
-  end
+  allow_unauthenticated_access
 
-  def contact
-    @title = "Contact"
+  def home
+    resume_session
+    @templates = InvitationTemplate.all.first(6)
   end
 
   def about
-    @title = "About"
   end
 
+  def contact
+  end
 end

@@ -1,0 +1,29 @@
+<% if @message.kind == "invitation" -%>
+<%= @event.display_host_name %> invited you: <%= @event.title %>
+<% else -%>
+<%= @message.subject_line %>
+<% end -%>
+
+<% if @event.starts_at -%>
+When:  <%= event_when(@event) %>
+<% end -%>
+<% if (place = event_where(@event)).present? -%>
+Where: <%= place %>
+<% end -%>
+
+Hi <%= @guest.first_name %>,
+
+<% if @message.body.present? -%>
+<%= @message.body %>
+<% elsif @message.kind == "invitation" -%>
+You're invited! Open your invitation to see the details and RSVP.
+<% elsif @message.kind == "cancellation" -%>
+Unfortunately this event has been cancelled.
+<% end -%>
+
+Your invitation: <%= @url %>
+(This link is personal to you. You can use it to change your RSVP later.)
+
+--
+Sent with Larkspur on behalf of <%= @event.display_host_name %>. Reply to reach the host.
+Stop messages about this event: <%= @url %> (choose "Stop emails")

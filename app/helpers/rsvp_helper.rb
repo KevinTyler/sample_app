@@ -1,0 +1,57 @@
+module RsvpHelper
+  STATUS_LABELS = { "pending" => "Awaiting reply", "yes" => "Attending", "no" => "Declined", "maybe" => "Maybe" }.freeze
+  GUEST_CHOICE_LABELS = { "yes" => "Joyfully accepts", "maybe" => "Maybe", "no" => "Regretfully declines" }.freeze
+
+  def rsvp_badge(status)
+    tag.span(STATUS_LABELS.fetch(status.to_s, status.to_s.humanize), class: "badge badge--rsvp-#{status}")
+  end
+
+  # The host-facing delivery column: what happened to this guest's invitation?
+  def delivery_badge(guest)
+    delivery = guest.deliveries.select { |d| d.message&.kind == "invitation" }.max_by(&:created_at)
+    if guest.first_viewed_at
+      tag.span("Opened", class: "badge badge--opened", title: "First opened #{time_ago_in_words(guest.first_viewed_at)} ago")
+    elsif delivery.nil?
+      tag.span(guest.email.present? ? "Not sent" : "No email", class: "badge badge--muted")
+    elsif delivery.status == "failed"
+      tag.span("Failed", class: "badge badge--failed", title: delivery.error_message)
+    elsif delivery.status == "bounced"
+      tag.span("Bounced", class: "badge badge--failed")
+    elsif delivery.stale?
+      tag.span("Unconfirmed", class: "badge badge--warning", title: "The send didn't confirm. Check your email provider before resending.")
+    elsif delivery.status == "sent"
+      tag.span("Sent", class: "badge badge--sent", title: "Sent #{time_ago_in_words(delivery.sent_at)} ago")
+    else
+      tag.span("Sending…", class: "badge badge--queued")
+    end
+  end
+
+  def party_label(guest)
+    return "—" unless guest.rsvp_yes? || guest.rsvp_maybe?
+
+    guest.party_size.to_s
+  end
+
+  def activity_sentence(activity)
+    data = activity.data || {}
+    name = activity.actor_name
+    case activity.action
+    when "rsvp_submitted" then "#{name} replied #{STATUS_LABELS.fetch(data['to'], data['to']).downcase}#{party_suffix(data)}"
+    when "rsvp_changed" then "#{name} changed their RSVP to #{STATUS_LABELS.fetch(data['to'], data['to']).downcase}#{party_suffix(data)}"
+    when "viewed" then "#{name} opened the invitation"
+    when "guest_added" then "#{name} was added to the guest list"
+    when "event_created" then "#{name} created the event"
+    when "event_published" then "#{name} published the event"
+    when "event_cancelled" then "#{name} cancelled the event"
+    when "message_sent" then "#{name} sent #{data['kind'] == 'invitation' ? 'invitations' : "a#{data['kind'] == 'update' ? 'n' : ''} #{data['kind']}"} to #{pluralize(data['recipients'], 'guest')}"
+    when "guests_imported" then "#{name} imported #{pluralize(data['created'], 'guest')}"
+    when "checked_in" then "#{name} checked in#{data['count'].to_i > 1 ? " (party of #{data['count']})" : ''}"
+    else activity.action.humanize
+    end
+  end
+
+  private
+    def party_suffix(data)
+      data["to"] == "yes" && data["party_size"].to_i > 1 ? " (party of #{data['party_size']})" : ""
+    end
+end

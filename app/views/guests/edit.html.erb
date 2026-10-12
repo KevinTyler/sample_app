@@ -1,0 +1,30 @@
+<% content_for :title, "Edit #{@guest.name}" %>
+<div class="container--form stack">
+  <%= link_to @event.title, event_path(@event, anchor: "guests"), class: "back-link" %>
+  <div class="page-header"><div><h1><%= @guest.name %></h1><p class="page-header__meta"><%= rsvp_badge(@guest.rsvp_status) %> <%= delivery_badge(@guest) %></p></div></div>
+
+  <section class="panel">
+    <h2>Guest details</h2>
+    <%= render "form", event: @event, guest: @guest %>
+  </section>
+
+  <section class="panel">
+    <h2>Record an RSVP</h2>
+    <p class="small muted">Got a reply by phone or in person? Record it here. Hosts can override the deadline and capacity.</p>
+    <%= form_with model: @rsvp, scope: :rsvp, url: rsvp_event_guest_path(@event, @guest), method: :patch, class: "form", data: { controller: "rsvp-form" } do |f| %>
+      <%= form_errors(@rsvp) %>
+      <%= render "guest_invitations/rsvp_fields", f: f, rsvp: @rsvp, event: @event, guest: @guest %>
+      <div class="form-actions"><%= f.submit "Save RSVP", class: "btn btn--primary" %></div>
+    <% end %>
+  </section>
+
+  <section class="panel">
+    <h2>Personal invitation link</h2>
+    <p class="small muted">Anyone with this link can view the invitation and change this guest's RSVP. Share it only with them.</p>
+    <div class="copy-field" data-controller="clipboard">
+      <label class="visually-hidden" for="personal-link">Personal link</label>
+      <input id="personal-link" type="text" readonly value="<%= guest_invitation_url(@guest.access_token) %>" data-clipboard-target="source">
+      <button type="button" class="btn btn--small" data-action="clipboard#copy" data-clipboard-target="button">Copy</button>
+    </div>
+  </section>
+</div>

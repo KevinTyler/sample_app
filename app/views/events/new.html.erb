@@ -1,0 +1,6 @@
+<% content_for :title, "New event" %>
+<div class="container--form">
+  <%= link_to "Your events", events_path, class: "back-link" %>
+  <div class="page-header"><div><p class="eyebrow">Step 1 of 3 · Details</p><h1>New event</h1><p class="page-header__meta">You can change anything later. Next you'll pick a design and add guests.</p></div></div>
+  <div class="panel"><%= render "form", event: @event %></div>
+</div>

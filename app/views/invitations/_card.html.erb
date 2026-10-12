@@ -1,0 +1,31 @@
+<%# locals: (event:, design: InvitationDesign.for(event), card_id: "invite-card-#{event.id || 'new'}", show_details: true) %>
+<%= render "invitations/design_style", design: design, selector: "##{card_id}" %>
+<% photo = event.respond_to?(:artwork) && event.artwork.attached? ? event.artwork : nil %>
+<article id="<%= card_id %>"
+  class="invite-card invite-card--<%= design.layout %>"
+  data-heading-font="<%= design.heading_font %>"
+  data-design-editor-target="card"
+  aria-label="Invitation for <%= event.title %>">
+  <% if design.artwork && lookup_context.exists?(design.artwork, [ "invitation_artworks" ], true) %>
+    <div class="invite-art" aria-hidden="true" data-design-editor-target="art"><%= render "invitation_artworks/#{design.artwork}" %></div>
+  <% end %>
+  <% if photo && design.photo_style == "background" %>
+    <figure class="invite-card__photo invite-card__photo--background"><%= image_tag url_for(photo), alt: "" %></figure>
+  <% end %>
+  <% if event.cancelled? %><div class="invite-card__stamp">CANCELLED</div><% end %>
+  <div class="invite-card__inner">
+    <% if photo && design.photo_style != "background" %>
+      <figure class="invite-card__photo invite-card__photo--<%= design.layout == 'split' ? 'banner' : design.photo_style %>"><%= image_tag url_for(photo), alt: "Invitation artwork" %></figure>
+    <% end %>
+    <p class="invite-card__tagline" data-design-editor-target="tagline"<%= " hidden" if design.tagline.blank? %>><%= design.tagline %></p>
+    <p class="invite-card__headline" data-design-editor-target="headline"<%= " hidden" if design.headline.blank? %>><%= design.headline %></p>
+    <h1 class="invite-card__title"><%= event.title %></h1>
+    <div class="invite-card__divider" aria-hidden="true"></div>
+    <% if show_details %>
+      <p class="invite-card__when"><%= card_when(event) %></p>
+      <% if (place = event_where(event)).present? %><p class="invite-card__where"><%= place %></p><% end %>
+    <% end %>
+    <p class="invite-card__message" data-design-editor-target="message"<%= " hidden" if design.message.blank? %>><%= design.message %></p>
+    <p class="invite-card__host">Hosted by <%= event.display_host_name %></p>
+  </div>
+</article>

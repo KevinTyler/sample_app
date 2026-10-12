@@ -1,0 +1,18 @@
+<% content_for :title, "Sign in" %>
+<div class="panel auth-card">
+  <h1>Welcome back</h1>
+  <%= form_with url: session_path, class: "form" do |form| %>
+    <div class="field">
+      <%= form.label :email_address, "Email" %>
+      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", value: params[:email_address] %>
+    </div>
+    <div class="field">
+      <%= form.label :password %>
+      <%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72 %>
+    </div>
+    <div class="form-actions">
+      <%= form.submit "Sign in", class: "btn btn--primary btn--block" %>
+    </div>
+  <% end %>
+  <p class="small muted"><%= link_to "Forgot password?", new_password_path %> · New here? <%= link_to "Create an account", new_registration_path %></p>
+</div>

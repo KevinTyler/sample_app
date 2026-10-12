@@ -1,0 +1,30 @@
+<%= form_with model: [ event, question ], class: "form", data: { controller: "question-form" } do |f| %>
+  <%= form_errors(question) %>
+  <div class="field">
+    <%= f.label :prompt, "Question" %>
+    <%= f.text_field :prompt, required: true, maxlength: 200, autofocus: true, placeholder: "e.g. Which dinner would you like?" %>
+  </div>
+  <div class="form-row form-row--2">
+    <div class="field">
+      <%= f.label :kind, "Answer type" %>
+      <%= f.select :kind, EventQuestion::KINDS.invert, {}, data: { action: "question-form#toggle", question_form_target: "kind" } %>
+    </div>
+    <div class="field">
+      <%= f.label :applies_to, "Ask" %>
+      <%= f.select :applies_to, EventQuestion::APPLIES_TO.invert %>
+    </div>
+  </div>
+  <div class="field" data-question-form-target="options">
+    <%= f.label :options_text, "Choices (one per line)" %>
+    <%= f.text_area :options_text, rows: 4, placeholder: "Roasted chicken\nMushroom risotto\nKids' meal" %>
+    <p class="field__hint">Only used for multiple choice. Up to <%= EventQuestion::MAX_OPTIONS %> choices.</p>
+  </div>
+  <label class="checkbox"><%= f.check_box :required %> Require an answer</label>
+  <div class="form-actions">
+    <%= f.submit question.new_record? ? "Add question" : "Save question", class: "btn btn--primary" %>
+    <%= link_to "Cancel", event_path(event, anchor: "questions"), class: "btn btn--ghost" %>
+    <% if question.persisted? %>
+      <%= link_to "Delete question", event_question_path(event, question), class: "btn btn--danger", data: { turbo_method: :delete, turbo_confirm: "Delete this question and all its answers?" } %>
+    <% end %>
+  </div>
+<% end %>

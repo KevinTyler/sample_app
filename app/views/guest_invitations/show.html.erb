@@ -1,0 +1,123 @@
+<% content_for :title, @event.title %>
+<% design = InvitationDesign.for(@event) %>
+<% content_for :head do %>
+  <style nonce="<%= content_security_policy_nonce %>">.guest-body { --guest-backdrop: color-mix(in srgb, <%= design.valid? ? design.accent_color : "#6b6fd8" %> 14%, #f3efe8); }</style>
+<% end %>
+
+<% if @preview %>
+  <div class="guest-banner guest-banner--preview">Preview — this is what <%= @guest.name.downcase == "guest name" ? "a guest" : @guest.name %> sees. Nothing you do here is saved.</div>
+<% end %>
+<% if @event.cancelled? %>
+  <div class="guest-banner guest-banner--cancelled" role="status">
+    <strong>This event has been cancelled.</strong>
+    <% if @event.cancellation_note.present? %><p class="mt-xs m-0"><%= @event.cancellation_note %></p><% end %>
+  </div>
+<% end %>
+
+<%= render "invitations/card", event: @event, design: design, card_id: "guest-card" %>
+
+<section class="guest-panel" id="rsvp" aria-labelledby="rsvp-heading" data-controller="rsvp-form">
+  <% if @guest.responded? && !@show_form %>
+    <% icon = { "yes" => "✓", "no" => "✕", "maybe" => "?" }[@guest.rsvp_status] %>
+    <div class="rsvp-summary">
+      <div class="rsvp-summary__icon rsvp-summary__icon--<%= @guest.rsvp_status %>" aria-hidden="true"><%= icon %></div>
+      <div>
+        <h2 id="rsvp-heading"><%= { "yes" => "You're going!", "no" => "You can't make it", "maybe" => "You might come" }[@guest.rsvp_status] %></h2>
+        <p>
+          <%= @guest.name %><% if @guest.rsvp_yes? || @guest.rsvp_maybe? %> · party of <%= @guest.party_size %><% end %>
+          · replied <%= time_ago_in_words(@guest.responded_at) %> ago
+        </p>
+      </div>
+    </div>
+    <% answers = @guest.rsvp_answers.includes(:event_question) %>
+    <% if answers.any? || @guest.guest_note.present? %>
+      <ul class="answers mt-s">
+        <% answers.each do |a| %><li><strong><%= a.event_question.prompt %>:</strong> <%= a.value %></li><% end %>
+        <% if @guest.guest_note.present? %><li><strong>Your note:</strong> <%= @guest.guest_note %></li><% end %>
+      </ul>
+    <% end %>
+    <% if @event.accepting_rsvps? %>
+      <details class="disclosure mt-m">
+        <summary>Change your response</summary>
+        <div class="mt-s"><%= render "guest_invitations/rsvp_form", guest: @guest, event: @event, rsvp: @rsvp %></div>
+      </details>
+    <% elsif !@event.cancelled? %>
+      <p class="small muted mt-s m-0">RSVPs are closed. To change your response, reply to your invitation email to reach the host.</p>
+    <% end %>
+  <% elsif @event.accepting_rsvps? || @preview %>
+    <h2 id="rsvp-heading">Will you be there, <%= @guest.first_name %>?</h2>
+    <% if (deadline = deadline_text(@event)) %><p class="small muted"><%= deadline %>.</p><% end %>
+    <% if @event.capacity && (left = @event.spots_remaining).to_i <= 10 %>
+      <p class="small muted"><%= left.zero? ? "This event is currently full — you can still let the host know." : "Only #{pluralize(left, 'spot')} left." %></p>
+    <% end %>
+    <%= render "guest_invitations/rsvp_form", guest: @guest, event: @event, rsvp: @rsvp %>
+  <% elsif @event.cancelled? %>
+    <h2 id="rsvp-heading">RSVPs are closed</h2>
+    <p class="muted m-0">This event has been cancelled.</p>
+  <% else %>
+    <h2 id="rsvp-heading">RSVPs are closed</h2>
+    <p class="muted m-0">The RSVP deadline has passed. Reply to your invitation email to reach the host.</p>
+  <% end %>
+</section>
+
+<section class="guest-panel" aria-labelledby="details-heading">
+  <h2 id="details-heading">Details</h2>
+  <dl class="details-list">
+    <div>
+      <dt>When</dt>
+      <dd>
+        <%= event_when(@event) %>
+        <% if @event.starts_at %>
+          <span class="local-time" hidden data-controller="local-time" data-local-time-iso-value="<%= @event.starts_at.iso8601 %>" data-local-time-zone-value="<%= @event.time_zone %>"></span>
+        <% end %>
+      </dd>
+    </div>
+    <% if @event.in_person? %>
+      <div>
+        <dt>Where</dt>
+        <dd><%= event_where(@event) %><% if (url = map_url(@event)) %> · <%= link_to "Map", url, target: "_blank", rel: "noopener noreferrer" %><% end %></dd>
+      </div>
+    <% end %>
+    <% if @event.online? %>
+      <div><dt>Join online</dt><dd><%= link_to @event.video_url.truncate(60), @event.video_url, target: "_blank", rel: "noopener noreferrer" %></dd></div>
+    <% end %>
+    <div><dt>Host</dt><dd><%= @event.display_host_name %></dd></div>
+    <% if @event.description.present? %>
+      <div><dt>From the host</dt><dd><%= simple_format(@event.description) %></dd></div>
+    <% end %>
+  </dl>
+  <% if @event.starts_at && !@event.cancelled? && !@preview %>
+    <% invite = CalendarInvite.new(@event, url: guest_invitation_url(params[:token])) %>
+    <h3 class="mt-m">Add to your calendar</h3>
+    <div class="calendar-links">
+      <%= link_to "Apple / Outlook (.ics)", guest_calendar_path(params[:token]), class: "btn btn--small", data: { turbo: false } %>
+      <%= link_to "Google Calendar", invite.google_url, class: "btn btn--small", target: "_blank", rel: "noopener noreferrer" %>
+      <%= link_to "Outlook.com", invite.outlook_url, class: "btn btn--small", target: "_blank", rel: "noopener noreferrer" %>
+    </div>
+  <% end %>
+</section>
+
+<% if @updates.any? %>
+  <section class="guest-panel" aria-labelledby="updates-heading">
+    <h2 id="updates-heading">Updates from the host</h2>
+    <ul class="update-list">
+      <% @updates.each do |update| %>
+        <li>
+          <h3><%= update.subject_line %></h3>
+          <time datetime="<%= update.dispatched_at.iso8601 %>"><%= @event.local(update.dispatched_at).strftime("%b %-d, %Y") %></time>
+          <% if update.body.present? %><p><%= update.body %></p><% end %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>
+
+<% content_for :guest_footer do %>
+  <% if !@preview && @guest.email.present? %>
+    <% if @guest.unsubscribed? %>
+      <p>You've stopped emails about this event.</p>
+    <% else %>
+      <%= button_to "Stop emails about this event", guest_unsubscribe_path(params[:token]), class: "button_to", form: { data: { turbo_confirm: "Stop all emails about this event? Your RSVP stays as it is." } } %>
+    <% end %>
+  <% end %>
+<% end %>

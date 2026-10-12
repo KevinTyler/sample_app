@@ -1,0 +1,213 @@
+/*
+ * Invitation cards and the guest-facing pages.
+ *
+ * A card is a size container: all typography uses container-query units (cqi), so the same
+ * card renders identically as a thumbnail, in the mobile/desktop editor previews, and full size.
+ * Per-event colors and fonts arrive as CSS custom properties from a nonced <style> block.
+ */
+
+.invite-card {
+  --card-bg: #ffffff;
+  --card-ink: #222222;
+  --card-accent: #6b6fd8;
+  --card-heading-font: "Fraunces", Georgia, serif;
+  --card-body-font: "DM Sans", Arial, sans-serif;
+
+  container-type: inline-size;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  background: var(--card-bg);
+  color: var(--card-ink);
+  font-family: var(--card-body-font);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 12px 32px rgba(36, 38, 74, 0.14);
+  text-align: center;
+}
+
+.invite-art, .invite-card__photo--background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+}
+.invite-art svg { width: 100%; height: 100%; display: block; }
+
+.invite-card__inner {
+  position: relative;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2.4cqi;
+  padding: 16cqi 13cqi;
+}
+
+.invite-card__tagline {
+  margin: 0;
+  font-size: 3.3cqi;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--card-accent);
+  font-weight: 600;
+}
+.invite-card__headline {
+  margin: 0;
+  font-family: var(--card-heading-font);
+  font-size: 6.4cqi;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+.invite-card__title {
+  margin: 0;
+  font-family: var(--card-heading-font);
+  font-size: 10cqi;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.invite-card__divider {
+  width: 16cqi;
+  height: 0.6cqi;
+  min-height: 2px;
+  border-radius: 99px;
+  background: var(--card-accent);
+  margin: 1.2cqi 0;
+}
+.invite-card__when { margin: 0; font-size: 4.3cqi; font-weight: 600; line-height: 1.35; }
+.invite-card__where { margin: 0; font-size: 3.8cqi; line-height: 1.4; opacity: 0.9; }
+.invite-card__message { margin: 1cqi 0 0; font-size: 3.7cqi; line-height: 1.5; white-space: pre-line; max-width: 62ch; }
+.invite-card__host { margin: 1.5cqi 0 0; font-size: 3.4cqi; font-style: italic; opacity: 0.85; }
+
+/* Script and handwritten heading fonts read small; give them more size. */
+.invite-card[data-heading-font="great-vibes"] .invite-card__title,
+.invite-card[data-heading-font="caveat"] .invite-card__title { font-size: 13cqi; font-weight: 400; }
+.invite-card[data-heading-font="great-vibes"] .invite-card__headline,
+.invite-card[data-heading-font="caveat"] .invite-card__headline { font-size: 8.5cqi; }
+
+/* Layouts */
+.invite-card--left { text-align: left; }
+.invite-card--left .invite-card__inner { align-items: flex-start; justify-content: flex-end; padding-bottom: 18cqi; }
+
+.invite-card--framed .invite-card__inner::before {
+  content: "";
+  position: absolute;
+  inset: 5cqi;
+  border: 0.6cqi double var(--card-accent);
+  border-width: max(3px, 1.2cqi);
+  pointer-events: none;
+}
+
+.invite-card--split { aspect-ratio: 5 / 7; }
+.invite-card--split .invite-card__photo--banner { order: -1; }
+@container (min-width: 520px) {
+  .invite-card--split .invite-card__inner { display: grid; grid-template-columns: 1fr 1fr; text-align: left; align-items: center; justify-items: start; column-gap: 6cqi; }
+  .invite-card--split .invite-card__photo { grid-row: 1 / span 9; width: 100%; height: 100%; aspect-ratio: auto; }
+}
+
+/* Photos */
+.invite-card__photo { margin: 0; overflow: hidden; }
+.invite-card__photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.invite-card__photo--banner { width: 100%; aspect-ratio: 16 / 10; border-radius: 2cqi; margin-bottom: 2cqi; }
+.invite-card__photo--inset { width: 40cqi; aspect-ratio: 1; border-radius: 50%; border: 1.2cqi solid var(--card-accent); margin-bottom: 2cqi; }
+.invite-card__photo--background::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--card-bg);
+  opacity: 0.72;
+}
+
+/* SVG artwork paints with the card's palette via these classes. */
+.art-accent { fill: var(--card-accent); }
+.art-ink { fill: var(--card-ink); }
+.art-bg { fill: var(--card-bg); }
+.art-soft { fill: var(--card-accent); opacity: 0.22; }
+.art-softer { fill: var(--card-accent); opacity: 0.12; }
+.art-ink-soft { fill: var(--card-ink); opacity: 0.18; }
+.art-line { fill: none; stroke: var(--card-accent); stroke-linecap: round; stroke-linejoin: round; }
+.art-line-ink { fill: none; stroke: var(--card-ink); stroke-linecap: round; opacity: 0.35; }
+
+/* Cancelled stamp */
+.invite-card__stamp {
+  position: absolute;
+  top: 8cqi;
+  right: -9cqi;
+  transform: rotate(35deg);
+  background: #b8384c;
+  color: #fff;
+  font: 700 3.2cqi/1 "DM Sans", sans-serif;
+  letter-spacing: 0.2em;
+  padding: 2cqi 12cqi;
+  z-index: 2;
+}
+
+/* ---------- Guest pages ---------- */
+
+.guest-body {
+  background: var(--guest-backdrop, #efeae2);
+  min-height: 100vh;
+}
+.guest-shell { max-width: 620px; margin: 0 auto; padding: 20px 16px 56px; }
+@media (min-width: 720px) { .guest-shell { padding-top: 40px; } }
+.guest-shell .invite-card { margin: 0 auto 24px; }
+
+.guest-panel {
+  background: #fff;
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-m);
+  padding: 22px 20px;
+  margin-bottom: 18px;
+}
+@media (min-width: 560px) { .guest-panel { padding: 28px 32px; } }
+.guest-panel h2 { font-size: 1.35rem; }
+
+.guest-banner { border-radius: var(--radius-m); padding: 14px 18px; margin-bottom: 18px; font-weight: 500; }
+.guest-banner--cancelled { background: var(--rose-tint); color: #7d2232; border: 1px solid #efc4cb; }
+.guest-banner--preview { background: var(--larkspur-tint); color: var(--larkspur-dark); border: 1px solid #cfd0f5; }
+
+.rsvp-choices { display: grid; gap: 10px; grid-template-columns: 1fr; border: 0; padding: 0; margin: 0; }
+@media (min-width: 480px) { .rsvp-choices { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); } }
+.rsvp-choice { position: relative; }
+.rsvp-choice input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.rsvp-choice span {
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  min-height: 56px; padding: 10px 14px;
+  border: 2px solid var(--line-strong); border-radius: var(--radius-m);
+  font-weight: 700; color: var(--ink-soft); background: #fff;
+  transition: all 0.15s;
+}
+.rsvp-choice input:hover + span { border-color: var(--ink-faint); color: var(--ink); }
+.rsvp-choice input:focus-visible + span { box-shadow: var(--focus); }
+.rsvp-choice input:checked + span { border-color: var(--larkspur); background: var(--larkspur-tint); color: var(--larkspur-dark); }
+.rsvp-choice--yes input:checked + span { border-color: var(--sage); background: var(--sage-tint); color: var(--sage); }
+.rsvp-choice--no input:checked + span { border-color: var(--rose); background: var(--rose-tint); color: var(--rose); }
+.rsvp-choice--maybe input:checked + span { border-color: #c9932a; background: var(--amber-tint); color: var(--amber); }
+
+.rsvp-summary { display: flex; gap: 14px; align-items: center; }
+.rsvp-summary__icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-size: 1.5rem; flex: none; }
+.rsvp-summary__icon--yes { background: var(--sage-tint); color: var(--sage); }
+.rsvp-summary__icon--no { background: var(--rose-tint); color: var(--rose); }
+.rsvp-summary__icon--maybe { background: var(--amber-tint); color: var(--amber); }
+.rsvp-summary h2 { margin: 0 0 2px; }
+.rsvp-summary p { margin: 0; color: var(--ink-soft); }
+
+.calendar-links { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.update-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.update-list li { border-left: 3px solid var(--larkspur); padding: 2px 0 2px 14px; }
+.update-list h3 { font-size: 1rem; margin: 0 0 2px; font-family: var(--font-ui); font-weight: 700; }
+.update-list time { font-size: 0.8rem; color: var(--ink-faint); }
+.update-list p { margin: 6px 0 0; white-space: pre-line; }
+
+.guest-footer { text-align: center; color: var(--ink-soft); font-size: 0.85rem; margin-top: 28px; }
+.guest-footer a { color: var(--ink-soft); }
+.guest-footer .button_to button { background: none; border: 0; color: var(--ink-soft); text-decoration: underline; font: inherit; cursor: pointer; padding: 0; }
+
+.local-time { color: var(--ink-faint); font-size: 0.85rem; }

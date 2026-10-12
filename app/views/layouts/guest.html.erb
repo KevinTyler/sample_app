@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for(:title) || "You're invited" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="no-referrer">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%= stylesheet_link_tag :app %>
+    <%= javascript_importmap_tags %>
+    <%= yield :head %>
+  </head>
+  <body class="guest-body">
+    <main class="guest-shell" id="main">
+      <% if flash.any? %><div class="flash-area"><%= flash_messages %></div><% end %>
+      <%= yield %>
+      <footer class="guest-footer">
+        <%= yield :guest_footer %>
+        <p>Made with <%= link_to "Larkspur", root_path %> — invitations &amp; RSVPs.</p>
+      </footer>
+    </main>
+  </body>
+</html>

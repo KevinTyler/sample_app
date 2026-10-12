@@ -1,0 +1,8 @@
+<% content_for :title, "Edit #{@event.title}" %>
+<div class="container--form">
+  <%= link_to @event.title, event_path(@event), class: "back-link" %>
+  <div class="page-header"><div><h1>Edit event details</h1>
+    <% if @event.published? %><p class="page-header__meta">This event is live. Guests will see changes right away; date, time or place changes also refresh their calendar entry.</p><% end %>
+  </div></div>
+  <div class="panel"><%= render "form", event: @event %></div>
+</div>

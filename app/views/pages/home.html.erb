@@ -1,6 +1,44 @@
-<h1>Sample App</h1>
-<p>
-  This is the home page for the
-  <a href="http://railstutorial.org/">Ruby on Rails Tutorial</a>
-  sample application.
-</p>
+<% content_for :title, "Invitations & RSVPs" %>
+<section class="hero">
+  <div>
+    <p class="eyebrow">Digital invitations · Guest lists · RSVPs</p>
+    <h1>Invitations that feel <em>handmade</em>, guest lists that run themselves.</h1>
+    <p class="hero__lede">Design an invitation in minutes, send it by email or a shareable link, and watch the RSVPs roll in. Guests reply from any phone — no account, no app.</p>
+    <div class="hero__actions">
+      <% if authenticated? %>
+        <%= link_to "Go to your events", events_path, class: "btn btn--primary" %>
+        <%= link_to "Start a new event", new_event_path, class: "btn" %>
+      <% else %>
+        <%= link_to "Create your first invitation", new_registration_path, class: "btn btn--primary" %>
+        <%= link_to "Sign in", new_session_path, class: "btn" %>
+      <% end %>
+    </div>
+  </div>
+  <div class="hero__stage" aria-hidden="true">
+    <% sample_events.each_with_index do |(sample, design), i| %>
+      <%= render "invitations/card", event: sample, design: design, card_id: "hero-card-#{i}" %>
+    <% end %>
+  </div>
+</section>
+
+<section aria-labelledby="features-heading">
+  <h2 id="features-heading">Everything between “save the date” and “see you there”</h2>
+  <div class="feature-grid">
+    <div class="feature"><div class="feature__icon">✎</div><h3>Design it your way</h3><p>Original templates and artwork, your own photos, fonts and colors — previewed on desktop and phone as you edit.</p></div>
+    <div class="feature"><div class="feature__icon">✉</div><h3>Send with confidence</h3><p>Email invitations with personal RSVP links, or share one link anywhere. Re-sending never double-sends.</p></div>
+    <div class="feature"><div class="feature__icon">✓</div><h3>Effortless RSVPs</h3><p>Yes, no or maybe, party size and your custom questions. Guests can change their answer any time before the deadline.</p></div>
+    <div class="feature"><div class="feature__icon">☰</div><h3>A guest list that keeps up</h3><p>Import a CSV, organize groups, track opens and replies, send reminders and updates to exactly who needs them.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="templates-heading">
+  <h2 id="templates-heading">Start from an original template</h2>
+  <div class="template-strip">
+    <% @templates.each do |template| %>
+      <figure>
+        <%= render "invitations/card", event: sample_event(template), design: InvitationDesign.new(template.design_defaults), card_id: "tpl-#{template.key}", show_details: false %>
+        <figcaption><%= template.name %><span class="muted"><%= template.occasion %></span></figcaption>
+      </figure>
+    <% end %>
+  </div>
+</section>

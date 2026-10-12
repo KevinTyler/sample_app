@@ -1,0 +1,7 @@
+<%= form_with model: rsvp, scope: :rsvp, url: (@preview ? "#" : guest_rsvp_path(params[:token])), method: :patch, class: "form" do |f| %>
+  <%= form_errors(rsvp) %>
+  <%= render "guest_invitations/rsvp_fields", f: f, rsvp: rsvp, event: event, guest: guest %>
+  <div class="form-actions">
+    <%= f.submit guest.responded? ? "Update my RSVP" : "Send my RSVP", class: "btn btn--primary btn--block", disabled: @preview, data: { turbo_submits_with: "Saving…" } %>
+  </div>
+<% end %>

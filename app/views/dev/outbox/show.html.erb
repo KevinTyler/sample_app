@@ -1,0 +1,11 @@
+<% content_for :title, @item.subject.presence || "Message" %>
+<%= link_to "Outbox", dev_outbox_index_path, class: "back-link" %>
+<div class="page-header"><div><p class="eyebrow"><%= @item.channel.upcase %></p><h1><%= @item.subject.presence || "Text message" %></h1>
+  <p class="page-header__meta">To <%= @item.recipient %> · <%= @item.created_at.to_fs(:long) %>
+  <% if (attachments = @item.metadata["attachments"]).present? %> · Attachments: <%= attachments.join(", ") %><% end %></p></div></div>
+<% if @item.html_body.present? %>
+  <iframe class="outbox-frame" src="<%= html_dev_outbox_path(@item) %>" sandbox title="Email preview"></iframe>
+  <details class="disclosure mt-m"><summary>Plain-text version</summary><div class="outbox-text mt-s"><%= auto_link_text(@item.text_body) %></div></details>
+<% else %>
+  <div class="outbox-text"><%= auto_link_text(@item.text_body) %></div>
+<% end %>

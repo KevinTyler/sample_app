@@ -1,0 +1,56 @@
+<% bg = @design.background_color; ink = @design.text_color; accent = @design.accent_color %>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F3EFE8;padding:24px 12px;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border-radius:14px;overflow:hidden;">
+        <tr>
+          <td style="background:<%= bg %>;color:<%= ink %>;padding:40px 32px;text-align:center;border-bottom:6px solid <%= accent %>;">
+            <% if @message.kind == "invitation" %>
+              <p style="margin:0 0 8px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:<%= accent %>;"><%= @event.display_host_name %> invited you</p>
+            <% else %>
+              <p style="margin:0 0 8px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:<%= accent %>;"><%= { "update" => "An update", "reminder" => "A reminder", "cancellation" => "Event cancelled" }[@message.kind] %></p>
+            <% end %>
+            <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.2;font-weight:normal;"><%= @event.title %></h1>
+            <% if @event.starts_at %>
+              <p style="margin:16px 0 0;font-size:16px;"><%= event_when(@event) %></p>
+            <% end %>
+            <% if (place = event_where(@event)).present? %>
+              <p style="margin:6px 0 0;font-size:15px;opacity:0.85;"><%= place %></p>
+            <% end %>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:28px 32px;font-size:16px;line-height:1.55;color:#24264A;">
+            <p style="margin:0 0 16px;">Hi <%= @guest.first_name %>,</p>
+            <% if @message.body.present? %>
+              <div style="margin:0 0 20px;white-space:pre-line;"><%= @message.body %></div>
+            <% elsif @message.kind == "invitation" %>
+              <p style="margin:0 0 20px;">You're invited! Open your invitation to see the details and let <%= @event.display_host_name %> know if you can make it.</p>
+            <% elsif @message.kind == "cancellation" %>
+              <p style="margin:0 0 20px;">Unfortunately this event has been cancelled.</p>
+            <% end %>
+            <% unless @event.cancelled? %>
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 20px;">
+                <tr>
+                  <td style="border-radius:999px;background:#2B2D63;">
+                    <a href="<%= @url %>" style="display:inline-block;padding:14px 28px;color:#FFFFFF;text-decoration:none;font-weight:bold;font-size:16px;border-radius:999px;background:#2B2D63;">
+                      <%= @message.kind == "invitation" ? "View invitation & RSVP" : "View invitation" %>
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            <% end %>
+            <p style="margin:0;font-size:13px;color:#6B6E8F;">This link is personal to you — please don't forward it. You can use it to change your RSVP later.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:18px 32px;background:#FAF8F4;font-size:12px;color:#6B6E8F;line-height:1.5;">
+            Sent with Larkspur on behalf of <%= @event.display_host_name %>. Reply to this email to reach the host.<br>
+            <a href="<%= @url %>" style="color:#6B6E8F;">Manage your RSVP</a> ·
+            Don't want messages about this event? Open your invitation and choose “Stop emails”.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

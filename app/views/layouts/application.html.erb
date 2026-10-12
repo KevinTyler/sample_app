@@ -1,12 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title><%= title %></title>
-    <%= csrf_meta_tag %>
-    <%= stylesheet_link_tag 'blueprint/screen', :media => 'screen' %>
-    <%= stylesheet_link_tag 'blueprint/print',  :media => 'print'  %>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="application-name" content="Larkspur">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
   </head>
+
   <body>
-    <%= yield %>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <%= link_to (authenticated? ? events_path : root_path), class: "brand" do %>
+          <%= render "shared/brand_mark" %>
+          <span>Larkspur</span>
+        <% end %>
+        <nav class="nav" aria-label="Main">
+          <% if authenticated? %>
+            <%= nav_link "Events", events_path %>
+            <%= link_to "New event", new_event_path, class: "btn btn--primary btn--small" %>
+            <span class="nav__user"><%= current_user.first_name %></span>
+            <%= button_to "Sign out", session_path, method: :delete, class: "btn btn--ghost btn--small" %>
+          <% else %>
+            <%= nav_link "About", about_path %>
+            <%= nav_link "Sign in", new_session_path %>
+            <%= link_to "Get started", new_registration_path, class: "btn btn--primary btn--small" %>
+          <% end %>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <div class="container <%= content_for(:container_class) %>">
+        <% if flash.any? %><div class="flash-area"><%= flash_messages %></div><% end %>
+        <%= yield %>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <span>Larkspur — invitations, RSVPs and guest lists.</span>
+        <span><%= link_to "About", about_path %> · <%= link_to "Contact", contact_path %><% if Messaging.outbox_enabled? %> · <%= link_to "Dev outbox", dev_outbox_index_path %><% end %></span>
+      </div>
+    </footer>
   </body>
 </html>

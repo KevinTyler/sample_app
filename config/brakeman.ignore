@@ -1,0 +1,73 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 4,
+      "fingerprint": "701e6ff8fec3200b6311a277f1e53d5d7209de0118a9c3af39abdeb5ae99c66b",
+      "check_name": "LinkToHref",
+      "message": "Potentially unsafe model attribute in `link_to` href",
+      "file": "app/views/guest_invitations/show.html.erb",
+      "line": 95,
+      "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
+      "code": "link_to(\"Outlook.com\", CalendarInvite.new(current_user.accessible_events.find((params[:event_id] or params[:id])), :url => guest_invitation_url(params[:token])).outlook_url, :class => \"btn btn--small\", :target => \"_blank\", :rel => \"noopener noreferrer\")",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "EventsController",
+          "method": "preview",
+          "line": 102,
+          "file": "app/controllers/events_controller.rb",
+          "rendered": {
+            "name": "guest_invitations/show",
+            "file": "app/views/guest_invitations/show.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "guest_invitations/show"
+      },
+      "user_input": "CalendarInvite.new(current_user.accessible_events.find((params[:event_id] or params[:id])), :url => guest_invitation_url(params[:token])).outlook_url",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
+      ],
+      "note": "CalendarInvite#google_url/#outlook_url always start with a fixed https:// calendar host; only the query string is derived from event data (URL-encoded via to_query)."
+    },
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 4,
+      "fingerprint": "97b37ca430ca45d8aa6ef1bdf6e9ac7d6dd576aa777c7409d8c6487b2d6e2eaa",
+      "check_name": "LinkToHref",
+      "message": "Potentially unsafe model attribute in `link_to` href",
+      "file": "app/views/guest_invitations/show.html.erb",
+      "line": 94,
+      "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
+      "code": "link_to(\"Google Calendar\", CalendarInvite.new(current_user.accessible_events.find((params[:event_id] or params[:id])), :url => guest_invitation_url(params[:token])).google_url, :class => \"btn btn--small\", :target => \"_blank\", :rel => \"noopener noreferrer\")",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "EventsController",
+          "method": "preview",
+          "line": 102,
+          "file": "app/controllers/events_controller.rb",
+          "rendered": {
+            "name": "guest_invitations/show",
+            "file": "app/views/guest_invitations/show.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "guest_invitations/show"
+      },
+      "user_input": "CalendarInvite.new(current_user.accessible_events.find((params[:event_id] or params[:id])), :url => guest_invitation_url(params[:token])).google_url",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
+      ],
+      "note": "CalendarInvite#google_url/#outlook_url always start with a fixed https:// calendar host; only the query string is derived from event data (URL-encoded via to_query)."
+    }
+  ],
+  "brakeman_version": "8.1.0"
+}

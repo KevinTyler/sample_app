@@ -1,64 +1,52 @@
-SampleApp::Application.routes.draw do
-  get "pages/home"
+Rails.application.routes.draw do
+  root "pages#home"
+  get "about" => "pages#about"
+  get "contact" => "pages#contact"
 
-  get "pages/contact"
+  # Host accounts
+  resource :registration, only: %i[new create]
+  resource :session
+  resources :passwords, param: :token
 
-  get "pages/about"
+  # Host dashboard
+  resources :events do
+    member do
+      post :publish
+      get :cancellation
+      post :cancel
+      post :duplicate
+      get :preview
+    end
 
-  # The priority is based upon order of creation:
-  # first created -> highest priority.
+    resources :guests, except: %i[index show] do
+      member do
+        patch :rsvp
+        post :resend
+      end
+    end
+    resource :invitation_send, only: :create
+    resources :questions, except: %i[index show] do
+      member { patch :move }
+    end
+  end
 
-  # Sample of regular route:
-  #   match 'products/:id' => 'catalog#view'
-  # Keep in mind you can assign values other than :controller and :action
+  # Guests: no account needed, access is via the secret token in the personal link.
+  scope "i/:token", constraints: { token: /[A-Za-z0-9_-]{40}/ }, controller: "guest_invitations", as: :guest do
+    get "/", action: :show, as: :invitation
+    patch "rsvp", action: :rsvp, as: :rsvp
+    get "calendar.ics", action: :calendar, as: :calendar, format: false
+    post "unsubscribe", action: :unsubscribe, as: :unsubscribe
+  end
 
-  # Sample of named route:
-  #   match 'products/:id/purchase' => 'catalog#purchase', :as => :purchase
-  # This route can be invoked with purchase_url(:id => product.id)
+  # Local development outbox: captured emails and SMS.
+  if Rails.application.config.x.outbox_enabled
+    namespace :dev do
+      resources :outbox, only: %i[index show], controller: "outbox" do
+        member { get :html }
+        collection { delete :clear }
+      end
+    end
+  end
 
-  # Sample resource route (maps HTTP verbs to controller actions automatically):
-  #   resources :products
-
-  # Sample resource route with options:
-  #   resources :products do
-  #     member do
-  #       get 'short'
-  #       post 'toggle'
-  #     end
-  #
-  #     collection do
-  #       get 'sold'
-  #     end
-  #   end
-
-  # Sample resource route with sub-resources:
-  #   resources :products do
-  #     resources :comments, :sales
-  #     resource :seller
-  #   end
-
-  # Sample resource route with more complex sub-resources
-  #   resources :products do
-  #     resources :comments
-  #     resources :sales do
-  #       get 'recent', :on => :collection
-  #     end
-  #   end
-
-  # Sample resource route within a namespace:
-  #   namespace :admin do
-  #     # Directs /admin/products/* to Admin::ProductsController
-  #     # (app/controllers/admin/products_controller.rb)
-  #     resources :products
-  #   end
-
-  # You can have the root of your site routed with "root"
-  # just remember to delete public/index.html.
-  # root :to => "welcome#index"
-
-  # See how all your routes lay out with "rake routes"
-
-  # This is a legacy wild controller route that's not recommended for RESTful applications.
-  # Note: This route will make all actions in every controller accessible via GET requests.
-  # match ':controller(/:action(/:id(.:format)))'
+  get "up" => "rails/health#show", as: :rails_health_check
 end

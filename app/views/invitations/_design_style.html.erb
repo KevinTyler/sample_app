@@ -1,0 +1,7 @@
+<%# Design values are validated by InvitationDesign (hex colors, whitelisted fonts), so raw output is safe here. %>
+<style nonce="<%= content_security_policy_nonce %>">
+  <%== design.css_rule(selector) %>
+  <% if local_assigns[:backdrop] %>
+  .guest-body { --guest-backdrop: color-mix(in srgb, <%= design.accent_color %> 14%, #f3efe8); }
+  <% end %>
+</style>
