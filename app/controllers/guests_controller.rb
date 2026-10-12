@@ -55,11 +55,9 @@ class GuestsController < ApplicationController
     return redirect_to(event_path(@event), alert: "Publish the event before sending invitations.") unless @event.published?
     return redirect_to(event_path(@event), alert: "#{@guest.name} has no email address (or has unsubscribed).") unless @guest.emailable?
 
-    message = @event.messages.create_or_find_by!(idempotency_key: params[:idempotency_key].presence || SecureRandom.uuid) do |m|
-      m.assign_attributes(kind: "invitation", author: current_user, channels: %w[email],
-        audience: { "guest_ids" => [ @guest.id ], "resend" => true })
-    end
-    message.dispatch!
+    message = @event.messages.idempotent_create!(idempotency_key: params[:idempotency_key].presence || SecureRandom.uuid,
+      kind: "invitation", author: current_user, channels: %w[email], audience: { "guest_ids" => [ @guest.id ], "resend" => true })
+    message.dispatch! unless message.status == "dispatched"
     redirect_to event_path(@event, anchor: "guests"), notice: "Invitation re-sent to #{@guest.name}."
   end
 

@@ -1,0 +1,146 @@
+<% content_for :title, "Design · #{@event.title}" %>
+<%= link_to @event.title, event_path(@event), class: "back-link" %>
+<div class="page-header">
+  <div><p class="eyebrow">Step 2 of 3 · Design</p><h1>Design your invitation</h1>
+    <p class="page-header__meta">Changes preview instantly. Guests see the saved version.</p></div>
+  <div class="page-header__actions">
+    <%= link_to "Preview as guest", preview_event_path(@event), class: "btn", target: "_blank", rel: "noopener" %>
+  </div>
+</div>
+
+<%= form_with url: event_design_path(@event), method: :patch, multipart: true, class: "design-editor",
+      data: { controller: "design-editor", design_editor_templates_value: design_editor_templates_json, design_editor_fonts_value: design_editor_fonts_json } do |f| %>
+  <div class="design-editor__controls stack">
+    <%= form_errors(@event) %>
+
+    <section class="panel" aria-labelledby="tpl-heading">
+      <h2 id="tpl-heading" class="h3">Template</h2>
+      <div class="template-picker" role="radiogroup" aria-labelledby="tpl-heading">
+        <% InvitationTemplate.all.each do |template| %>
+          <label class="template-option">
+            <%= radio_button_tag "design[template]", template.key, @design.template == template.key, class: "visually-hidden", data: { action: "design-editor#chooseTemplate" } %>
+            <span class="template-option__card">
+              <%= render "invitations/card", event: @event, design: InvitationDesign.new(template.design_defaults), card_id: "pick-#{template.key}", show_details: false %>
+            </span>
+            <span class="template-option__name"><%= template.name %></span>
+          </label>
+        <% end %>
+      </div>
+    </section>
+
+    <section class="panel stack" aria-labelledby="words-heading">
+      <h2 id="words-heading" class="h3">Wording</h2>
+      <div class="field">
+        <label for="design_tagline">Small line above <span class="field__optional">(optional)</span></label>
+        <%= text_field_tag "design[tagline]", @design.tagline, id: "design_tagline", maxlength: InvitationDesign::TEXT_LIMITS[:tagline], data: { action: "input->design-editor#refresh" } %>
+      </div>
+      <div class="field">
+        <label for="design_headline">Headline <span class="field__optional">(optional)</span></label>
+        <%= text_field_tag "design[headline]", @design.headline, id: "design_headline", maxlength: InvitationDesign::TEXT_LIMITS[:headline], data: { action: "input->design-editor#refresh" } %>
+        <p class="field__hint">The event name, date and place come from your event details.</p>
+      </div>
+      <div class="field">
+        <label for="design_message">Message on the card <span class="field__optional">(optional)</span></label>
+        <%= text_area_tag "design[message]", @design.message, id: "design_message", rows: 3, maxlength: InvitationDesign::TEXT_LIMITS[:message], data: { action: "input->design-editor#refresh" } %>
+      </div>
+    </section>
+
+    <section class="panel stack" aria-labelledby="type-heading">
+      <h2 id="type-heading" class="h3">Fonts</h2>
+      <div class="form-row form-row--2">
+        <div class="field">
+          <label for="design_heading_font">Headings</label>
+          <%= select_tag "design[heading_font]", font_options(@design.heading_font), id: "design_heading_font", data: { action: "design-editor#refresh" } %>
+        </div>
+        <div class="field">
+          <label for="design_body_font">Details</label>
+          <%= select_tag "design[body_font]", font_options(@design.body_font), id: "design_body_font", data: { action: "design-editor#refresh" } %>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel stack" aria-labelledby="color-heading">
+      <h2 id="color-heading" class="h3">Colors</h2>
+      <div class="color-inputs">
+        <% { "background_color" => "Background", "text_color" => "Text", "accent_color" => "Accent" }.each do |attr, label| %>
+          <div class="field">
+            <label for="design_<%= attr %>"><%= label %></label>
+            <%= color_field_tag "design[#{attr}]", @design.public_send(attr), id: "design_#{attr}", data: { action: "input->design-editor#refresh" } %>
+          </div>
+        <% end %>
+      </div>
+      <p class="field__hint" data-design-editor-target="contrast" hidden>Text and background are hard to tell apart — guests may struggle to read this.</p>
+      <div>
+        <p class="field__label small">Suggested palettes</p>
+        <div class="palette-row">
+          <% DesignsHelper::PALETTES.each do |palette| %>
+            <button type="button" class="palette-button" title="<%= palette[:name] %>" aria-label="Use the <%= palette[:name] %> palette"
+              data-action="design-editor#applyPalette" data-bg="<%= palette[:bg] %>" data-ink="<%= palette[:ink] %>" data-accent="<%= palette[:accent] %>">
+              <%= palette_swatch(palette) %>
+            </button>
+          <% end %>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel stack" aria-labelledby="layout-heading">
+      <h2 id="layout-heading" class="h3">Layout</h2>
+      <div class="layout-options" role="radiogroup" aria-labelledby="layout-heading">
+        <% InvitationDesign::LAYOUTS.each do |key, label| %>
+          <label class="layout-option">
+            <%= radio_button_tag "design[layout]", key, @design.layout == key, class: "visually-hidden", data: { action: "design-editor#refresh" } %>
+            <span class="layout-option__box"><%= layout_diagram(key) %><span><%= label %></span></span>
+          </label>
+        <% end %>
+      </div>
+      <label class="checkbox">
+        <%= hidden_field_tag "design[show_artwork]", "0", id: nil %>
+        <%= check_box_tag "design[show_artwork]", "1", @design.show_artwork, data: { action: "design-editor#refresh" } %>
+        Show the template's artwork
+      </label>
+    </section>
+
+    <section class="panel stack" aria-labelledby="photo-heading">
+      <h2 id="photo-heading" class="h3">Your photo or artwork</h2>
+      <p class="field__hint">Upload a photo or your own artwork (PNG, JPEG, WebP or GIF, up to 8 MB). Tip: choose “Plain Paper” and “Full background” to use your own full-card design.</p>
+      <% if @event.artwork.attached? && @event.artwork.persisted? %>
+        <div class="current-artwork"><%= image_tag url_for(@event.artwork), alt: "Current artwork" %>
+          <label class="checkbox"><%= check_box_tag :remove_artwork, "1", false %> Remove this image</label>
+        </div>
+      <% end %>
+      <div class="field">
+        <label for="artwork">Upload image</label>
+        <%= file_field_tag :artwork, accept: Event::ARTWORK_TYPES.join(","), data: { action: "design-editor#previewPhoto" } %>
+      </div>
+      <div class="field">
+        <label for="design_photo_style">Placement</label>
+        <%= select_tag "design[photo_style]", options_for_select(InvitationDesign::PHOTO_STYLES.invert, @design.photo_style), id: "design_photo_style", data: { action: "design-editor#refresh" } %>
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <%= f.submit "Save design", class: "btn btn--primary" %>
+      <%= link_to "Cancel", event_path(@event), class: "btn btn--ghost" %>
+    </div>
+  </div>
+
+  <div class="design-editor__preview">
+    <div class="segmented" role="group" aria-label="Preview size">
+      <button type="button" class="segmented__button" aria-pressed="true" data-viewport="desktop" data-action="design-editor#setViewport" data-design-editor-target="viewportButton">Desktop</button>
+      <button type="button" class="segmented__button" aria-pressed="false" data-viewport="mobile" data-action="design-editor#setViewport" data-design-editor-target="viewportButton">Mobile</button>
+    </div>
+    <div class="preview-frame" data-viewport="desktop" data-design-editor-target="frame">
+      <div class="preview-frame__screen">
+        <%= render "invitations/card", event: @event, design: @design, card_id: "editor-card", editor: true %>
+        <div class="preview-rsvp" aria-hidden="true">
+          <strong>Will you be there?</strong>
+          <span class="preview-rsvp__choices"><span>Joyfully accepts</span><span>Maybe</span><span>Regretfully declines</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<% InvitationTemplate.all.filter_map(&:artwork).uniq.each do |artwork| %>
+  <template data-artwork-template="<%= artwork %>"><%= render "invitation_artworks/#{artwork}" %></template>
+<% end %>

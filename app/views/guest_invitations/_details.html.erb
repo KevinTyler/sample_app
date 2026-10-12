@@ -1,0 +1,46 @@
+<%# locals: (event:, calendar: nil, ics_path: nil, private_details: true) %>
+<section class="guest-panel" aria-labelledby="details-heading">
+  <h2 id="details-heading">Details</h2>
+  <dl class="details-list">
+    <div>
+      <dt>When</dt>
+      <dd>
+        <%= event_when(event) %>
+        <% if event.starts_at %>
+          <span class="local-time" hidden data-controller="local-time" data-local-time-iso-value="<%= event.starts_at.iso8601 %>" data-local-time-zone-value="<%= event.time_zone %>"></span>
+        <% end %>
+      </dd>
+    </div>
+    <% if event.in_person? %>
+      <div>
+        <dt>Where</dt>
+        <dd><%= event_where(event) %><% if (url = map_url(event)) %> · <%= link_to "Map", url, target: "_blank", rel: "noopener noreferrer" %><% end %></dd>
+      </div>
+    <% end %>
+    <% if event.online? %>
+      <div><dt>Join online</dt><dd>
+        <% if private_details %>
+          <%= link_to event.video_url.truncate(60), event.video_url, target: "_blank", rel: "noopener noreferrer" %>
+        <% else %>
+          The video link is shared with guests through their personal invitation.
+        <% end %>
+      </dd></div>
+    <% end %>
+    <div><dt>Host</dt><dd><%= event.display_host_name %></dd></div>
+    <% if event.show_guest_count && (going = event.attending_count) > 0 %>
+      <div><dt>Who's coming</dt><dd><%= pluralize(going, "guest") %> so far</dd></div>
+    <% end %>
+    <% if event.description.present? %>
+      <div><dt>From the host</dt><dd><%= simple_format(event.description) %></dd></div>
+    <% end %>
+  </dl>
+  <% if event.starts_at && !event.cancelled? && calendar %>
+    <% invite = calendar %>
+    <h3 class="mt-m">Add to your calendar</h3>
+    <div class="calendar-links">
+      <%= link_to "Apple / Outlook (.ics)", ics_path, class: "btn btn--small", data: { turbo: false } %>
+      <%= link_to "Google Calendar", invite.google_url, class: "btn btn--small", target: "_blank", rel: "noopener noreferrer" %>
+      <%= link_to "Outlook.com", invite.outlook_url, class: "btn btn--small", target: "_blank", rel: "noopener noreferrer" %>
+    </div>
+  <% end %>
+</section>

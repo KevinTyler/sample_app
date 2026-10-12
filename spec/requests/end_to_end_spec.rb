@@ -16,9 +16,16 @@ RSpec.describe "Invitation and RSVP flow", type: :request do
       description: "Cake at 8!", capacity: "20", default_plus_ones: "1", allow_maybe: "1"
     } }
     event = Event.last
-    expect(response).to redirect_to(event_path(event))
+    expect(response).to redirect_to(edit_event_design_path(event))
     expect(event).to be_draft
     expect(event.local(event.starts_at).strftime("%H:%M")).to eq("19:30")
+
+    # Picks a design
+    get edit_event_design_path(event)
+    expect(response).to have_http_status(:ok)
+    patch event_design_path(event), params: { design: { template: "starlit", headline: "Thirty, flirty & thriving", accent_color: "#FFD166" } }
+    expect(response).to redirect_to(event_path(event))
+    expect(event.reload.design).to include("template" => "starlit", "headline" => "Thirty, flirty & thriving", "accent_color" => "#FFD166")
 
     # Adds a question and a guest
     post event_questions_path(event), params: { question: { prompt: "Dinner?", kind: "choice", options_text: "Chicken\nRisotto", required: "1", applies_to: "attending" } }
@@ -40,6 +47,8 @@ RSpec.describe "Invitation and RSVP flow", type: :request do
       post event_invitation_send_path(event), params: { idempotency_key: key, personal_note: "Hope you can come!" }
       # A double-submitted form (same key) must not send a second email
       post event_invitation_send_path(event), params: { idempotency_key: key }
+      expect(response).to redirect_to(event_path(event, anchor: "guests"))
+      expect(flash[:notice]).to eq("Those invitations were already sent.")
     end
     expect(ActionMailer::Base.deliveries.size).to eq(1)
 
@@ -56,7 +65,7 @@ RSpec.describe "Invitation and RSVP flow", type: :request do
     delete session_path
     get link
     expect(response).to have_http_status(:ok)
-    expect(page_text).to include("Maya's 30th", "Will you be there, Dana?")
+    expect(page_text).to include("Maya's 30th", "Will you be there, Dana?", "Thirty, flirty & thriving")
     expect(guest.reload.first_viewed_at).to be_present
 
     # Guest RSVPs yes for two and answers the question

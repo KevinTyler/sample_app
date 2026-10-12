@@ -16,8 +16,10 @@ Rails.application.routes.draw do
       post :cancel
       post :duplicate
       get :preview
+      post :regenerate_share_link
     end
 
+    resource :design, only: %i[edit update], controller: "event_designs"
     resources :guests, except: %i[index show] do
       member do
         patch :rsvp
@@ -36,6 +38,13 @@ Rails.application.routes.draw do
     patch "rsvp", action: :rsvp, as: :rsvp
     get "calendar.ics", action: :calendar, as: :calendar, format: false
     post "unsubscribe", action: :unsubscribe, as: :unsubscribe
+  end
+
+  # Public share link: the invitation without personal data; optional open RSVP.
+  scope "e/:share_token", constraints: { share_token: /[A-Za-z0-9]{24}/ }, controller: "public_events", as: :public_event do
+    get "/", action: :show, as: ""
+    post "rsvp", action: :rsvp, as: :rsvp
+    get "calendar.ics", action: :calendar, as: :calendar, format: false
   end
 
   # Local development outbox: captured emails and SMS.

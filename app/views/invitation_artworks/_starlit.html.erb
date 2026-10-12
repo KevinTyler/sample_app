@@ -1,0 +1,16 @@
+<%# Starlit — a crescent moon, twinkling four-point stars and soft hills. %>
+<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <% rng = Random.new(7) %>
+  <% 46.times do %>
+    <% x, y = rng.rand(0..500), rng.rand(0..700) %>
+    <% next if x.between?(80, 420) && y.between?(170, 560) %>
+    <circle class="<%= rng.rand < 0.5 ? 'art-ink-soft' : 'art-soft' %>" cx="<%= x %>" cy="<%= y %>" r="<%= (rng.rand * 1.8 + 0.8).round(1) %>"/>
+  <% end %>
+  <% [ [ 92, 96, 16 ], [ 150, 150, 8 ], [ 70, 240, 6 ], [ 432, 270, 10 ], [ 400, 610, 7 ], [ 60, 600, 9 ], [ 300, 70, 7 ] ].each do |x, y, r| %>
+    <path class="art-accent" d="M<%= x %> <%= y - r %> L<%= x + r / 4.0 %> <%= y - r / 4.0 %> L<%= x + r %> <%= y %> L<%= x + r / 4.0 %> <%= y + r / 4.0 %> L<%= x %> <%= y + r %> L<%= x - r / 4.0 %> <%= y + r / 4.0 %> L<%= x - r %> <%= y %> L<%= x - r / 4.0 %> <%= y - r / 4.0 %> Z"/>
+  <% end %>
+  <circle class="art-accent" cx="398" cy="110" r="44"/>
+  <circle class="art-bg" cx="417" cy="95" r="40"/>
+  <path class="art-softer" d="M0 700 V640 C 90 600, 170 610, 250 640 S 420 600, 500 625 V700 Z"/>
+  <path class="art-soft" d="M0 700 V668 C 120 640, 210 655, 300 672 S 450 650, 500 660 V700 Z"/>
+</svg>

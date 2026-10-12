@@ -1,0 +1,29 @@
+<%# Garden Arch — a leafy arch framing the text, with small blooms at the crown and shoulders. %>
+<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <path class="art-line" stroke-width="2" d="M80 700 V270 A170 170 0 0 1 420 270 V700"/>
+  <path class="art-line" stroke-width="1" opacity="0.45" d="M66 700 V270 A184 184 0 0 1 434 270 V700"/>
+  <%
+    points = []
+    640.step(300, -34) { |y| points << [ 80, y, 90 ] }
+    180.step(0, -11) do |deg|
+      rad = deg * Math::PI / 180
+      points << [ 250 + 170 * Math.cos(rad), 270 - 170 * Math.sin(rad), deg - 90 ]
+    end
+    300.step(640, 34) { |y| points << [ 420, y, -90 ] }
+  %>
+  <% points.each_with_index do |(x, y, tangent), i| %>
+    <% side = i.even? ? 1 : -1 %>
+    <% angle = tangent + 45 * side %>
+    <ellipse class="<%= i % 3 == 0 ? 'art-soft' : 'art-accent' %>" cx="<%= x.round(1) %>" cy="<%= y.round(1) %>" rx="17" ry="6.5"
+      transform="rotate(<%= angle.round(1) %> <%= x.round(1) %> <%= y.round(1) %>) translate(<%= 13 * side %> 0)"/>
+  <% end %>
+  <% [ [ 250, 98, 1.0 ], [ 104, 205, 0.75 ], [ 396, 205, 0.75 ] ].each do |cx, cy, s| %>
+    <g transform="translate(<%= cx %> <%= cy %>) scale(<%= s %>)">
+      <% 5.times do |p| %>
+        <% a = p * 72 * Math::PI / 180 %>
+        <circle class="art-soft" cx="<%= (13 * Math.sin(a)).round(1) %>" cy="<%= (-13 * Math.cos(a)).round(1) %>" r="11"/>
+      <% end %>
+      <circle class="art-accent" r="7"/>
+    </g>
+  <% end %>
+</svg>

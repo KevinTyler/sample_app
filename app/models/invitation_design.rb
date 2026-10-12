@@ -49,6 +49,10 @@ class InvitationDesign
   attribute :show_artwork, :boolean
   attribute :photo_style, :string, default: "banner"
 
+  %w[background_color text_color accent_color].each do |color|
+    define_method(:"#{color}=") { |value| super(value.to_s.strip.upcase.presence) }
+  end
+
   validates :template, inclusion: { in: ->(_) { InvitationTemplate.all.map(&:key) } }
   validates :background_color, :text_color, :accent_color, format: { with: HEX_COLOR, message: "must be a color like #A1B2C3" }
   validates :heading_font, :body_font, inclusion: { in: FONTS.keys }

@@ -1,0 +1,22 @@
+<%# Gilded Fan — an Art Deco sunrise fan at the foot, stepped corners and a chevron band. %>
+<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <g class="art-line" stroke-width="1.6">
+    <% [ 78, 120, 162, 204 ].each_with_index do |r, i| %>
+      <path d="M<%= 250 - r %> 700 A<%= r %> <%= r %> 0 0 1 <%= 250 + r %> 700" opacity="<%= 1 - i * 0.15 %>"/>
+    <% end %>
+    <% 13.times do |i| %>
+      <% a = (180 + 15 * i) * Math::PI / 180 %>
+      <line x1="<%= (250 + 78 * Math.cos(a)).round(1) %>" y1="<%= (700 + 78 * Math.sin(a)).round(1) %>"
+            x2="<%= (250 + 204 * Math.cos(a)).round(1) %>" y2="<%= (700 + 204 * Math.sin(a)).round(1) %>"/>
+    <% end %>
+    <% [ [ 34, 34, 1, 1 ], [ 466, 34, -1, 1 ], [ 34, 666, 1, -1 ], [ 466, 666, -1, -1 ] ].each do |x, y, dx, dy| %>
+      <% 3.times do |s| %>
+        <% o = 10 + s * 12 %>
+        <path d="M<%= x + dx * o %> <%= y + dy * (o + 40) %> V<%= y + dy * o %> H<%= x + dx * (o + 40) %>"/>
+      <% end %>
+    <% end %>
+    <path d="M150 64 <% 10.times do |i| %>L<%= 160 + i * 20 %> <%= i.even? ? 54 : 64 %> <% end %>L350 64"/>
+  </g>
+  <path class="art-accent" d="M250 676 l10 24 h-20 z"/>
+  <circle class="art-accent" cx="250" cy="44" r="4"/>
+</svg>

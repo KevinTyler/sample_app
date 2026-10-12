@@ -53,9 +53,13 @@ there and click the personal link to experience the guest side.
 
 ### Running the tests
 
+The browser specs in `spec/system/` drive headless Chrome through Cuprite. They find Chromium at
+the usual paths or `BROWSER_PATH`, and are skipped (not failed) when no browser is installed.
+
+
 ```bash
 bin/rails db:test:prepare
-bundle exec rspec            # model, request, mailer and end-to-end specs
+bundle exec rspec            # model, request, mailer, browser and end-to-end specs
 bin/rubocop                  # style
 bin/brakeman                 # security static analysis
 bin/ci                       # all of the above, as CI runs them
@@ -94,10 +98,30 @@ What works:
 - **Host dashboard**: headcount, yes/maybe/no/awaiting, capacity remaining, opens, answers,
   recent activity, a guest-preview mode.
 
-### ⏳ Stage 2 — design editor *(next)*
-Original SVG artwork for every template, a live design editor (template, text, fonts, colors,
-layout, uploaded artwork/photo) with desktop and mobile previews; a shareable public event link with
-optional open RSVP.
+### ✅ Stage 2 — design editor & sharing
+
+What works:
+
+- **Ten original templates** (Garden Arch, Confetti Burst, Gilded Fan, Starlit, Citrus Picnic,
+  Gallery, Watercolor Bloom, Winter Pines, Retro Sunset, Plain Paper), each with SVG artwork drawn for
+  this app (`app/views/invitation_artworks/`). The artwork paints with the invitation's own colors, so
+  recoloring a template recolors its art.
+- **Design editor** (*Design* on the event page; also step 2 after creating an event): template,
+  headline / small line / card message, heading and body fonts (10 self-hosted OFL fonts), background /
+  text / accent colors with palette suggestions and a live readability (contrast) warning, four layouts
+  (centered, left, framed, side by side), artwork on/off.
+- **Upload your own photo or artwork** (PNG/JPEG/WebP/GIF ≤ 8 MB) as a banner, a round inset, or the
+  full card background — e.g. Plain Paper + full background for a fully custom design. SVG uploads are
+  refused because they can carry script.
+- **Live desktop and mobile previews**: every change updates instantly; the card is a CSS size
+  container, so it renders identically as a thumbnail, in the phone frame and full size.
+- **Shareable public link** (`/e/<token>`): the invitation without any guest data or the private
+  video-call link. Optional **open RSVP**: visitors give a name and email, join the guest list, and get
+  their personal link by email. An email that's already on the list is never answered for — that
+  address is just sent its own link (at most once per 10 minutes). Hosts can revoke and regenerate the
+  link, and choose whether guests see how many people are coming.
+- **Envelope reveal** the first time a guest opens their invitation (skipped with reduced motion,
+  without JavaScript, or on later visits).
 
 ### ⏳ Stage 3 — bulk guest tools
 CSV import with a validation summary, CSV export, bulk select actions (group, invite, remove).
@@ -124,6 +148,9 @@ Ticketed or paid RSVPs through a payment adapter (local fake checkout + Stripe C
 | Per-recipient delivery state machine | `app/models/delivery.rb`, `app/jobs/delivery_job.rb` |
 | Channel adapters (email, SMS) | `app/services/messaging*.rb`, `app/services/messaging/` |
 | Invitation templates & design validation | `app/models/invitation_template.rb`, `app/models/invitation_design.rb` |
+| Template artwork (SVG partials) and the card | `app/views/invitation_artworks/`, `app/views/invitations/_card.html.erb` |
+| Design editor (server + live preview) | `app/controllers/event_designs_controller.rb`, `app/javascript/controllers/design_editor_controller.js` |
+| Public share link and open RSVP | `app/controllers/public_events_controller.rb`, `app/models/link_rsvp.rb` |
 | Calendar files and links | `app/models/calendar_invite.rb` |
 | Who may do what on an event | `app/models/event_policy.rb`, `app/controllers/concerns/event_scoped.rb` |
 | Guest-facing pages | `app/controllers/guest_invitations_controller.rb`, `app/views/guest_invitations/` |

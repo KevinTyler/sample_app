@@ -1,0 +1,26 @@
+<%# Confetti — a deterministic scatter of dots, ribbons and squiggles around the edges. %>
+<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <% rng = Random.new(42) %>
+  <% classes = %w[art-accent art-ink-soft art-soft art-accent] %>
+  <% 54.times do |i| %>
+    <%
+      x, y = loop do
+        cx, cy = rng.rand(10..490), rng.rand(10..690)
+        break [ cx, cy ] unless cx.between?(70, 430) && cy.between?(150, 575)
+      end
+      kind = i % 4
+      cls = classes[i % classes.size]
+      rot = rng.rand(0..180)
+    %>
+    <% case kind %>
+    <% when 0 %>
+      <circle class="<%= cls %>" cx="<%= x %>" cy="<%= y %>" r="<%= rng.rand(4..10) %>"/>
+    <% when 1 %>
+      <rect class="<%= cls %>" x="<%= x - 4 %>" y="<%= y - 9 %>" width="8" height="18" rx="2" transform="rotate(<%= rot %> <%= x %> <%= y %>)"/>
+    <% when 2 %>
+      <path class="art-line" stroke-width="3.2" d="M<%= x - 14 %> <%= y %> q 7 -9 14 0 t 14 0" transform="rotate(<%= rot %> <%= x %> <%= y %>)"/>
+    <% else %>
+      <path class="<%= cls %>" d="M<%= x %> <%= y - 8 %> L<%= x + 7 %> <%= y + 6 %> L<%= x - 7 %> <%= y + 6 %> Z" transform="rotate(<%= rot %> <%= x %> <%= y %>)"/>
+    <% end %>
+  <% end %>
+</svg>

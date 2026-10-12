@@ -10,7 +10,7 @@
 #   an earlier message, unless the host explicitly asks to resend.
 # * Each Delivery is claimed atomically before sending (see Delivery#deliver_now!).
 class Message < ApplicationRecord
-  KINDS = %w[invitation update reminder cancellation].freeze
+  KINDS = %w[invitation update reminder cancellation rsvp_confirmation].freeze
   CHANNELS = %w[email sms].freeze
   STATUSES = %w[draft scheduled dispatched].freeze
 
@@ -30,6 +30,16 @@ class Message < ApplicationRecord
   scope :due, -> { where(status: "scheduled").where(scheduled_for: ..Time.current) }
   scope :for_guests, -> { where(kind: %w[update reminder cancellation]) }
 
+  # Finds the message for this idempotency key, or creates it. Safe under concurrency: a racing
+  # insert loses on the unique index and we return the winner's row.
+  def self.idempotent_create!(idempotency_key:, **attributes)
+    find_by(idempotency_key: idempotency_key) || create!(attributes.merge(idempotency_key: idempotency_key))
+  rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => error
+    raise if error.is_a?(ActiveRecord::RecordInvalid) && !error.record.errors.of_kind?(:idempotency_key, :taken)
+
+    find_by!(idempotency_key: idempotency_key)
+  end
+
   def audience
     Audience.new(event, super || {})
   end
@@ -47,7 +57,9 @@ class Message < ApplicationRecord
     scope = audience.guests.and(reachable_guests)
     # Updates, reminders and cancellations only go to people who know about the event:
     # guests who were sent an invitation or who have responded.
-    scope = scope.where.not(invited_at: nil).or(scope.where.not(rsvp_status: "pending")) unless kind == "invitation"
+    unless kind.in?(%w[invitation rsvp_confirmation])
+      scope = scope.where.not(invited_at: nil).or(scope.where.not(rsvp_status: "pending"))
+    end
     if kind == "invitation" && !audience.resend?
       already = Delivery.joins(:message)
         .where(messages: { event_id: event_id, kind: "invitation" })
@@ -90,6 +102,7 @@ class Message < ApplicationRecord
     when "invitation" then "You're invited: #{event.title}"
     when "cancellation" then "Cancelled: #{event.title}"
     when "reminder" then "Reminder: #{event.title}"
+    when "rsvp_confirmation" then "Your RSVP link: #{event.title}"
     else "Update: #{event.title}"
     end
   end
@@ -117,7 +130,7 @@ class Message < ApplicationRecord
     end
 
     def log_activity
-      return if kind == "invitation" && recipients_count.zero?
+      return if kind == "rsvp_confirmation" || (kind == "invitation" && recipients_count.zero?)
 
       Activity.record(event: event, user: author, action: "message_sent",
         data: { kind: kind, message_id: id, recipients: recipients_count })

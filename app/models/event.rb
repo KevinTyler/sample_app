@@ -10,6 +10,12 @@ class Event < ApplicationRecord
   has_many :messages, dependent: :destroy
   has_many :activities, dependent: :delete_all
 
+  # Optional uploaded artwork or photo for the invitation. SVG is deliberately not accepted
+  # (it can carry script); only raster formats are served.
+  has_one_attached :artwork
+  ARTWORK_TYPES = %w[image/png image/jpeg image/webp image/gif].freeze
+  ARTWORK_MAX_SIZE = 8.megabytes
+
   enum :status, { draft: "draft", published: "published", cancelled: "cancelled" }, default: "draft", validate: true
 
   has_secure_token :share_token
@@ -33,6 +39,7 @@ class Event < ApplicationRecord
   validate :ends_after_start
   validate :deadline_before_end
   validate :starts_in_future, on: :publish
+  validate :artwork_is_acceptable
 
   before_validation :resolve_local_times
 
@@ -110,6 +117,7 @@ class Event < ApplicationRecord
     transaction do
       copy.save!
       questions.each { |q| copy.questions.create!(q.attributes.slice(*EventQuestion::COPYABLE_ATTRIBUTES)) }
+      copy.artwork.attach(artwork.blob) if artwork.attached?
       if include_guests
         guests.find_each do |guest|
           copy.guests.create!(guest.attributes.slice(*Guest::COPYABLE_ATTRIBUTES))
@@ -167,6 +175,14 @@ class Event < ApplicationRecord
     }
   end
 
+  def design_settings
+    InvitationDesign.for(self)
+  end
+
+  def regenerate_share_token!
+    update!(share_token: self.class.generate_unique_secure_token)
+  end
+
   def group_names
     guests.where.not(group_name: nil).distinct.order(:group_name).pluck(:group_name)
   end
@@ -217,6 +233,15 @@ class Event < ApplicationRecord
       return unless rsvp_deadline && starts_at
 
       errors.add(:rsvp_deadline, "must be before the event ends") if rsvp_deadline > effective_ends_at
+    end
+
+    def artwork_is_acceptable
+      return unless artwork.attached?
+
+      unless artwork.blob.content_type.in?(ARTWORK_TYPES)
+        errors.add(:artwork, "must be a PNG, JPEG, WebP or GIF image")
+      end
+      errors.add(:artwork, "must be smaller than 8 MB") if artwork.blob.byte_size > ARTWORK_MAX_SIZE
     end
 
     def starts_in_future

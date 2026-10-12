@@ -1,0 +1,53 @@
+<% content_for :title, @event.title %>
+<% design = @event.design_settings %>
+<% content_for :head do %>
+  <style nonce="<%= content_security_policy_nonce %>">.guest-body { --guest-backdrop: color-mix(in srgb, <%= design.valid? ? design.accent_color : "#6b6fd8" %> 14%, #f3efe8); }</style>
+<% end %>
+
+<% if @event.cancelled? %>
+  <div class="guest-banner guest-banner--cancelled" role="status">
+    <strong>This event has been cancelled.</strong>
+    <% if @event.cancellation_note.present? %><p class="mt-xs m-0"><%= @event.cancellation_note %></p><% end %>
+  </div>
+<% end %>
+
+<%= render "invitations/card", event: @event, design: design, card_id: "public-card" %>
+
+<section class="guest-panel" id="rsvp" aria-labelledby="rsvp-heading" data-controller="rsvp-form">
+  <% if open_rsvp? %>
+    <h2 id="rsvp-heading">Will you be there?</h2>
+    <% if (deadline = deadline_text(@event)) %><p class="small muted"><%= deadline %>.</p><% end %>
+    <p class="small muted">Already have a personal invitation link? Use that instead to update your RSVP.</p>
+    <%= form_with model: @rsvp, scope: :rsvp, url: public_event_rsvp_path(params[:share_token]), method: :post, class: "form" do |f| %>
+      <%= form_errors(@rsvp) %>
+      <div class="form-row form-row--2">
+        <div class="field">
+          <%= f.label :name, "Your name" %>
+          <%= f.text_field :name, required: true, maxlength: 100, autocomplete: "name" %>
+        </div>
+        <div class="field">
+          <%= f.label :email, "Email" %>
+          <%= f.email_field :email, required: true, maxlength: 254, autocomplete: "email" %>
+          <p class="field__hint">We'll email you a personal link to change your RSVP.</p>
+        </div>
+      </div>
+      <%= render "guest_invitations/rsvp_fields", f: f, rsvp: @rsvp, event: @event,
+            guest: Guest.new(event: @event, plus_ones_allowed: @event.default_plus_ones) %>
+      <div class="form-actions">
+        <%= f.submit "Send my RSVP", class: "btn btn--primary btn--block", data: { turbo_submits_with: "Saving…" } %>
+      </div>
+    <% end %>
+  <% elsif @event.cancelled? %>
+    <h2 id="rsvp-heading">RSVPs are closed</h2>
+  <% elsif @event.allow_link_rsvp %>
+    <h2 id="rsvp-heading">RSVPs are closed</h2>
+    <p class="muted m-0">The RSVP deadline has passed.</p>
+  <% else %>
+    <h2 id="rsvp-heading">RSVP with your personal link</h2>
+    <p class="muted m-0">This event is invitation-only. Use the personal link from your invitation email to RSVP, or contact <%= @event.display_host_name %>.</p>
+  <% end %>
+</section>
+
+<%= render "guest_invitations/details", event: @event, private_details: false,
+      calendar: CalendarInvite.new(@event, url: public_event_url(params[:share_token]), include_private: false),
+      ics_path: public_event_calendar_path(params[:share_token]) %>

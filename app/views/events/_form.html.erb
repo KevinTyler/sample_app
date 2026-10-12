@@ -79,6 +79,10 @@
         </div>
       </div>
       <label class="checkbox"><%= f.check_box :allow_maybe %> Let guests answer “Maybe”</label>
+      <label class="checkbox"><%= f.check_box :show_guest_count %> Show guests how many people are coming</label>
+      <label class="checkbox"><%= f.check_box :allow_link_rsvp %>
+        <span>Anyone with the share link can RSVP <span class="field__hint">— they enter their name and email and are added to your guest list. Leave off for invite-only events.</span></span>
+      </label>
     </div>
   </fieldset>
 

@@ -34,7 +34,8 @@
   pointer-events: none;
   z-index: -1;
 }
-.invite-art svg { width: 100%; height: 100%; display: block; }
+.invite-art svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.invite-art .art-blur { filter: blur(2.6cqi); }
 
 .invite-card__inner {
   position: relative;
@@ -133,6 +134,7 @@
 .art-ink-soft { fill: var(--card-ink); opacity: 0.18; }
 .art-line { fill: none; stroke: var(--card-accent); stroke-linecap: round; stroke-linejoin: round; }
 .art-line-ink { fill: none; stroke: var(--card-ink); stroke-linecap: round; opacity: 0.35; }
+.art-line-bg { fill: none; stroke: var(--card-bg); stroke-linecap: round; }
 
 /* Cancelled stamp */
 .invite-card__stamp {
@@ -211,3 +213,47 @@
 .guest-footer .button_to button { background: none; border: 0; color: var(--ink-soft); text-decoration: underline; font: inherit; cursor: pointer; padding: 0; }
 
 .local-time { color: var(--ink-faint); font-size: 0.85rem; }
+
+/* ---------- Envelope reveal (progressive enhancement; see envelope_controller.js) ---------- */
+
+.envelope-stage { position: relative; }
+.envelope { display: none; }
+.envelope-stage.is-sealed .envelope {
+  --env: color-mix(in srgb, var(--card-accent) 22%, #fbf8f3);
+  --env-shade: color-mix(in srgb, var(--card-accent) 34%, #f1ece4);
+  display: block;
+  position: absolute;
+  left: 0; right: 0; top: 10%;
+  aspect-ratio: 7 / 5;
+  z-index: 5;
+  cursor: pointer;
+  filter: drop-shadow(0 18px 30px rgba(36, 38, 74, 0.2));
+  transition: transform 0.8s ease 0.55s, opacity 0.7s ease 0.65s;
+}
+.envelope__back, .envelope__front, .envelope__flap { position: absolute; inset: 0; border-radius: 6px; }
+.envelope__back { background: var(--env-shade); }
+.envelope__front {
+  background: var(--env);
+  clip-path: polygon(0 28%, 50% 62%, 100% 28%, 100% 100%, 0 100%);
+  display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12%;
+}
+.envelope__name { font-family: var(--card-heading-font); color: color-mix(in srgb, var(--card-accent) 70%, #24264a); font-size: clamp(1.1rem, 5vw, 1.7rem); }
+.envelope__flap {
+  background: linear-gradient(160deg, var(--card-accent), color-mix(in srgb, var(--card-accent) 60%, #fff));
+  clip-path: polygon(0 0, 100% 0, 50% 58%);
+  transform-origin: top center;
+  transition: transform 0.6s ease;
+  z-index: 2;
+}
+.envelope-stage.is-sealed .invite-card { opacity: 0; transform: translateY(14%) scale(0.9); }
+.envelope-stage .invite-card { transition: opacity 0.8s ease 0.45s, transform 0.9s cubic-bezier(.2, .8, .2, 1) 0.45s; }
+.envelope-stage.is-open .envelope__flap { transform: rotateX(180deg); }
+.envelope-stage.is-open .envelope { transform: translateY(45%); opacity: 0; pointer-events: none; }
+.envelope-stage.is-open .invite-card { opacity: 1; transform: none; }
+
+/* Artwork that sits along the foot of the card: keep the text clear of it. */
+.invite-card:has(> .invite-art--deco_fan, > .invite-art--retro_sunset, > .invite-art--winter_pines) .invite-card__inner {
+  justify-content: flex-start;
+  padding-top: 15cqi;
+  padding-bottom: 42cqi;
+}

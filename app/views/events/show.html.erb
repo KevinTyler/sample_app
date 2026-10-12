@@ -9,6 +9,7 @@
   <div class="page-header__actions">
     <% if policy.can?(:edit) %>
       <%= link_to "Edit details", edit_event_path(@event), class: "btn" %>
+      <%= link_to "Design", edit_event_design_path(@event), class: "btn" %>
     <% end %>
     <%= link_to "Preview as guest", preview_event_path(@event), class: "btn", target: "_blank", rel: "noopener" %>
     <% if @event.draft? && policy.can?(:publish) %>
@@ -180,8 +181,22 @@
       <div class="panel__header"><h3>Invitation</h3></div>
       <%= render "invitations/card", event: @event, card_id: "dashboard-card" %>
       <div class="cluster mt-s">
+        <% if policy.can?(:edit) %><%= link_to "Edit design", edit_event_design_path(@event), class: "btn btn--small" %><% end %>
         <%= link_to "Preview as guest", preview_event_path(@event), class: "btn btn--small", target: "_blank", rel: "noopener" %>
       </div>
+    </section>
+
+    <section class="panel" id="share">
+      <div class="panel__header"><h3>Share link</h3></div>
+      <p class="small muted"><%= @event.allow_link_rsvp ? "Anyone with this link can view the invitation and RSVP (they'll be added to your guest list)." : "Anyone with this link can view the invitation. RSVPs need a personal link (turn on open RSVPs in Edit details)." %></p>
+      <div class="copy-field" data-controller="clipboard">
+        <label class="visually-hidden" for="share-link">Share link</label>
+        <input id="share-link" type="text" readonly value="<%= public_event_url(@event.share_token) %>" data-clipboard-target="source">
+        <button type="button" class="btn btn--small" data-action="clipboard#copy" data-clipboard-target="button">Copy</button>
+      </div>
+      <% if policy.can?(:edit) %>
+        <%= button_to "Revoke & create new link", regenerate_share_link_event_path(@event), class: "btn btn--small btn--ghost mt-s", form: { data: { turbo_confirm: "The current share link will stop working. Continue?" } } %>
+      <% end %>
     </section>
 
     <section class="panel" id="questions">

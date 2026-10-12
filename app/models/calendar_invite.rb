@@ -3,9 +3,11 @@
 class CalendarInvite
   PRODID = "-//Larkspur//Invitations//EN".freeze
 
-  def initialize(event, url: nil)
+  # include_private: false leaves out the video-call link (for the public share page).
+  def initialize(event, url: nil, include_private: true)
     @event = event
     @url = url
+    @include_private = include_private
   end
 
   def to_ics
@@ -62,13 +64,13 @@ class CalendarInvite
     end
 
     def location
-      [ @event.location_name, @event.address, @event.video_url ].compact_blank.join(", ")
+      [ @event.location_name, @event.address, (@event.video_url if @include_private) ].compact_blank.join(", ")
     end
 
     def details
       parts = []
       parts << @event.description.to_s.truncate(1500) if @event.description.present?
-      parts << "Join online: #{@event.video_url}" if @event.video_url.present?
+      parts << "Join online: #{@event.video_url}" if @event.video_url.present? && @include_private
       parts << "Details & RSVP: #{@url}" if @url
       parts.join("\n\n")
     end

@@ -1,0 +1,13 @@
+<%# Retro Sunset — a striped half-sun rising from the foot with radiating rings. %>
+<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <% [ 232, 262, 292 ].each_with_index do |r, i| %>
+    <path class="art-line" stroke-width="<%= 3 - i %>" opacity="<%= 0.7 - i * 0.2 %>" d="M<%= 250 - r %> 700 A<%= r %> <%= r %> 0 0 1 <%= 250 + r %> 700"/>
+  <% end %>
+  <path class="art-accent" d="M50 700 A200 200 0 0 1 450 700 Z"/>
+  <% [ [ 560, 4 ], [ 594, 7 ], [ 626, 10 ], [ 656, 13 ], [ 684, 16 ] ].each do |y, h| %>
+    <rect class="art-bg" x="40" y="<%= y %>" width="420" height="<%= h %>"/>
+  <% end %>
+  <% [ [ 70, 80 ], [ 430, 120 ], [ 110, 200 ], [ 400, 40 ] ].each do |x, y| %>
+    <path class="art-line" stroke-width="3" d="M<%= x %> <%= y - 10 %> v20 M<%= x - 10 %> <%= y %> h20"/>
+  <% end %>
+</svg>

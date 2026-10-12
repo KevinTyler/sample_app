@@ -1,0 +1,25 @@
+<%# Winter Pines — a ridge of layered pines along the foot, with drifting snow. %>
+<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <% rng = Random.new(3) %>
+  <% 40.times do %>
+    <circle class="art-ink-soft" cx="<%= rng.rand(0..500) %>" cy="<%= rng.rand(0..150) %>" r="<%= (rng.rand * 2.2 + 1).round(1) %>"/>
+  <% end %>
+  <path class="art-softer" d="M0 700 V650 Q 125 630 250 648 T 500 640 V700 Z"/>
+  <% trees = [ [ 30, 90, "art-ink-soft" ], [ 78, 130, "art-accent" ], [ 128, 96, "art-ink-soft" ], [ 182, 70, "art-soft" ], [ 330, 74, "art-soft" ], [ 378, 104, "art-ink-soft" ], [ 428, 138, "art-accent" ], [ 476, 92, "art-ink-soft" ] ] %>
+  <% trees.each do |x, h, cls| %>
+    <% base = 676 %>
+    <% 3.times do |tier| %>
+      <% w = h * (0.42 - tier * 0.09) %>
+      <% top = base - h + tier * h * 0.22 %>
+      <% bottom = base - tier * h * 0.28 %>
+      <path class="<%= cls %>" d="M<%= x %> <%= top.round(1) %> L<%= (x + w).round(1) %> <%= bottom.round(1) %> L<%= (x - w).round(1) %> <%= bottom.round(1) %> Z"/>
+    <% end %>
+    <rect class="art-ink-soft" x="<%= x - 3 %>" y="<%= base %>" width="6" height="12"/>
+  <% end %>
+  <% [ [ 250, 70 ] ].each do |x, y| %>
+    <% 6.times do |i| %>
+      <% a = i * 30 * Math::PI / 180 %>
+      <line class="art-line" stroke-width="2" x1="<%= (x - 14 * Math.cos(a)).round(1) %>" y1="<%= (y - 14 * Math.sin(a)).round(1) %>" x2="<%= (x + 14 * Math.cos(a)).round(1) %>" y2="<%= (y + 14 * Math.sin(a)).round(1) %>"/>
+    <% end %>
+  <% end %>
+</svg>

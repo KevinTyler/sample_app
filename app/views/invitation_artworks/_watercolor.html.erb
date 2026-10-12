@@ -1,0 +1,21 @@
+<%# Watercolor Bloom — layered translucent washes (blurred via CSS) under crisp sprigs. %>
+<svg class="art-blur" viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <% rng = Random.new(11) %>
+  <% [ [ 70, 70, 120 ], [ 440, 110, 110 ], [ 60, 640, 120 ], [ 450, 630, 130 ] ].each do |cx, cy, spread| %>
+    <% 7.times do %>
+      <circle class="<%= rng.rand < 0.5 ? 'art-soft' : 'art-softer' %>" cx="<%= cx + rng.rand(-spread / 2..spread / 2) %>" cy="<%= cy + rng.rand(-spread / 2..spread / 2) %>" r="<%= rng.rand(34..70) %>"/>
+    <% end %>
+  <% end %>
+</svg>
+<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <% [ [ 96, 118, -35 ], [ 410, 586, 145 ] ].each do |x, y, rot| %>
+    <g transform="rotate(<%= rot %> <%= x %> <%= y %>)">
+      <path class="art-line" stroke-width="2" d="M<%= x %> <%= y %> q 40 -6 92 0"/>
+      <% 4.times do |i| %>
+        <ellipse class="art-accent" cx="<%= x + 20 + i * 20 %>" cy="<%= y - 9 %>" rx="9" ry="4" transform="rotate(-30 <%= x + 20 + i * 20 %> <%= y - 9 %>)"/>
+        <ellipse class="art-accent" cx="<%= x + 26 + i * 20 %>" cy="<%= y + 8 %>" rx="9" ry="4" transform="rotate(30 <%= x + 26 + i * 20 %> <%= y + 8 %>)"/>
+      <% end %>
+      <circle class="art-accent" cx="<%= x + 100 %>" cy="<%= y %>" r="6"/>
+    </g>
+  <% end %>
+</svg>

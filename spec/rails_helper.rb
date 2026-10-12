@@ -25,7 +25,6 @@ RSpec.configure do |config|
   config.include ActiveSupport::Testing::TimeHelpers
   config.include ActiveJob::TestHelper
   config.include AuthenticationHelpers, type: :request
-  config.include AuthenticationHelpers, type: :system
 
   config.before do
     ActionMailer::Base.deliveries.clear

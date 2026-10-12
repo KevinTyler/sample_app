@@ -15,7 +15,7 @@ class GuestMailer < ApplicationMailer
     headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
     headers["X-Entity-Ref-ID"] = "delivery-#{@delivery.id}"
 
-    if @event.starts_at && @message.kind.in?(%w[invitation update cancellation])
+    if @event.starts_at && @message.kind.in?(%w[invitation update cancellation rsvp_confirmation])
       invite = CalendarInvite.new(@event, url: @url)
       attachments[invite.filename] = { mime_type: "text/calendar", content: invite.to_ics }
     end

@@ -8,10 +8,8 @@ class InvitationSendsController < ApplicationController
   def create
     return redirect_to(event_path(@event), alert: "Publish the event before sending invitations.") unless @event.published?
 
-    message = @event.messages.create_or_find_by!(idempotency_key: idempotency_key) do |m|
-      m.assign_attributes(kind: "invitation", author: current_user, channels: %w[email], audience: {},
-        body: params[:personal_note].to_s.strip.first(1000).presence)
-    end
+    message = @event.messages.idempotent_create!(idempotency_key: idempotency_key, kind: "invitation",
+      author: current_user, channels: %w[email], audience: {}, body: params[:personal_note].to_s.strip.first(1000).presence)
 
     if message.status == "dispatched"
       redirect_to event_path(@event, anchor: "guests"), notice: "Those invitations were already sent."

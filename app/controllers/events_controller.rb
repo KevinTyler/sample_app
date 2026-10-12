@@ -33,7 +33,7 @@ class EventsController < ApplicationController
     @event = current_user.owned_events.new(event_params)
     if @event.save
       Activity.record(event: @event, user: current_user, action: "event_created")
-      redirect_to @event, notice: "Event created as a draft. Add guests, then publish when you're ready."
+      redirect_to edit_event_design_path(@event), notice: "Event created as a draft. Next, make the invitation yours."
     else
       render :new, status: :unprocessable_content
     end
@@ -92,6 +92,13 @@ class EventsController < ApplicationController
     redirect_to edit_event_path(copy), notice: "Duplicated. You're now editing the copy (a draft)."
   end
 
+  # Revokes the current public share link and issues a new one.
+  def regenerate_share_link
+    authorize! :edit
+    @event.regenerate_share_token!
+    redirect_to event_path(@event, anchor: "share"), notice: "New share link created. The old link no longer works."
+  end
+
   # The host's view of the guest-facing invitation, using a sample guest.
   def preview
     authorize! :view
@@ -106,7 +113,7 @@ class EventsController < ApplicationController
     def event_params
       params.expect(event: %i[
         title host_name description starts_at_local ends_at_local time_zone location_name address video_url
-        rsvp_deadline_local capacity allow_maybe default_plus_ones
+        rsvp_deadline_local capacity allow_maybe default_plus_ones allow_link_rsvp show_guest_count
       ])
     end
 
@@ -123,12 +130,9 @@ class EventsController < ApplicationController
     end
 
     def notify_cancellation
-      message = @event.messages.create!(kind: "cancellation", author: current_user, channels: %w[email],
-        subject: "Cancelled: #{@event.title}", body: @event.cancellation_note,
-        idempotency_key: "cancellation-#{@event.id}", audience: {}, status: "draft")
-      message.dispatch!
+      message = @event.messages.idempotent_create!(idempotency_key: "cancellation-#{@event.id}", kind: "cancellation",
+        author: current_user, channels: %w[email], subject: "Cancelled: #{@event.title}", body: @event.cancellation_note, audience: {})
+      message.dispatch! unless message.status == "dispatched"
       true
-    rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
-      false
     end
 end

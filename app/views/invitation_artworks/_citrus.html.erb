@@ -1,0 +1,20 @@
+<%# Citrus Picnic — sliced citrus wheels and leaves tumbling in from the corners. %>
+<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <% slices = [ [ 418, 88, 118, 12 ], [ 96, 176, 56, -20 ], [ 452, 636, 64, 30 ] ] %>
+  <% slices.each do |cx, cy, r, rot| %>
+    <g transform="rotate(<%= rot %> <%= cx %> <%= cy %>)">
+      <circle class="art-accent" cx="<%= cx %>" cy="<%= cy %>" r="<%= r %>"/>
+      <circle class="art-bg" cx="<%= cx %>" cy="<%= cy %>" r="<%= (r * 0.9).round(1) %>"/>
+      <circle class="art-soft" cx="<%= cx %>" cy="<%= cy %>" r="<%= (r * 0.9).round(1) %>"/>
+      <% 10.times do |i| %>
+        <% a = i * 36 * Math::PI / 180 %>
+        <line class="art-line-bg" stroke-width="<%= (r / 26.0).round(1) %>" x1="<%= cx %>" y1="<%= cy %>"
+          x2="<%= (cx + r * 0.86 * Math.cos(a)).round(1) %>" y2="<%= (cy + r * 0.86 * Math.sin(a)).round(1) %>"/>
+      <% end %>
+      <circle class="art-accent" cx="<%= cx %>" cy="<%= cy %>" r="<%= (r * 0.09).round(1) %>"/>
+    </g>
+  <% end %>
+  <% [ [ 300, 40, 35 ], [ 330, 180, -20 ], [ 40, 270, 70 ], [ 400, 560, -40 ] ].each do |x, y, rot| %>
+    <path class="art-ink-soft" d="M<%= x %> <%= y %> c 18 -22 46 -22 60 0 c -14 22 -42 22 -60 0 z" transform="rotate(<%= rot %> <%= x %> <%= y %>)"/>
+  <% end %>
+</svg>
