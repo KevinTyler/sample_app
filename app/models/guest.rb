@@ -8,6 +8,7 @@ class Guest < ApplicationRecord
   has_many :rsvp_answers, dependent: :destroy
   has_many :deliveries, dependent: :destroy
   has_many :activities, dependent: :nullify
+  has_many :payments, dependent: :nullify
 
   enum :rsvp_status, RSVP_STATUSES.index_by(&:itself), default: "pending", prefix: :rsvp, validate: true
 
@@ -56,6 +57,25 @@ class Guest < ApplicationRecord
     id = code.to_s[/\A(\d+)-[A-Za-z0-9_-]{12}\z/, 1]
     guest = id && find_by(id: id)
     guest if guest && ActiveSupport::SecurityUtils.secure_compare(guest.check_in_code, code.to_s)
+  end
+
+  # --- Tickets ---------------------------------------------------------------
+
+  def amount_paid_cents
+    payments.select { |p| p.status == "paid" }.sum(&:amount_cents)
+  end
+
+  # What a guest who said yes still owes for their party. Maybes and declines owe nothing.
+  def amount_due_cents
+    return 0 unless event.ticketed? && rsvp_yes?
+
+    [ event.ticket_price_cents * party_size - amount_paid_cents, 0 ].max
+  end
+
+  def payment_state
+    return nil unless event.ticketed? && rsvp_yes?
+
+    amount_due_cents.zero? ? "paid" : (amount_paid_cents.positive? ? "partial" : "unpaid")
   end
 
   def checked_in?

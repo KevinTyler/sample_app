@@ -20,6 +20,13 @@ class Event < ApplicationRecord
   ARTWORK_TYPES = %w[image/png image/jpeg image/webp image/gif].freeze
   ARTWORK_MAX_SIZE = 8.megabytes
 
+  has_many :payments, dependent: :destroy
+  CURRENCIES = {
+    "usd" => { symbol: "$", name: "US dollar" }, "cad" => { symbol: "$", name: "Canadian dollar" },
+    "eur" => { symbol: "€", name: "Euro" }, "gbp" => { symbol: "£", name: "British pound" },
+    "aud" => { symbol: "$", name: "Australian dollar" }
+  }.freeze
+
   enum :status, { draft: "draft", published: "published", cancelled: "cancelled" }, default: "draft", validate: true
 
   has_secure_token :share_token
@@ -44,6 +51,11 @@ class Event < ApplicationRecord
   validate :deadline_before_end
   validate :starts_in_future, on: :publish
   validate :artwork_is_acceptable
+  validates :currency, inclusion: { in: CURRENCIES.keys }
+  validates :ticket_price_cents, numericality: { only_integer: true, greater_than_or_equal_to: 50, less_than_or_equal_to: 1_000_000,
+    message: "must be between 0.50 and 10,000" }, allow_nil: true
+  validate :payments_available, if: :ticketed?
+  validate :ticket_price_parses
 
   before_validation :resolve_local_times
 
@@ -179,6 +191,25 @@ class Event < ApplicationRecord
     }
   end
 
+  # --- Tickets ---------------------------------------------------------------
+
+  def ticketed?
+    ticket_price_cents.present?
+  end
+
+  def ticket_price
+    ticket_price_cents && format("%.2f", ticket_price_cents / 100.0)
+  end
+
+  def ticket_price=(value)
+    self.ticket_price_cents = value.to_s.strip.presence && Money.parse_cents(value)
+    @invalid_ticket_price = value.to_s.strip.present? && ticket_price_cents.nil?
+  end
+
+  def collected_cents
+    payments.paid.sum(:amount_cents)
+  end
+
   def design_settings
     InvitationDesign.for(self)
   end
@@ -248,6 +279,14 @@ class Event < ApplicationRecord
         errors.add(:artwork, "must be a PNG, JPEG, WebP or GIF image")
       end
       errors.add(:artwork, "must be smaller than 8 MB") if artwork.blob.byte_size > ARTWORK_MAX_SIZE
+    end
+
+    def payments_available
+      errors.add(:ticket_price, "can't be set until payments are configured (see README)") unless Payments.enabled?
+    end
+
+    def ticket_price_parses
+      errors.add(:ticket_price, "isn't a valid amount") if @invalid_ticket_price
     end
 
     def starts_in_future

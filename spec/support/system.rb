@@ -17,6 +17,16 @@ Capybara.default_max_wait_time = 4
 Capybara.server = :puma, { Silent: true }
 
 RSpec.configure do |config|
+  # Browser specs run with CSRF protection on (the test environment turns it off by default),
+  # so they exercise forms exactly as production does — including Origin header checks.
+  config.around(:each, type: :system) do |example|
+    original = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    example.run
+  ensure
+    ActionController::Base.allow_forgery_protection = original
+  end
+
   config.before(:each, type: :system) do |example|
     if example.metadata[:js]
       skip "No Chrome/Chromium found (set BROWSER_PATH)" unless CHROME_PATH || system("which chrome > /dev/null 2>&1")

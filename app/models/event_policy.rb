@@ -1,7 +1,7 @@
 # What a signed-in user may do with an event. Roles come from Event#role_for.
 class EventPolicy
   PERMISSIONS = {
-    "owner" => %i[view edit publish cancel destroy manage_guests view_contacts send_messages manage_cohosts check_in],
+    "owner" => %i[view edit publish cancel destroy manage_guests view_contacts send_messages manage_cohosts check_in manage_payments],
     "editor" => %i[view edit publish manage_guests view_contacts send_messages check_in],
     "checkin" => %i[view check_in]
   }.freeze

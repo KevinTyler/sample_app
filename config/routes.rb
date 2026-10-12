@@ -64,6 +64,7 @@ Rails.application.routes.draw do
     patch "rsvp", action: :rsvp, as: :rsvp
     get "calendar.ics", action: :calendar, as: :calendar, format: false
     post "unsubscribe", action: :unsubscribe, as: :unsubscribe
+    post "pay", action: :pay, as: :pay
   end
 
   # Public share link: the invitation without personal data; optional open RSVP.
@@ -78,6 +79,13 @@ Rails.application.routes.draw do
     post "email" => "email#create"
     post "twilio/status" => "twilio#status"
     post "twilio/inbound" => "twilio#inbound"
+    post "stripe" => "stripe#create"
+  end
+
+  # Local stand-in for a hosted payment page (PAYMENTS_PROVIDER=fake; the default outside production).
+  if !Rails.env.production? || ENV["PAYMENTS_PROVIDER"] == "fake"
+    get "dev/checkout/:token" => "dev/checkouts#show", as: :dev_checkout, constraints: { token: /[A-Za-z0-9_=-]+/ }
+    post "dev/checkout/:token" => "dev/checkouts#create", constraints: { token: /[A-Za-z0-9_=-]+/ }
   end
 
   # Local development outbox: captured emails and SMS.

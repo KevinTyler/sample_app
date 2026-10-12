@@ -1,0 +1,14 @@
+<% content_for :title, "Test checkout" %>
+<section class="guest-panel">
+  <p class="eyebrow">Test checkout · no real money moves</p>
+  <h1><%= @payment.amount %></h1>
+  <p><%= @payment.event.title %> — <%= pluralize(@payment.quantity, "ticket") %><% if @payment.guest %> for <%= @payment.guest.name %><% end %></p>
+  <% if @payment.status == "paid" %>
+    <p class="badge badge--rsvp-yes">Already paid</p>
+  <% end %>
+  <div class="cluster mt-m">
+    <%= button_to "Pay #{@payment.amount}", dev_checkout_path(params[:token]), class: "btn btn--primary", disabled: @payment.status == "paid" %>
+    <%= button_to "Cancel", dev_checkout_path(params[:token]), params: { outcome: "cancel" }, class: "btn btn--ghost" %>
+  </div>
+  <p class="small muted mt-m">In production this page is Stripe Checkout (set PAYMENTS_PROVIDER=stripe).</p>
+</section>

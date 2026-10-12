@@ -1,5 +1,7 @@
 # The guest-facing invitation. No account is needed: the 40-character token in the URL is the
-# guest's credential, so these pages are never cached, indexed, or leaked via the Referer header.
+# guest's credential, so these pages are never cached or indexed, and the Referer header never
+# carries the URL to other sites ("same-origin" — not "no-referrer", which would make browsers send
+# `Origin: null` on form posts and fail Rails' CSRF origin check).
 class GuestInvitationsController < ApplicationController
   allow_unauthenticated_access
   layout "guest"
@@ -10,6 +12,8 @@ class GuestInvitationsController < ApplicationController
 
   rate_limit to: 20, within: 10.minutes, only: :rsvp, by: -> { "#{request.remote_ip}:#{params[:token].to_s.first(16)}" },
     with: -> { redirect_to guest_invitation_path(params[:token]), alert: "Too many attempts. Please wait a few minutes and try again." }
+  rate_limit to: 10, within: 10.minutes, only: :pay, by: -> { "#{request.remote_ip}:#{params[:token].to_s.first(16)}" }, name: "guest-pay",
+    with: -> { redirect_to guest_invitation_path(params[:token]), alert: "Too many attempts. Please wait a few minutes." }
   rate_limit to: 120, within: 1.minute, by: -> { request.remote_ip }, name: "guest-pages",
     with: -> { head :too_many_requests }
 
@@ -28,6 +32,19 @@ class GuestInvitationsController < ApplicationController
       load_updates
       render :show, status: :unprocessable_content
     end
+  end
+
+  # Starts or resumes checkout for what this guest owes (ticketed events).
+  def pay
+    payment = Payment.checkout_for!(@guest,
+      success_url: guest_invitation_url(params[:token], paid: 1), cancel_url: guest_invitation_url(params[:token]))
+    return redirect_to(guest_invitation_path(params[:token]), notice: "Nothing to pay — you're all set.") unless payment
+    raise "unexpected checkout host for payment #{payment.id}" unless (url = payment.safe_checkout_url(app_host: request.host))
+
+    redirect_to url, allow_other_host: true
+  rescue Payments::NotConfigured, RuntimeError => e
+    Rails.logger.error("[payments] checkout failed: #{e.message}")
+    redirect_to guest_invitation_path(params[:token]), alert: "We couldn't start the payment just now. Please try again in a moment."
   end
 
   def calendar
@@ -53,7 +70,7 @@ class GuestInvitationsController < ApplicationController
     end
 
     def set_private_headers
-      response.headers["Referrer-Policy"] = "no-referrer"
+      response.headers["Referrer-Policy"] = "same-origin"
       response.headers["X-Robots-Tag"] = "noindex, nofollow"
       response.headers["Cache-Control"] = "private, no-store"
     end
@@ -75,6 +92,8 @@ class GuestInvitationsController < ApplicationController
     end
 
     def thank_you_message
+      return "You're on the list! One more step: complete your payment below to confirm your tickets." if @guest.reload.amount_due_cents.positive?
+
       case @rsvp.status
       when "yes" then "Wonderful — you're on the list! We've saved your RSVP."
       when "maybe" then "Thanks for letting the host know. You can update your RSVP any time before the deadline."

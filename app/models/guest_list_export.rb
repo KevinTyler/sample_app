@@ -11,7 +11,7 @@ class GuestListExport
   def to_csv
     CSV.generate do |csv|
       csv << header
-      @event.guests.includes(:rsvp_answers).order(:name).each { |guest| csv << CsvSafety.row(row(guest)) }
+      @event.guests.includes(:rsvp_answers, :payments).order(:name).each { |guest| csv << CsvSafety.row(row(guest)) }
     end
   end
 
@@ -19,7 +19,7 @@ class GuestListExport
     def header
       [ "Name", "Email", "Phone", "Group", "Plus-ones allowed", "RSVP", "Party size", "Responded at",
         "Invited at", "Opened at", *@questions.map(&:prompt), "Note from guest", "Host notes",
-        "Checked in", "Source" ]
+        "Checked in", "Source", *([ "Paid", "Amount due" ] if @event.ticketed?) ]
     end
 
     def row(guest)
@@ -29,8 +29,13 @@ class GuestListExport
         RsvpHelper::STATUS_LABELS.fetch(guest.rsvp_status), guest.party_size,
         time(guest.responded_at), time(guest.invited_at), time(guest.first_viewed_at),
         *@questions.map { |q| answers[q.id]&.value },
-        guest.guest_note, guest.host_notes, guest.checked_in_count.positive? ? guest.checked_in_count : nil, guest.source
+        guest.guest_note, guest.host_notes, guest.checked_in_count.positive? ? guest.checked_in_count : nil, guest.source,
+        *(@event.ticketed? ? [ money(guest.amount_paid_cents), money(guest.amount_due_cents) ] : [])
       ]
+    end
+
+    def money(cents)
+      format("%.2f", cents / 100.0)
     end
 
     def time(value)

@@ -26,7 +26,7 @@ class EventsController < ApplicationController
     @page = [ params[:page].to_i, 1 ].max
     @total_pages = [ (guests.count / GUESTS_PER_PAGE.to_f).ceil, 1 ].max
     @page = [ @page, @total_pages ].min
-    @guests = guests.includes(:rsvp_answers, deliveries: :message).limit(GUESTS_PER_PAGE).offset((@page - 1) * GUESTS_PER_PAGE)
+    @guests = guests.includes(:rsvp_answers, :payments, deliveries: :message).limit(GUESTS_PER_PAGE).offset((@page - 1) * GUESTS_PER_PAGE)
     @questions = @event.questions.to_a
     @activities = @event.activities.recent.includes(:guest, :user).limit(12)
     @uninvited_count = invitation_preview.recipients.count
@@ -119,10 +119,13 @@ class EventsController < ApplicationController
 
   private
     def event_params
-      params.expect(event: %i[
+      permitted = params.expect(event: %i[
         title host_name description starts_at_local ends_at_local time_zone location_name address video_url
-        rsvp_deadline_local capacity allow_maybe default_plus_ones allow_link_rsvp show_guest_count
+        rsvp_deadline_local capacity allow_maybe default_plus_ones allow_link_rsvp show_guest_count ticket_price currency
       ])
+      # Only the owner decides whether and what guests pay.
+      permitted = permitted.except(:ticket_price, :currency) if @event&.persisted? && !policy.can?(:manage_payments)
+      permitted
     end
 
     def invitation_preview

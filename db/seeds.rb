@@ -57,6 +57,7 @@ dinner = host.owned_events.find_or_create_by!(title: "Autumn Supper Club") do |e
   e.starts_at = 6.weeks.from_now.in_time_zone("America/Chicago").change(hour: 18, min: 0)
   e.location_name = "Our place"
   e.design = InvitationTemplate.find("garden-arch").design_defaults.merge("headline" => "A long table, good friends")
+  e.ticket_price = "45" if Payments.enabled? # a ticketed event (test checkout in development)
 end
 
 puts "Seeded #{User.count} host, #{Event.count} events, #{Guest.count} guests. Sign in: demo@larkspur.test / larkspur-demo-1"

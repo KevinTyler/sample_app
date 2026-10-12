@@ -10,7 +10,7 @@ RSpec.describe "Guest invitation pages", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.headers["Cache-Control"]).to include("no-store")
     expect(response.headers["X-Robots-Tag"]).to eq("noindex, nofollow")
-    expect(response.headers["Referrer-Policy"]).to eq("no-referrer")
+    expect(response.headers["Referrer-Policy"]).to eq("same-origin")
     expect(page_text).to include('<meta name="robots" content="noindex, nofollow">')
   end
 

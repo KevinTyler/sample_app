@@ -86,6 +86,28 @@
     </div>
   </fieldset>
 
+  <% if event.new_record? || policy.can?(:manage_payments) %>
+    <fieldset>
+      <legend>Tickets <span class="field__optional">(optional)</span></legend>
+      <% if Payments.enabled? %>
+        <div class="form-row form-row--2">
+          <div class="field">
+            <%= f.label :ticket_price, "Price per person" %>
+            <%= f.text_field :ticket_price, inputmode: "decimal", placeholder: "Free", maxlength: 12 %>
+            <p class="field__hint">Leave blank for a free event. Guests who RSVP yes pay for their whole party.</p>
+          </div>
+          <div class="field">
+            <%= f.label :currency %>
+            <%= f.select :currency, Event::CURRENCIES.map { |code, c| [ "#{code.upcase} — #{c[:name]}", code ] } %>
+          </div>
+        </div>
+        <% if Payments.provider == "fake" %><p class="field__hint">Development mode: payments use a local test checkout. Set PAYMENTS_PROVIDER=stripe for real payments.</p><% end %>
+      <% else %>
+        <p class="field__hint m-0">Paid tickets need a payment provider (see README: Payments).</p>
+      <% end %>
+    </fieldset>
+  <% end %>
+
   <div class="form-actions">
     <%= f.submit event.new_record? ? "Create event" : "Save changes", class: "btn btn--primary" %>
     <%= link_to "Cancel", event.new_record? ? events_path : event_path(event), class: "btn btn--ghost" %>

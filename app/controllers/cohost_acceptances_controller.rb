@@ -5,7 +5,7 @@ class CohostAcceptancesController < ApplicationController
   rate_limit to: 30, within: 10.minutes, by: -> { request.remote_ip }, with: -> { head :too_many_requests }
 
   def show
-    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Referrer-Policy"] = "same-origin"
     unless authenticated?
       session[:return_to_after_authenticating] = request.url # come back here after signing in or up
       return

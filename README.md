@@ -51,11 +51,22 @@ there and click the personal link to experience the guest side.
    later to change the response.
 7. **See the response** — back on the event dashboard: stats, the guest's RSVP, answers, activity.
 
+### More to try
+
+- **Design** (event page → *Design*): switch templates, recolor, upload a photo, toggle Desktop/Mobile.
+- **Share link** (event page sidebar): open it in a private window; turn on open RSVPs in *Edit details*.
+- **Import** a CSV or pasted list, **export** the guest list, tick guests for **bulk actions**.
+- **Messages**: *Remind non-responders*, schedule a *Day-before reminder*, open a delivery report.
+- **Co-hosts**: invite a second account you create; the invitation email is in the dev outbox.
+- **Check-in**: open *Check-in*, or scan the QR pass on an attending guest's invitation page.
+- **Tickets**: set a price in *Edit details* (the seeded "Autumn Supper Club" draft has one), RSVP yes
+  as a guest and pay on the local test checkout page.
+
 ### Running the tests
 
-The browser specs in `spec/system/` drive headless Chrome through Cuprite. They find Chromium at
-the usual paths or `BROWSER_PATH`, and are skipped (not failed) when no browser is installed.
-
+The browser specs in `spec/system/` drive headless Chrome through Cuprite, with CSRF protection
+switched on (Rails turns it off in tests by default). They find Chromium at the usual paths or
+`BROWSER_PATH`, and are skipped (not failed) when no browser is installed.
 
 ```bash
 bin/rails db:test:prepare
@@ -72,7 +83,7 @@ endpoints, including the double-submit idempotency check.
 
 ## Build stages
 
-The app is being built in stages; each stage is usable on its own.
+The app was built in six stages; each is usable on its own. All six are complete.
 
 ### ✅ Stage 1 — end-to-end core flow
 
@@ -188,8 +199,26 @@ What works:
 | Co-host | ✓ | ✓ | ✓ | ✓ | – | – |
 | Door staff | – | names only | – | ✓ | – | – |
 
-### ⏳ Stage 6 — optional payments
-Ticketed or paid RSVPs through a payment adapter (local fake checkout + Stripe Checkout).
+### ✅ Stage 6 — optional payments
+
+What works:
+
+- **Ticketed events**: the owner sets a price per person and currency in *Edit details* (blank = free;
+  co-hosts can't change pricing). Guests who RSVP **yes** see what they owe for their party and pay
+  through hosted checkout; maybes and declines owe nothing. Adding people later asks only for the
+  difference.
+- **Gateway adapter** (`app/services/payments/`): a local **test checkout** page in development (no
+  credentials; the link is signed) and **Stripe Checkout** via its REST API when configured — per-attempt
+  idempotency keys, redirects only to `https://checkout.stripe.com`, and a webhook (`/webhooks/stripe`)
+  verified with `Stripe-Signature` (HMAC-SHA256, 5-minute tolerance) that records the payment once, only
+  when the paid amount matches. Expired sessions are marked and can be restarted.
+- **Idempotent checkout**: clicking *Pay* twice (or concurrently) reuses one pending payment and one
+  checkout session (row lock); a "completed" event delivered twice records the payment once.
+- The dashboard shows Paid / Part paid / Unpaid per guest and the total collected; the CSV export includes
+  paid and due amounts; payments survive a guest's removal for record-keeping.
+
+Not included (by design, for now): refunds and partial-attendance credits are handled in the Stripe
+dashboard; unpaid "yes" RSVPs hold their seats until the host follows up.
 
 ---
 
@@ -210,6 +239,7 @@ Ticketed or paid RSVPs through a payment adapter (local fake checkout + Stripe C
 | Design editor (server + live preview) | `app/controllers/event_designs_controller.rb`, `app/javascript/controllers/design_editor_controller.js` |
 | Public share link and open RSVP | `app/controllers/public_events_controller.rb`, `app/models/link_rsvp.rb` |
 | Guest import / export | `app/models/guest_import.rb`, `app/models/guest_list_export.rb`, `app/models/csv_safety.rb` |
+| Payments (model, gateways, webhook) | `app/models/payment.rb`, `app/services/payments/`, `app/controllers/webhooks/stripe_controller.rb` |
 | Co-hosts and invitations | `app/models/event_membership.rb`, `app/models/cohost_invitation.rb`, `app/controllers/cohost*_controller.rb` |
 | Check-in and QR passes | `app/controllers/check_ins_controller.rb`, `Guest#check_in!`, `GuestAccessToken.check_in_code` |
 | Calendar files and links | `app/models/calendar_invite.rb` |
@@ -239,16 +269,21 @@ Retries must never produce duplicate invitations. Four layers make that hold:
 - **Personal links** are `/i/<40-char token>`: a random 16-character key stored on the guest plus a
   24-character HMAC signature derived from `secret_key_base`. A copy of the database alone can't
   forge links; tampered tokens are rejected in constant time; rotating the key revokes a link.
-- Guest pages send `Cache-Control: no-store`, `X-Robots-Tag: noindex` and `Referrer-Policy: no-referrer`
-  (so tokens don't leak to video-call or map sites); tokens are scrubbed from request logs, and guest
-  emails, phones and notes are filtered from parameter logs.
+- Guest pages send `Cache-Control: no-store`, `X-Robots-Tag: noindex` and `Referrer-Policy: same-origin`
+  (tokens never leak to video-call, map or calendar sites; `no-referrer` would make browsers send
+  `Origin: null` on form posts and break CSRF origin checks); tokens are scrubbed from request logs, and
+  guest emails, phones and notes are filtered from parameter logs.
+- **Separate credentials per purpose**: a guest's RSVP link, their check-in QR code, co-host invitation
+  tokens (stored as digests) and the public share link are all different secrets, each revocable.
 - **Access control**: every host route loads events through `current_user.accessible_events` (other
   people's events are a 404) and checks a permission from `EventPolicy`.
-- **Strict Content-Security-Policy**: scripts and styles only from our origin or with a nonce; no
-  inline `style` attributes. Invitation colors and fonts are emitted as CSS variables only after
+- **Strict Content-Security-Policy**: scripts and styles only from our origin or with a nonce (per
+  visitor, stable across Turbo visits); no inline `style` attributes. Invitation colors and fonts are emitted as CSS variables only after
   validation (hex colors, fonts from a fixed list), so design input can't inject CSS.
-- **Rate limits** (Rails `rate_limit`) on sign-in, sign-up, password reset, RSVP submission, guest pages
-  and invitation sends.
+- **Rate limits** (Rails `rate_limit`) on sign-in, sign-up, password reset, RSVP submission, open RSVPs,
+  payment starts, guest pages, imports, co-host invitations, message and invitation sends, and webhooks.
+- **Webhooks** are authenticated (shared bearer token, Twilio and Stripe signatures) before any data
+  is read or changed.
 - **Input validation** on every model (lengths, formats, http(s)-only links, time zones, capacity).
 - Guests can stop emails about an event (also via RFC 8058 one-click `List-Unsubscribe`); deleting an
   event deletes its guests, answers and delivery records.
@@ -266,6 +301,7 @@ Nothing needs configuring for local development. For production, see `.env.examp
 | `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` | Any SMTP provider. Without them, sends fail visibly ("Email is not configured") rather than vanishing. |
 | `SMS_PROVIDER=twilio` + `TWILIO_*` | Enables SMS (see below) |
 | `EMAIL_WEBHOOK_TOKEN` | Shared secret (16+ chars) that enables `POST /webhooks/email` for bounce/delivery feedback |
+| `PAYMENTS_PROVIDER=stripe`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Paid tickets via Stripe Checkout (see below). Development defaults to a local test checkout. |
 | `ENABLE_OUTBOX=1`, `OUTBOX_PASSWORD` | Demo/staging: capture all mail/SMS at `/dev/outbox` behind basic auth |
 | `SECRET_KEY_BASE` | Rails secret (also signs guest links — rotating it invalidates all personal links) |
 
@@ -282,8 +318,38 @@ SMS is a channel adapter with the same interface as email (`deliver(delivery) �
   so STOP replies are recorded. Only text guests who agreed to receive texts — regulations such as
   the US TCPA apply to the host.
 
+### Payments (Stripe)
+
+1. Set `PAYMENTS_PROVIDER=stripe`, `STRIPE_SECRET_KEY` (a restricted key with Checkout Sessions write
+   access is enough) and `STRIPE_WEBHOOK_SECRET`.
+2. In the Stripe dashboard, add a webhook endpoint `https://<APP_HOST>/webhooks/stripe` for
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+   `checkout.session.async_payment_failed` and `checkout.session.expired`.
+3. The Content-Security-Policy then also allows form redirects to `https://checkout.stripe.com`.
+
+Without a provider in production, the ticket price field is hidden and events stay free.
+
 ### Deploying
 
 The generated `Dockerfile` builds a production image (Puma + Thruster). Mount a volume at
 `/rails/storage` so the SQLite databases and uploads persist, set the variables above, and run Solid
 Queue either in Puma (`SOLID_QUEUE_IN_PUMA=1`) or as a separate `bin/jobs` process.
+
+---
+
+## Known limitations & next steps
+
+- **Scale**: SQLite (with Solid Queue/Cache) suits a single server. For multiple app servers, move to
+  PostgreSQL — the code avoids SQLite-specific SQL, and `RsvpSubmission` already takes a row lock on
+  other databases.
+- **Email feedback**: bounce/delivery webhooks match on the Message-ID we set, which SendGrid and
+  similar providers echo back. Providers that only report their own IDs (e.g. Postmark) need a small
+  adapter.
+- **SMS**: only Twilio is implemented; numbers must be stored in E.164 form. Consent is the host's
+  responsibility.
+- **Accessibility & i18n**: pages use semantic HTML, labels, focus styles and reduced-motion handling,
+  but haven't had a formal audit; all copy is English.
+- **Not built**: guest-to-guest features (public guest lists, comments), seating charts, refunds,
+  recurring events, and a native app.
+- Rate limits use Rails' built-in limiter backed by the cache store (Solid Cache in production);
+  put the app behind a proxy/CDN with its own limits for high-traffic events.

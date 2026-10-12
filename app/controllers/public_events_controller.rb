@@ -42,7 +42,7 @@ class PublicEventsController < ApplicationController
       return render("guest_invitations/unavailable", status: :not_found) if @event.draft?
 
       response.headers["X-Robots-Tag"] = "noindex, nofollow"
-      response.headers["Referrer-Policy"] = "no-referrer"
+      response.headers["Referrer-Policy"] = "same-origin"
     end
 
     def open_rsvp?

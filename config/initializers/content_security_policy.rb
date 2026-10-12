@@ -15,7 +15,8 @@ Rails.application.configure do
     policy.frame_src   :self
     policy.frame_ancestors :none
     policy.base_uri    :self
-    policy.form_action :self
+    # Paying redirects (after a form POST) to the provider's hosted checkout page.
+    policy.form_action :self, *([ "https://checkout.stripe.com" ] if ENV["PAYMENTS_PROVIDER"] == "stripe")
   end
 
   # The nonce must stay the same across Turbo Drive visits (Turbo swaps in new <body> content under

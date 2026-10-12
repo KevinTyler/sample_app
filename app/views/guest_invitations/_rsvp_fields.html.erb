@@ -10,6 +10,10 @@
   <% end %>
 </fieldset>
 
+<% if event.ticketed? %>
+  <p class="small muted m-0" data-rsvp-form-target="attendingOnly">Tickets are <%= Money.format(event.ticket_price_cents, event.currency) %> per person, paid after you RSVP.</p>
+<% end %>
+
 <% if guest.max_party_size > 1 %>
   <div class="field" data-rsvp-form-target="attendingOnly">
     <%= f.label :party_size, "How many in your party (including you)?" %>

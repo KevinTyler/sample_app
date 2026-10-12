@@ -1,4 +1,28 @@
 {
-  "ignored_warnings": [],
+  "ignored_warnings": [
+    {
+      "warning_type": "Redirect",
+      "warning_code": 18,
+      "fingerprint": "19bf19b6d10167a986908b5e5345f7188e6cca3753c6835dc968cf2dbcd24c3b",
+      "check_name": "Redirect",
+      "message": "Possible unprotected redirect",
+      "file": "app/controllers/guest_invitations_controller.rb",
+      "line": 44,
+      "link": "https://brakemanscanner.org/docs/warning_types/redirect/",
+      "code": "redirect_to(Payment.checkout_for!(Guest.find_by_access_token(params[:token]), :success_url => guest_invitation_url(params[:token], :paid => 1), :cancel_url => guest_invitation_url(params[:token])).safe_checkout_url(:app_host => request.host), :allow_other_host => true)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "GuestInvitationsController",
+        "method": "pay"
+      },
+      "user_input": "Payment.checkout_for!(Guest.find_by_access_token(params[:token]), :success_url => guest_invitation_url(params[:token], :paid => 1), :cancel_url => guest_invitation_url(params[:token])).safe_checkout_url(:app_host => request.host)",
+      "confidence": "Weak",
+      "cwe_id": [
+        601
+      ],
+      "note": "Redirect target is the checkout URL returned by the payment gateway (not request input); Payment#safe_checkout_url only allows https://checkout.stripe.com, or this app itself for the development fake checkout."
+    }
+  ],
   "brakeman_version": "8.1.0"
 }

@@ -70,6 +70,21 @@
   <% end %>
 </section>
 
+<% if !@preview && @event.ticketed? && @guest.rsvp_yes? %>
+  <section class="guest-panel" aria-labelledby="payment-heading">
+    <h2 id="payment-heading">Tickets</h2>
+    <% due = @guest.amount_due_cents %>
+    <% if due.positive? %>
+      <p><%= pluralize(@guest.party_size, "ticket") %> × <%= Money.format(@event.ticket_price_cents, @event.currency) %><% if @guest.amount_paid_cents.positive? %>, <%= Money.format(@guest.amount_paid_cents, @event.currency) %> already paid<% end %>.</p>
+      <% if params[:paid] %><p class="small muted">Thanks! If you just paid, confirmation can take a few seconds — refresh this page.</p><% end %>
+      <%= button_to "Pay #{Money.format(due, @event.currency)}", guest_pay_path(params[:token]), class: "btn btn--primary btn--block", data: { turbo: false } %>
+      <p class="small muted mt-s m-0">Secure checkout. Your spot is held while you pay.</p>
+    <% else %>
+      <p class="m-0"><span class="badge badge--rsvp-yes">Paid</span> <%= Money.format(@guest.amount_paid_cents, @event.currency) %> for <%= pluralize(@guest.party_size, "ticket") %>. See you there!</p>
+    <% end %>
+  </section>
+<% end %>
+
 <% if !@preview && @event.published? && (@guest.rsvp_yes? || @guest.rsvp_maybe?) && (@event.starts_at.nil? || @event.effective_ends_at > Time.current) %>
   <section class="guest-panel" aria-labelledby="pass-heading">
     <h2 id="pass-heading">Your check-in pass</h2>

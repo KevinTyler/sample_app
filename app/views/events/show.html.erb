@@ -55,6 +55,7 @@
   <%= @summary[:sent] %> invited · <%= @summary[:viewed] %> opened their invitation
   <% if @summary[:maybe_headcount] > 0 %> · <%= @summary[:maybe_headcount] %> more might come<% end %>
   <% if @event.capacity %> · <strong><%= @event.spots_remaining %></strong> of <%= @event.capacity %> spots left<% end %>
+  <% if @event.ticketed? %> · <strong><%= Money.format(@event.collected_cents, @event.currency) %></strong> collected (<%= Money.format(@event.ticket_price_cents, @event.currency) %> per person)<% end %>
   <% if @event.rsvp_deadline %> · RSVPs close <%= @event.local(@event.rsvp_deadline).strftime("%b %-d, %-l:%M %p %Z") %><% end %>
 </p>
 
@@ -164,6 +165,9 @@
                   <td data-label="Invitation"><%= delivery_badge(guest) %></td>
                   <td data-label="RSVP">
                     <%= rsvp_badge(guest.rsvp_status) %>
+                    <% if (state = guest.payment_state) %>
+                      <span class="badge <%= { 'paid' => 'badge--rsvp-yes', 'partial' => 'badge--warning', 'unpaid' => 'badge--failed' }[state] %>"><%= { "paid" => "Paid", "partial" => "Part paid", "unpaid" => "Unpaid" }[state] %></span>
+                    <% end %>
                     <% if guest.responded_at %><div class="table__secondary"><%= time_ago_in_words(guest.responded_at) %> ago</div><% end %>
                   </td>
                   <td data-label="Party"><%= party_label(guest) %></td>

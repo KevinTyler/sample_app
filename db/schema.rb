@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_020000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_030000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -142,6 +142,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_020000) do
     t.text "cancellation_note"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "ticket_price_cents"
+    t.string "currency", default: "usd", null: false
     t.index ["owner_id"], name: "index_events_on_owner_id"
     t.index ["share_token"], name: "index_events_on_share_token", unique: true
     t.index ["status"], name: "index_events_on_status"
@@ -221,6 +223,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_020000) do
     t.datetime "created_at", null: false
   end
 
+  create_table "payments", force: :cascade do |t|
+    t.integer "event_id", null: false
+    t.integer "guest_id"
+    t.integer "amount_cents", null: false
+    t.string "currency", null: false
+    t.integer "quantity", null: false
+    t.string "status", default: "pending", null: false
+    t.string "provider", null: false
+    t.string "provider_session_id"
+    t.string "provider_payment_id"
+    t.string "checkout_url", limit: 2048
+    t.string "idempotency_key", null: false
+    t.datetime "paid_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_payments_on_event_id"
+    t.index ["guest_id"], name: "index_payments_on_guest_id"
+    t.index ["idempotency_key"], name: "index_payments_on_idempotency_key", unique: true
+    t.index ["provider", "provider_session_id"], name: "index_payments_on_provider_and_provider_session_id", unique: true
+  end
+
   create_table "rsvp_answers", force: :cascade do |t|
     t.integer "guest_id", null: false
     t.integer "event_question_id", null: false
@@ -269,6 +292,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_020000) do
   add_foreign_key "guests", "events"
   add_foreign_key "messages", "events"
   add_foreign_key "messages", "users", column: "author_id"
+  add_foreign_key "payments", "events"
+  add_foreign_key "payments", "guests", on_delete: :nullify
   add_foreign_key "rsvp_answers", "event_questions"
   add_foreign_key "rsvp_answers", "guests"
   add_foreign_key "sessions", "users"
