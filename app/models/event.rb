@@ -9,6 +9,7 @@ class Event < ApplicationRecord
     dependent: :destroy, inverse_of: :event
   has_many :messages, dependent: :destroy
   has_many :activities, dependent: :delete_all
+  has_many :guest_imports, dependent: :delete_all
 
   # Optional uploaded artwork or photo for the invitation. SVG is deliberately not accepted
   # (it can carry script); only raster formats are served.

@@ -1,7 +1,7 @@
 class GuestsController < ApplicationController
   include EventScoped
   before_action { authorize! :manage_guests }
-  before_action :set_guest, except: %i[new create]
+  before_action :set_guest, except: %i[new create export bulk]
 
   def new
     @guest = @event.guests.new(plus_ones_allowed: @event.default_plus_ones)
@@ -61,7 +61,45 @@ class GuestsController < ApplicationController
     redirect_to event_path(@event, anchor: "guests"), notice: "Invitation re-sent to #{@guest.name}."
   end
 
+  def export
+    authorize! :view_contacts
+    send_data GuestListExport.new(@event).to_csv,
+      filename: "#{@event.title.parameterize.presence || 'event'}-guests-#{Date.current.iso8601}.csv", type: "text/csv"
+  end
+
+  # Applies one action to the guests ticked in the guest list.
+  def bulk
+    guests = @event.guests.where(id: Array(params[:guest_ids]).map(&:to_i))
+    return redirect_to(event_path(@event, anchor: "guests"), alert: "Select at least one guest first.") if guests.none?
+
+    notice = case params[:bulk_action]
+    when "group"
+      group = params[:group_name].to_s.squish.first(60).presence
+      count = guests.update_all(group_name: group, updated_at: Time.current)
+      group ? "Moved #{pluralize_guests(count)} to “#{group}”." : "Cleared the group for #{pluralize_guests(count)}."
+    when "invite"
+      authorize! :send_messages
+      return redirect_to(event_path(@event), alert: "Publish the event before sending invitations.") unless @event.published?
+
+      message = @event.messages.idempotent_create!(idempotency_key: params[:idempotency_key].presence || SecureRandom.uuid,
+        kind: "invitation", author: current_user, channels: %w[email], audience: { "guest_ids" => guests.ids })
+      message.dispatch! unless message.status == "dispatched"
+      skipped = guests.count - message.recipients_count
+      "Sending #{message.recipients_count} #{'invitation'.pluralize(message.recipients_count)}." +
+        (skipped.positive? ? " #{pluralize_guests(skipped)} skipped (already invited, no email, or unsubscribed)." : "")
+    when "remove"
+      "Removed #{pluralize_guests(guests.destroy_all.size)}."
+    else
+      return redirect_to(event_path(@event, anchor: "guests"), alert: "Choose an action.")
+    end
+    redirect_to event_path(@event, anchor: "guests"), notice: notice, status: :see_other
+  end
+
   private
+    def pluralize_guests(count)
+      helpers.pluralize(count, "guest")
+    end
+
     def set_guest
       @guest = @event.guests.find(params[:id])
     end

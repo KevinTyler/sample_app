@@ -1,0 +1,50 @@
+<% content_for :title, "Review import" %>
+<% counts = @import.counts %>
+<% importable = counts[:new] + counts[:update] %>
+<%= link_to @event.title, event_path(@event, anchor: "guests"), class: "back-link" %>
+<div class="page-header">
+  <div><h1>Review import</h1>
+    <p class="page-header__meta"><%= @import.filename.presence || "Pasted list" %> · <%= pluralize(@import.rows.size, "row") %></p></div>
+</div>
+
+<section class="stats" aria-label="Import summary">
+  <div class="stat stat--yes"><span class="stat__value"><%= counts[:new] %></span><span class="stat__label">New guests</span></div>
+  <div class="stat"><span class="stat__value"><%= counts[:update] %></span><span class="stat__label">Updates</span></div>
+  <div class="stat stat--maybe"><span class="stat__value"><%= counts[:exists] + counts[:duplicate_in_file] %></span><span class="stat__label">Skipped (duplicates)</span></div>
+  <div class="stat stat--no"><span class="stat__value"><%= counts[:invalid] %></span><span class="stat__label">Need fixing</span></div>
+</section>
+
+<div class="panel mt-m">
+  <div class="cluster">
+    <% if importable > 0 %>
+      <%= button_to "Import #{pluralize(importable, 'guest')}", confirm_event_guest_import_path(@event, @import), method: :patch, class: "btn btn--primary", data: { turbo_submits_with: "Importing…" } %>
+    <% end %>
+    <%= button_to "Discard", event_guest_import_path(@event, @import), method: :delete, class: "btn btn--ghost" %>
+    <% if counts[:invalid] > 0 %><span class="small muted">Rows that need fixing are skipped. Fix them in your file and import again, or add them by hand.</span><% end %>
+  </div>
+
+  <div class="table-wrap mt-m">
+    <table class="table table--responsive">
+      <thead><tr><th scope="col">Row</th><th scope="col">Name</th><th scope="col">Email / phone</th><th scope="col">Group</th><th scope="col">+1s</th><th scope="col">Result</th></tr></thead>
+      <tbody>
+        <% @import.rows.first(500).each do |row| %>
+          <% a = row.attributes %>
+          <tr>
+            <td data-label="Row"><%= row.number %></td>
+            <td data-label="Name"><span class="table__primary"><%= a[:name].presence || "—" %></span></td>
+            <td data-label="Email / phone"><span class="table__secondary table__secondary--contact"><%= [ a[:email], a[:phone] ].compact.join(" · ").presence || "—" %></span></td>
+            <td data-label="Group"><%= a[:group_name] %></td>
+            <td data-label="+1s"><%= a[:plus_ones_allowed] %></td>
+            <td data-label="Result">
+              <% label, css = { new: [ "New", "badge--rsvp-yes" ], update: [ "Update", "badge--sent" ], exists: [ "Skip", "badge--muted" ],
+                                duplicate_in_file: [ "Skip", "badge--muted" ], invalid: [ "Fix needed", "badge--failed" ] }[row.status] %>
+              <span class="badge <%= css %>"><%= label %></span>
+              <% if row.messages.any? && row.status != :new %><div class="table__secondary"><%= row.messages.to_sentence %></div><% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @import.rows.size > 500 %><p class="small muted">Showing the first 500 rows; all <%= @import.rows.size %> will be processed.</p><% end %>
+  </div>
+</div>

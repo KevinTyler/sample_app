@@ -123,8 +123,23 @@ What works:
 - **Envelope reveal** the first time a guest opens their invitation (skipped with reduced motion,
   without JavaScript, or on later visits).
 
-### ⏳ Stage 3 — bulk guest tools
-CSV import with a validation summary, CSV export, bulk select actions (group, invite, remove).
+### ✅ Stage 3 — bulk guest tools
+
+What works:
+
+- **Import** from a CSV file (Excel, Numbers, Google Sheets) or a pasted list, in two steps: a preview
+  that marks every row *new*, *update*, *skip* (already listed / repeated in the file) or *fix needed*
+  (with the reason), then **Import** to apply. Understands common header names ("First name" + "Last
+  name", "E-mail address", "Mobile", "Side", "Plus-ones", …), headerless lists, comma / semicolon / tab
+  separators, UTF-8 with or without BOM and Windows-1252. Optionally updates existing guests' details
+  (never their RSVPs). Limits: 1 MB / 2,000 rows. The raw upload is erased once applied or discarded.
+- **Export** the guest list as CSV: contact details, RSVP, party size, timestamps, every question's
+  answer, notes, check-in. Cells a spreadsheet would run as formulas (`=`, `+`, `-`, `@`) are neutralized.
+- **Bulk actions** on ticked guests: send invitations (still never double-sends), set or clear a group,
+  remove. Guest IDs from other events are ignored.
+- Pagination (100 per page) alongside search and status/group filters; a downloadable CSV template.
+- Custom RSVP questions shipped in Stage 1 (short answer, paragraph, multiple choice; required or not;
+  everyone or attending guests only; reorderable; tallies on the dashboard).
 
 ### ⏳ Stage 4 — messaging
 Updates and reminders to selected groups/RSVP statuses, scheduled sends, SMS via the adapter.
@@ -151,6 +166,7 @@ Ticketed or paid RSVPs through a payment adapter (local fake checkout + Stripe C
 | Template artwork (SVG partials) and the card | `app/views/invitation_artworks/`, `app/views/invitations/_card.html.erb` |
 | Design editor (server + live preview) | `app/controllers/event_designs_controller.rb`, `app/javascript/controllers/design_editor_controller.js` |
 | Public share link and open RSVP | `app/controllers/public_events_controller.rb`, `app/models/link_rsvp.rb` |
+| Guest import / export | `app/models/guest_import.rb`, `app/models/guest_list_export.rb`, `app/models/csv_safety.rb` |
 | Calendar files and links | `app/models/calendar_invite.rb` |
 | Who may do what on an event | `app/models/event_policy.rb`, `app/controllers/concerns/event_scoped.rb` |
 | Guest-facing pages | `app/controllers/guest_invitations_controller.rb`, `app/views/guest_invitations/` |

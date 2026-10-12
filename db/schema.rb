@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_230501) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_000000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -116,6 +116,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_230501) do
     t.index ["status"], name: "index_events_on_status"
   end
 
+  create_table "guest_imports", force: :cascade do |t|
+    t.integer "event_id", null: false
+    t.integer "user_id"
+    t.string "filename"
+    t.text "csv_data"
+    t.boolean "update_existing", default: false, null: false
+    t.string "status", default: "pending", null: false
+    t.json "summary", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_guest_imports_on_event_id"
+    t.index ["user_id"], name: "index_guest_imports_on_user_id"
+  end
+
   create_table "guests", force: :cascade do |t|
     t.integer "event_id", null: false
     t.string "name", null: false
@@ -214,6 +228,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_230501) do
   add_foreign_key "deliveries", "messages"
   add_foreign_key "event_questions", "events"
   add_foreign_key "events", "users", column: "owner_id"
+  add_foreign_key "guest_imports", "events"
+  add_foreign_key "guest_imports", "users", on_delete: :nullify
   add_foreign_key "guests", "events"
   add_foreign_key "messages", "events"
   add_foreign_key "messages", "users", column: "author_id"

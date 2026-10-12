@@ -25,6 +25,14 @@ Rails.application.routes.draw do
         patch :rsvp
         post :resend
       end
+      collection do
+        get :export
+        post :bulk
+      end
+    end
+    resources :guest_imports, only: %i[new create show destroy] do
+      member { patch :confirm }
+      collection { get :template }
     end
     resource :invitation_send, only: :create
     resources :questions, except: %i[index show] do

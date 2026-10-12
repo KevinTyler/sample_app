@@ -2,6 +2,8 @@ class EventsController < ApplicationController
   include EventScoped
   skip_before_action :set_event, only: %i[index new create]
 
+  GUESTS_PER_PAGE = 100
+
   def index
     events = current_user.accessible_events.includes(:owner)
     @upcoming = events.where.not(status: "cancelled").upcoming
@@ -19,7 +21,10 @@ class EventsController < ApplicationController
     guests = guests.search(@query) if @query.present?
     guests = guests.where(rsvp_status: @status_filter) if @status_filter
     guests = guests.where(group_name: @group_filter) if @group_filter
-    @guests = guests.includes(:rsvp_answers, deliveries: :message)
+    @page = [ params[:page].to_i, 1 ].max
+    @total_pages = [ (guests.count / GUESTS_PER_PAGE.to_f).ceil, 1 ].max
+    @page = [ @page, @total_pages ].min
+    @guests = guests.includes(:rsvp_answers, deliveries: :message).limit(GUESTS_PER_PAGE).offset((@page - 1) * GUESTS_PER_PAGE)
     @questions = @event.questions.to_a
     @activities = @event.activities.recent.includes(:guest, :user).limit(12)
     @uninvited_count = invitation_preview.recipients.count

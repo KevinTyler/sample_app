@@ -76,14 +76,18 @@
       </section>
     <% end %>
 
-    <section class="panel" id="guests" aria-labelledby="guests-heading">
+    <section class="panel" id="guests" aria-labelledby="guests-heading" data-controller="bulk-select">
       <div class="panel__header">
         <h2 id="guests-heading">Guest list</h2>
-        <% if policy.can?(:manage_guests) %>
-          <div class="cluster">
+        <div class="cluster">
+          <% if policy.can?(:view_contacts) %>
+            <%= link_to "Export CSV", export_event_guests_path(@event, format: :csv), class: "btn btn--small", data: { turbo: false } %>
+          <% end %>
+          <% if policy.can?(:manage_guests) %>
+            <%= link_to "Import", new_event_guest_import_path(@event), class: "btn btn--small" %>
             <%= link_to "Add guest", new_event_guest_path(@event), class: "btn btn--primary btn--small" %>
-          </div>
-        <% end %>
+          <% end %>
+        </div>
       </div>
 
       <%= form_with url: event_path(@event), method: :get, class: "toolbar", data: { turbo_frame: "_top" } do |f| %>
@@ -106,17 +110,40 @@
         <% end %>
       </nav>
 
+      <% if policy.can?(:manage_guests) && @guests.any? %>
+        <%= form_with url: bulk_event_guests_path(@event), method: :post, id: "bulk-guests", class: "bulk-bar",
+              data: { bulk_select_target: "bar", turbo_confirm: "Apply this to the selected guests?" } do |f| %>
+          <%= f.hidden_field :idempotency_key, value: SecureRandom.uuid %>
+          <span class="bulk-bar__count" data-bulk-select-target="count">0 selected</span>
+          <%= f.label :bulk_action, "Action", class: "visually-hidden" %>
+          <%= f.select :bulk_action, options_for_select([ [ "Choose an action…", "" ], [ "Send invitation", "invite" ], [ "Set group…", "group" ], [ "Remove from list", "remove" ] ]),
+                {}, data: { action: "bulk-select#actionChanged", bulk_select_target: "action" } %>
+          <%= f.label :group_name, "Group name", class: "visually-hidden" %>
+          <%= f.text_field :group_name, placeholder: "Group name (blank clears)", maxlength: 60, list: "bulk-groups", hidden: true, data: { bulk_select_target: "group" } %>
+          <datalist id="bulk-groups"><% @event.group_names.each do |g| %><option value="<%= g %>"></option><% end %></datalist>
+          <%= f.submit "Apply", class: "btn btn--small btn--primary", disabled: true, data: { bulk_select_target: "submit" } %>
+        <% end %>
+      <% end %>
+
       <% if @guests.empty? %>
         <p class="muted"><%= @summary[:invited].zero? ? "No guests yet. Add your first guest to get started." : "No guests match these filters." %></p>
       <% else %>
         <div class="table-wrap">
           <table class="table table--responsive">
             <thead>
-              <tr><th scope="col">Guest</th><th scope="col">Invitation</th><th scope="col">RSVP</th><th scope="col">Party</th><th scope="col">Answers</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+              <tr>
+                <% if policy.can?(:manage_guests) %>
+                  <th scope="col" class="table__check"><input type="checkbox" aria-label="Select all guests on this page" data-action="bulk-select#toggleAll" data-bulk-select-target="all"></th>
+                <% end %>
+                <th scope="col">Guest</th><th scope="col">Invitation</th><th scope="col">RSVP</th><th scope="col">Party</th><th scope="col">Answers</th><th scope="col"><span class="visually-hidden">Actions</span></th>
+              </tr>
             </thead>
             <tbody>
               <% @guests.each do |guest| %>
                 <tr id="<%= dom_id(guest) %>">
+                  <% if policy.can?(:manage_guests) %>
+                    <td class="table__check"><input type="checkbox" name="guest_ids[]" value="<%= guest.id %>" form="bulk-guests" aria-label="Select <%= guest.name %>" data-action="bulk-select#update" data-bulk-select-target="checkbox"></td>
+                  <% end %>
                   <td data-label="Guest">
                     <div class="table__primary"><%= guest.name %> <% if guest.group_name %><span class="tag"><%= guest.group_name %></span><% end %></div>
                     <% if policy.can?(:view_contacts) %>
@@ -172,6 +199,13 @@
             </tbody>
           </table>
         </div>
+        <% if @total_pages > 1 %>
+          <nav class="pagination" aria-label="Guest list pages">
+            <% if @page > 1 %><%= link_to "← Previous", event_path(@event, request.query_parameters.merge(page: @page - 1, anchor: "guests")), class: "btn btn--small" %><% end %>
+            <span class="small muted">Page <%= @page %> of <%= @total_pages %></span>
+            <% if @page < @total_pages %><%= link_to "Next →", event_path(@event, request.query_parameters.merge(page: @page + 1, anchor: "guests")), class: "btn btn--small" %><% end %>
+          </nav>
+        <% end %>
       <% end %>
     </section>
   </div>

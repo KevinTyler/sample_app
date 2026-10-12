@@ -17,7 +17,7 @@ class Guest < ApplicationRecord
   normalizes :group_name, with: ->(v) { v.squish.presence }
 
   validates :name, presence: true, length: { maximum: 100 }
-  validates :email, length: { maximum: 254 }, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_nil: true
+  validates :email, length: { maximum: 254 }, format: { with: EmailFormat::REGEXP }, allow_nil: true
   validates :email, uniqueness: { scope: :event_id, message: "is already on this guest list" }, allow_nil: true
   validates :phone, format: { with: PhoneNumber::FORMAT, message: "should contain 7–15 digits, optionally starting with +" }, allow_nil: true
   validates :group_name, length: { maximum: 60 }

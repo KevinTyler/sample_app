@@ -8,7 +8,7 @@ class User < ApplicationRecord
 
   validates :name, presence: true, length: { maximum: 80 }
   validates :email_address, presence: true, length: { maximum: 254 },
-    format: { with: URI::MailTo::EMAIL_REGEXP }, uniqueness: true
+    format: { with: EmailFormat::REGEXP }, uniqueness: true
   validates :password, length: { minimum: 10, maximum: 72 }, allow_nil: true
 
   # Every event this user may open in the host dashboard.

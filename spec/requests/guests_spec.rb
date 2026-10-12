@@ -12,6 +12,11 @@ RSpec.describe "Guest management", type: :request do
     expect(guest).to have_attributes(name: "Lee Park", email: "lee@example.com", phone: "+15550102000")
   end
 
+  it "rejects email addresses without a real domain" do
+    post event_guests_path(event), params: { guest: { name: "Ben", email: "ben@example" } }
+    expect(response).to have_http_status(:unprocessable_content)
+  end
+
   it "rejects duplicate emails on the same event" do
     create(:guest, event: event, email: "lee@example.com")
     post event_guests_path(event), params: { guest: { name: "Lee again", email: "Lee@example.com" } }

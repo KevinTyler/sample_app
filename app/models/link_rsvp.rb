@@ -19,7 +19,7 @@ class LinkRsvp
   attr_reader :guest, :outcome
 
   validates :name, presence: true, length: { maximum: 100 }
-  validates :email, presence: true, length: { maximum: 254 }, format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :email, presence: true, length: { maximum: 254 }, format: { with: EmailFormat::REGEXP }
 
   def answer_for(question)
     (answers || {}).to_h.stringify_keys[question.id.to_s]

@@ -1,0 +1,36 @@
+<% content_for :title, "Import guests" %>
+<div class="container--form">
+  <%= link_to @event.title, event_path(@event, anchor: "guests"), class: "back-link" %>
+  <div class="page-header"><div><h1>Import guests</h1>
+    <p class="page-header__meta">Upload a CSV from Excel, Numbers or Google Sheets, or paste a list. You'll review every row before anything is added.</p></div></div>
+
+  <div class="panel">
+    <%= form_with url: event_guest_imports_path(@event), method: :post, multipart: true, class: "form" do |f| %>
+      <%= form_errors(@import) %>
+      <div class="field">
+        <%= f.label :file, "CSV file" %>
+        <%= f.file_field :file, accept: ".csv,text/csv,text/plain" %>
+        <p class="field__hint">Up to <%= number_with_delimiter(GuestImport::MAX_ROWS) %> rows / 1 MB. <%= link_to "Download a template", template_event_guest_imports_path(@event) %>.</p>
+      </div>
+      <div class="field">
+        <%= f.label :pasted do %>…or paste your list <span class="field__optional">(one guest per line)</span><% end %>
+        <%= f.text_area :pasted, rows: 8, value: params[:pasted], placeholder: "Name, Email, Phone, Group, Plus ones\nDana Whitfield, dana@example.com, , Family, 1\nLee Park, lee@example.com" %>
+      </div>
+      <details class="disclosure">
+        <summary>Which columns are recognized?</summary>
+        <ul class="small muted mt-s">
+          <li><strong>Name</strong> (or First name + Last name) — if missing, we use the email address</li>
+          <li><strong>Email</strong>, <strong>Phone</strong>, <strong>Group</strong> (also “Tag”, “Side”, “Table”)</li>
+          <li><strong>Plus ones</strong> (a number, or yes/no) — blank uses this event's default of <%= @event.default_plus_ones %></li>
+          <li><strong>Notes</strong> — saved as private host notes</li>
+          <li>No header row? Columns are read in the order Name, Email, Phone, Group, Plus ones.</li>
+        </ul>
+      </details>
+      <label class="checkbox"><%= check_box_tag :update_existing, "1", params[:update_existing] == "1" %> Update details for guests already on the list (matched by email). Their RSVPs are never changed.</label>
+      <div class="form-actions">
+        <%= f.submit "Review import", class: "btn btn--primary" %>
+        <%= link_to "Cancel", event_path(@event, anchor: "guests"), class: "btn btn--ghost" %>
+      </div>
+    <% end %>
+  </div>
+</div>
