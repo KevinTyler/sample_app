@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_020000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -52,6 +52,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_010000) do
     t.index ["user_id"], name: "index_activities_on_user_id"
   end
 
+  create_table "cohost_invitations", force: :cascade do |t|
+    t.integer "event_id", null: false
+    t.string "email", null: false
+    t.string "role", null: false
+    t.string "token_digest", null: false
+    t.integer "invited_by_id"
+    t.datetime "expires_at", null: false
+    t.datetime "accepted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id", "email"], name: "index_cohost_invitations_on_event_id_and_email"
+    t.index ["event_id"], name: "index_cohost_invitations_on_event_id"
+    t.index ["invited_by_id"], name: "index_cohost_invitations_on_invited_by_id"
+    t.index ["token_digest"], name: "index_cohost_invitations_on_token_digest", unique: true
+  end
+
   create_table "deliveries", force: :cascade do |t|
     t.integer "message_id", null: false
     t.integer "guest_id", null: false
@@ -72,6 +88,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_010000) do
     t.index ["message_id"], name: "index_deliveries_on_message_id"
     t.index ["provider_message_id"], name: "index_deliveries_on_provider_message_id"
     t.index ["status"], name: "index_deliveries_on_status"
+  end
+
+  create_table "event_memberships", force: :cascade do |t|
+    t.integer "event_id", null: false
+    t.integer "user_id", null: false
+    t.string "role", null: false
+    t.integer "invited_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id", "user_id"], name: "index_event_memberships_on_event_id_and_user_id", unique: true
+    t.index ["event_id"], name: "index_event_memberships_on_event_id"
+    t.index ["invited_by_id"], name: "index_event_memberships_on_invited_by_id"
+    t.index ["user_id"], name: "index_event_memberships_on_user_id"
   end
 
   create_table "event_questions", force: :cascade do |t|
@@ -226,8 +255,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_010000) do
   add_foreign_key "activities", "events"
   add_foreign_key "activities", "guests", on_delete: :nullify
   add_foreign_key "activities", "users", on_delete: :nullify
+  add_foreign_key "cohost_invitations", "events"
+  add_foreign_key "cohost_invitations", "users", column: "invited_by_id", on_delete: :nullify
   add_foreign_key "deliveries", "guests"
   add_foreign_key "deliveries", "messages"
+  add_foreign_key "event_memberships", "events"
+  add_foreign_key "event_memberships", "users"
+  add_foreign_key "event_memberships", "users", column: "invited_by_id", on_delete: :nullify
   add_foreign_key "event_questions", "events"
   add_foreign_key "events", "users", column: "owner_id"
   add_foreign_key "guest_imports", "events"

@@ -164,8 +164,29 @@ What works:
   STOP replies stop all messages to that number). Complaints and STOPs unsubscribe the guest.
 - Guests see updates and reminders on their invitation page under "Updates from the host".
 
-### ⏳ Stage 5 — co-hosts & check-in
-Co-host invitations with roles (owner / editor / check-in staff) and a door check-in screen.
+### ✅ Stage 5 — co-hosts & check-in
+
+What works:
+
+- **Co-hosts** (*Co-hosts* on the event page, owner only): invite by email as **Co-host** (edit event
+  and design, manage guests, send messages, check-in) or **Door staff** (check-in only). Only the owner
+  can cancel or delete the event and manage co-hosts. Co-hosts see the event in their dashboard with
+  their role, and can leave. Invitation links are single-use, expire after 14 days, are stored only as
+  a SHA-256 digest, and can only be accepted by a signed-in account with the invited email address
+  (sign-in/sign-up returns to the invitation).
+- **Permissions** are enforced server-side per action (`EventPolicy`): door staff never see contact
+  details, personal RSVP links, answers or exports — they're taken straight to the door screen.
+- **Check-in** (*Check-in* on the event page): arrivals vs. expected headcount, search by name,
+  check a whole party or part of it in, undo mistakes, optionally include guests who didn't say yes.
+- **QR passes**: attending guests see a pass on their invitation page. It encodes a check-in code that
+  is separate from their RSVP link (so scanning it never grants the power to change the RSVP); any
+  phone camera opens the staff check-in page for that guest. Rotating a guest's link revokes the pass.
+
+| Role | Edit event & design | Guests & contacts | Messages | Check-in | Cancel / delete | Co-hosts |
+|------|:---:|:---:|:---:|:---:|:---:|:---:|
+| Owner | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Co-host | ✓ | ✓ | ✓ | ✓ | – | – |
+| Door staff | – | names only | – | ✓ | – | – |
 
 ### ⏳ Stage 6 — optional payments
 Ticketed or paid RSVPs through a payment adapter (local fake checkout + Stripe Checkout).
@@ -189,6 +210,8 @@ Ticketed or paid RSVPs through a payment adapter (local fake checkout + Stripe C
 | Design editor (server + live preview) | `app/controllers/event_designs_controller.rb`, `app/javascript/controllers/design_editor_controller.js` |
 | Public share link and open RSVP | `app/controllers/public_events_controller.rb`, `app/models/link_rsvp.rb` |
 | Guest import / export | `app/models/guest_import.rb`, `app/models/guest_list_export.rb`, `app/models/csv_safety.rb` |
+| Co-hosts and invitations | `app/models/event_membership.rb`, `app/models/cohost_invitation.rb`, `app/controllers/cohost*_controller.rb` |
+| Check-in and QR passes | `app/controllers/check_ins_controller.rb`, `Guest#check_in!`, `GuestAccessToken.check_in_code` |
 | Calendar files and links | `app/models/calendar_invite.rb` |
 | Who may do what on an event | `app/models/event_policy.rb`, `app/controllers/concerns/event_scoped.rb` |
 | Guest-facing pages | `app/controllers/guest_invitations_controller.rb`, `app/views/guest_invitations/` |

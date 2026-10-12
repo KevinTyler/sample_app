@@ -35,7 +35,7 @@
         <h2 id="rsvp-heading"><%= { "yes" => "You're going!", "no" => "You can't make it", "maybe" => "You might come" }[@guest.rsvp_status] %></h2>
         <p>
           <%= @guest.name %><% if @guest.rsvp_yes? || @guest.rsvp_maybe? %> · party of <%= @guest.party_size %><% end %>
-          · replied <%= time_ago_in_words(@guest.responded_at) %> ago
+          <% if @guest.responded_at %>· replied <%= time_ago_in_words(@guest.responded_at) %> ago<% end %>
         </p>
       </div>
     </div>
@@ -69,6 +69,17 @@
     <p class="muted m-0">The RSVP deadline has passed. Reply to your invitation email to reach the host.</p>
   <% end %>
 </section>
+
+<% if !@preview && @event.published? && (@guest.rsvp_yes? || @guest.rsvp_maybe?) && (@event.starts_at.nil? || @event.effective_ends_at > Time.current) %>
+  <section class="guest-panel" aria-labelledby="pass-heading">
+    <h2 id="pass-heading">Your check-in pass</h2>
+    <div class="pass">
+      <img src="<%= check_in_qr_data_uri(@guest) %>" alt="Check-in QR code for <%= @guest.name %>">
+      <p class="small muted m-0">Show this at the door for quick check-in<%= " (party of #{@guest.party_size})" if @guest.party_size > 1 %>.</p>
+      <% if @guest.checked_in? %><p class="badge badge--rsvp-yes m-0">Checked in</p><% end %>
+    </div>
+  </section>
+<% end %>
 
 <%= render "guest_invitations/details", event: @event,
       calendar: (@preview ? nil : CalendarInvite.new(@event, url: guest_invitation_url(params[:token]))),

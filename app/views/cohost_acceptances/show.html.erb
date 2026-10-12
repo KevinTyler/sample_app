@@ -1,0 +1,21 @@
+<% content_for :title, "Co-host invitation" %>
+<div class="panel auth-card">
+  <p class="eyebrow">Co-host invitation</p>
+  <h1><%= @invitation.event.title %></h1>
+  <% if !@invitation.usable? %>
+    <p>This invitation has <%= @invitation.accepted_at ? "already been used" : "expired" %>. Ask the host to send a new one.</p>
+  <% elsif !authenticated? %>
+    <p><%= @invitation.invited_by&.name || "The host" %> invited <strong><%= @invitation.email %></strong> to help as <%= @invitation.role_name.downcase %>.</p>
+    <p class="small muted">Sign in or create an account with that email address, then come back to this link.</p>
+    <div class="cluster">
+      <%= link_to "Sign in", new_session_path(email_address: @invitation.email), class: "btn btn--primary" %>
+      <%= link_to "Create an account", new_registration_path, class: "btn" %>
+    </div>
+  <% elsif @mismatch %>
+    <p>This invitation was sent to <strong><%= @invitation.email %></strong>, but you're signed in as <%= current_user.email_address %>.</p>
+    <%= button_to "Sign out and switch accounts", session_path, method: :delete, class: "btn" %>
+  <% else %>
+    <p>Join as <strong><%= @invitation.role_name.downcase %></strong>: <%= EventMembership::ROLES.dig(@invitation.role, :summary).downcase_first %>.</p>
+    <%= button_to "Accept invitation", cohost_acceptance_path(params[:token]), class: "btn btn--primary" %>
+  <% end %>
+</div>

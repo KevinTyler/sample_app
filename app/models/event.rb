@@ -10,6 +10,9 @@ class Event < ApplicationRecord
   has_many :messages, dependent: :destroy
   has_many :activities, dependent: :delete_all
   has_many :guest_imports, dependent: :delete_all
+  has_many :memberships, class_name: "EventMembership", dependent: :delete_all
+  has_many :members, through: :memberships, source: :user
+  has_many :cohost_invitations, dependent: :delete_all
 
   # Optional uploaded artwork or photo for the invitation. SVG is deliberately not accepted
   # (it can carry script); only raster formats are served.
@@ -188,11 +191,13 @@ class Event < ApplicationRecord
     guests.where.not(group_name: nil).distinct.order(:group_name).pluck(:group_name)
   end
 
-  # "owner", "editor", "checkin" or nil. Co-host roles arrive with event memberships.
+  # "owner", "editor", "checkin" or nil.
   def role_for(user)
     return nil unless user
+    return "owner" if owner_id == user.id
 
-    "owner" if owner_id == user.id
+    @roles_by_user ||= {}
+    @roles_by_user.fetch(user.id) { @roles_by_user[user.id] = memberships.find_by(user_id: user.id)&.role }
   end
 
   def display_host_name

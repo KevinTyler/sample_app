@@ -11,7 +11,7 @@ class RegistrationsController < ApplicationController
     @user = User.new(params.expect(user: %i[name email_address password password_confirmation]))
     if @user.save
       start_new_session_for @user
-      redirect_to events_path, notice: "Welcome to Larkspur, #{@user.first_name}! Let's plan your first event."
+      redirect_to after_authentication_url, notice: "Welcome to Larkspur, #{@user.first_name}!"
     else
       render :new, status: :unprocessable_content
     end

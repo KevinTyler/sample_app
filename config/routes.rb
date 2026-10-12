@@ -35,6 +35,16 @@ Rails.application.routes.draw do
       collection { get :template }
     end
     resource :invitation_send, only: :create
+    resources :cohosts, only: %i[index create update destroy] do
+      collection { delete :leave }
+    end
+    resources :cohost_invitations, only: :destroy
+
+    get "check-in" => "check_ins#index", as: :check_in
+    get "check-in/scan" => "check_ins#scan", as: :check_in_scan
+    post "check-in/:guest_id" => "check_ins#create", as: :check_in_guest
+    delete "check-in/:guest_id" => "check_ins#destroy"
+
     resources :messages, only: %i[index new create show destroy] do
       member { post :retry_failed }
       collection { get :audience_count }
@@ -43,6 +53,10 @@ Rails.application.routes.draw do
       member { patch :move }
     end
   end
+
+  # Accepting a co-host invitation (token from the email link; needs the invited account).
+  get "cohost-invites/:token" => "cohost_acceptances#show", as: :cohost_acceptance
+  post "cohost-invites/:token" => "cohost_acceptances#create"
 
   # Guests: no account needed, access is via the secret token in the personal link.
   scope "i/:token", constraints: { token: /[A-Za-z0-9_-]{40}/ }, controller: "guest_invitations", as: :guest do

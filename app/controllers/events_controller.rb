@@ -13,6 +13,8 @@ class EventsController < ApplicationController
 
   def show
     authorize! :view
+    # Door staff only need the door: names and party sizes, nothing else.
+    return redirect_to(event_check_in_path(@event)) if policy.role == "checkin"
     @summary = @event.rsvp_summary
     @query = params[:q].to_s.strip
     @status_filter = params[:status].presence_in(Guest::RSVP_STATUSES)

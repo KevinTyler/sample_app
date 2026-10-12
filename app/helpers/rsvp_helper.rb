@@ -45,6 +45,8 @@ module RsvpHelper
     when "event_cancelled" then "#{name} cancelled the event"
     when "message_sent" then "#{name} sent #{data['kind'] == 'invitation' ? 'invitations' : "a#{data['kind'] == 'update' ? 'n' : ''} #{data['kind']}"} to #{pluralize(data['recipients'], 'guest')}"
     when "guests_imported" then "#{name} imported #{pluralize(data['created'], 'guest')}"
+    when "cohost_joined" then "#{name} joined as #{EventMembership::ROLES.dig(data['role'], :name).to_s.downcase}"
+    when "check_in_undone" then "#{name}'s check-in was undone"
     when "checked_in" then "#{name} checked in#{data['count'].to_i > 1 ? " (party of #{data['count']})" : ''}"
     else activity.action.humanize
     end

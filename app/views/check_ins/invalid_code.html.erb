@@ -1,0 +1,6 @@
+<% content_for :title, "Pass not recognized" %>
+<div class="panel auth-card">
+  <h1>Pass not recognized</h1>
+  <p>This QR pass isn't valid for <%= @event.title %>. It may belong to another event, or the guest's link was reset. Search for the guest by name instead.</p>
+  <%= link_to "Go to the check-in list", event_check_in_path(@event), class: "btn btn--primary" %>
+</div>

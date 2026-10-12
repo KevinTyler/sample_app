@@ -30,6 +30,14 @@ module GuestAccessToken
     ActiveSupport::SecurityUtils.secure_compare(given, signature(key)) ? key : nil
   end
 
+  # The code inside a guest's check-in QR pass: "<guest id>-<12 chars>". It is derived from the
+  # guest's key, so it's revoked with the link, but it is *not* the RSVP token — door staff who
+  # scan it can check the guest in without gaining the ability to change their RSVP.
+  def check_in_code(guest)
+    sig = Base64.urlsafe_encode64(OpenSSL::HMAC.digest("SHA256", secret, "check-in:#{guest.id}:#{guest.token_key}").byteslice(0, 9), padding: false)
+    "#{guest.id}-#{sig}"
+  end
+
   def signature(key)
     digest = OpenSSL::HMAC.digest("SHA256", secret, key)
     Base64.urlsafe_encode64(digest.byteslice(0, 18), padding: false)

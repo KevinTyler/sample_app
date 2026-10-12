@@ -1,0 +1,8 @@
+<%= @invitation.invited_by&.name || "The host" %> invited you to help with "<%= @event.title %>" on Larkspur as <%= @invitation.role_name.downcase %>.
+
+<%= EventMembership::ROLES.dig(@invitation.role, :summary) %>.
+
+Accept the invitation: <%= @url %>
+
+Sign in (or create an account) with this email address — <%= @invitation.email %> — to accept.
+The link expires on <%= @invitation.expires_at.to_date.to_fs(:long) %>.

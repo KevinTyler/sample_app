@@ -246,7 +246,7 @@
   z-index: 2;
 }
 .envelope-stage.is-sealed .invite-card { opacity: 0; transform: translateY(14%) scale(0.9); }
-.envelope-stage .invite-card { transition: opacity 0.8s ease 0.45s, transform 0.9s cubic-bezier(.2, .8, .2, 1) 0.45s; }
+.envelope-stage.is-open .invite-card { transition: opacity 0.8s ease 0.45s, transform 0.9s cubic-bezier(.2, .8, .2, 1) 0.45s; }
 .envelope-stage.is-open .envelope__flap { transform: rotateX(180deg); }
 .envelope-stage.is-open .envelope { transform: translateY(45%); opacity: 0; pointer-events: none; }
 .envelope-stage.is-open .invite-card { opacity: 1; transform: none; }

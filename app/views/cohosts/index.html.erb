@@ -1,0 +1,50 @@
+<% content_for :title, "Co-hosts · #{@event.title}" %>
+<div class="container--form stack">
+  <%= link_to @event.title, event_path(@event), class: "back-link" %>
+  <div class="page-header"><div><h1>Co-hosts</h1><p class="page-header__meta">Share the work. Only you (the owner) can cancel or delete the event and manage co-hosts.</p></div></div>
+
+  <section class="panel">
+    <h2 class="h3">People with access</h2>
+    <ul class="question-list">
+      <li><div><strong><%= @event.owner.name %></strong><div class="small muted">Owner · <%= @event.owner.email_address %></div></div></li>
+      <% @memberships.each do |membership| %>
+        <li>
+          <div><strong><%= membership.user.name %></strong>
+            <div class="small muted"><%= membership.role_name %> · <%= membership.user.email_address %></div></div>
+          <div class="cluster">
+            <% other_role = membership.role == "editor" ? "checkin" : "editor" %>
+            <%= button_to "Make #{EventMembership::ROLES.dig(other_role, :name).downcase}", event_cohost_path(@event, membership), method: :patch, params: { role: other_role }, class: "btn btn--small" %>
+            <%= button_to "Remove", event_cohost_path(@event, membership), method: :delete, class: "btn btn--small btn--danger", form: { data: { turbo_confirm: "Remove #{membership.user.name}'s access?" } } %>
+          </div>
+        </li>
+      <% end %>
+      <% @invitations.each do |invitation| %>
+        <li>
+          <div><strong><%= invitation.email %></strong><div class="small muted"><%= invitation.role_name %> · invited, expires <%= invitation.expires_at.to_date.to_fs(:long) %></div></div>
+          <%= button_to "Revoke", event_cohost_invitation_path(@event, invitation), method: :delete, class: "btn btn--small btn--ghost" %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+
+  <section class="panel">
+    <h2 class="h3">Invite someone</h2>
+    <%= form_with model: @invitation, url: event_cohosts_path(@event), class: "form" do |f| %>
+      <%= form_errors(@invitation) %>
+      <div class="field">
+        <%= f.label :email, "Their email" %>
+        <%= f.email_field :email, required: true, maxlength: 254 %>
+        <p class="field__hint">They'll need to sign in (or sign up) with this exact address to accept.</p>
+      </div>
+      <fieldset>
+        <legend>Role</legend>
+        <div class="form">
+          <% EventMembership::ROLES.each do |key, role| %>
+            <label class="checkbox"><%= f.radio_button :role, key %> <span><strong><%= role[:name] %></strong> <span class="field__hint">— <%= role[:summary] %></span></span></label>
+          <% end %>
+        </div>
+      </fieldset>
+      <div class="form-actions"><%= f.submit "Send invitation", class: "btn btn--primary" %></div>
+    <% end %>
+  </section>
+</div>

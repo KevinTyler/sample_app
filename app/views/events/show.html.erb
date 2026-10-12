@@ -2,7 +2,7 @@
 <%= link_to "Your events", events_path, class: "back-link" %>
 <div class="page-header">
   <div>
-    <div class="cluster"><%= event_status_badge(@event) %><span class="muted small">Your role: <%= policy.role %></span></div>
+    <div class="cluster"><%= event_status_badge(@event) %><span class="muted small">Your role: <%= EventsHelper::ROLE_LABELS[policy.role] %></span></div>
     <h1><%= @event.title %></h1>
     <p class="page-header__meta"><%= event_when(@event) %><% if (place = event_where(@event)) %> · <%= place %><% end %></p>
   </div>
@@ -12,6 +12,9 @@
       <%= link_to "Design", edit_event_design_path(@event), class: "btn" %>
     <% end %>
     <%= link_to "Preview as guest", preview_event_path(@event), class: "btn", target: "_blank", rel: "noopener" %>
+    <% if policy.can?(:check_in) && !@event.draft? %>
+      <%= link_to "Check-in", event_check_in_path(@event), class: "btn" %>
+    <% end %>
     <% if @event.draft? && policy.can?(:publish) %>
       <%= button_to "Publish", publish_event_path(@event), class: "btn btn--primary" %>
     <% end %>
@@ -178,6 +181,7 @@
                     <% end %>
                   </td>
                   <td class="table__actions" data-label="Actions">
+                    <% if policy.can?(:manage_guests) || policy.can?(:send_messages) %>
                     <details class="disclosure">
                       <summary>Manage</summary>
                       <div class="stack mt-s manage-menu">
@@ -199,6 +203,7 @@
                         </div>
                       </div>
                     </details>
+                    <% end %>
                   </td>
                 </tr>
               <% end %>
@@ -315,6 +320,11 @@
             <label class="checkbox"><%= f.check_box :include_guests, {}, "1", "0" %> Include guest list (fresh, no RSVPs)</label>
             <%= f.submit "Duplicate event", class: "btn btn--small" %>
           <% end %>
+        <% end %>
+        <% if policy.can?(:manage_cohosts) %>
+          <%= link_to "Co-hosts (#{@event.memberships.count})", event_cohosts_path(@event), class: "btn btn--small" %>
+        <% elsif policy.role != "owner" %>
+          <%= button_to "Leave this event", leave_event_cohosts_path(@event), method: :delete, class: "btn btn--small btn--ghost", form: { data: { turbo_confirm: "Remove your access to this event?" } } %>
         <% end %>
         <% if !@event.cancelled? && policy.can?(:cancel) %>
           <%= link_to "Cancel event…", cancellation_event_path(@event), class: "btn btn--small btn--danger" %>

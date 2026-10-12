@@ -1,6 +1,8 @@
 module EventsHelper
   STATUS_LABELS = { "draft" => "Draft", "published" => "Published", "cancelled" => "Cancelled" }.freeze
 
+  ROLE_LABELS = { "owner" => "Owner", "editor" => "Co-host", "checkin" => "Door staff" }.freeze
+
   def event_status_badge(event)
     tag.span(STATUS_LABELS.fetch(event.status), class: "badge badge--#{event.status}")
   end

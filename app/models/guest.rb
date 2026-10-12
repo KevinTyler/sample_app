@@ -48,6 +48,31 @@ class Guest < ApplicationRecord
     GuestAccessToken.for(token_key)
   end
 
+  def check_in_code
+    GuestAccessToken.check_in_code(self)
+  end
+
+  def self.find_by_check_in_code(code)
+    id = code.to_s[/\A(\d+)-[A-Za-z0-9_-]{12}\z/, 1]
+    guest = id && find_by(id: id)
+    guest if guest && ActiveSupport::SecurityUtils.secure_compare(guest.check_in_code, code.to_s)
+  end
+
+  def checked_in?
+    checked_in_at.present?
+  end
+
+  def check_in!(count:, by: nil)
+    count = count.to_i.clamp(1, [ party_size, max_party_size, 1 ].max)
+    update!(checked_in_at: checked_in_at || Time.current, checked_in_count: count)
+    Activity.record(event: event, guest: self, user: by, action: "checked_in", data: { count: count })
+  end
+
+  def undo_check_in!(by: nil)
+    update!(checked_in_at: nil, checked_in_count: 0)
+    Activity.record(event: event, guest: self, user: by, action: "check_in_undone")
+  end
+
   # Invalidates the guest's current personal link.
   def rotate_access_token!
     update!(token_key: GuestAccessToken.generate_key)
