@@ -10,6 +10,7 @@
       <%= link_to export_event_guests_path(@event, format: :csv), class: "btn", data: { turbo: false } do %><%= icon(:download, size: 18) %>Export<% end %>
     <% end %>
     <%= link_to new_event_guest_import_path(@event), class: "btn" do %><%= icon(:upload, size: 18) %>Import<% end %>
+    <%= link_to from_contacts_event_guests_path(@event), class: "btn" do %><%= icon(:cohosts, size: 18) %>From contacts<% end %>
     <%= link_to new_event_guest_path(@event), class: "btn btn--primary" do %><%= icon(:plus, size: 18) %>Add guest<% end %>
   </div>
 </header>
@@ -62,6 +63,7 @@
         <div class="cluster">
           <%= link_to "Add a guest", new_event_guest_path(@event), class: "btn btn--primary" %>
           <%= link_to "Import a CSV", new_event_guest_import_path(@event), class: "btn" %>
+          <%= link_to "Pick from contacts", from_contacts_event_guests_path(@event), class: "btn" %>
         </div>
       <% else %>
         <h2>No matches</h2>

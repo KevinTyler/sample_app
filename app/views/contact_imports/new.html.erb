@@ -1,0 +1,35 @@
+<% content_for :title, "Import contacts" %>
+<div class="container--form container--flush">
+  <%= link_to "Contacts", contacts_path, class: "back-link" %>
+  <header class="page-header mb-s">
+    <div>
+      <span class="eyebrow">Import</span>
+      <h1>Bring your people</h1>
+      <p class="page-header__meta">From your phone or email: export contacts as a vCard (.vcf) or CSV file and upload it here. Existing contacts are matched by email and never overwritten.</p>
+    </div>
+  </header>
+  <div class="grid grid--2 mt-m">
+    <div class="panel">
+      <%= form_with url: contact_import_path, multipart: true, class: "form" do |f| %>
+        <div class="field">
+          <%= f.label :file, "Contacts file (.vcf or .csv)" %>
+          <%= f.file_field :file, accept: ".vcf,.vcard,.csv,.txt,text/vcard,text/csv" %>
+        </div>
+        <div class="field">
+          <%= f.label :pasted do %>…or paste a list <span class="field__optional">(name, email, phone per line)</span><% end %>
+          <%= f.text_area :pasted, rows: 5, placeholder: "Dana Whitfield, dana@example.com, +1 555 0100" %>
+        </div>
+        <div class="form-actions"><%= f.submit "Import contacts", class: "btn btn--primary", data: { turbo_submits_with: "Importing…" } %></div>
+      <% end %>
+    </div>
+    <aside class="panel">
+      <h2 class="panel__title mb-s">Where to find the file</h2>
+      <ul class="dash-list small">
+        <li><strong>iPhone:</strong> Contacts on iCloud.com → select → Export vCard.</li>
+        <li><strong>Android / Google:</strong> contacts.google.com → Export → vCard or Google CSV.</li>
+        <li><strong>Outlook:</strong> People → Manage → Export contacts (CSV).</li>
+        <li><strong>A spreadsheet:</strong> columns like Name, Email, Phone, Household.</li>
+      </ul>
+    </aside>
+  </div>
+</div>

@@ -1,0 +1,26 @@
+<%= form_with model: contact, class: "form" do |f| %>
+  <%= form_errors(contact) %>
+  <div class="field">
+    <%= f.label :name %>
+    <%= f.text_field :name, required: true, maxlength: 100, autofocus: contact.new_record? %>
+  </div>
+  <div class="form-row form-row--2">
+    <div class="field"><%= f.label :email do %>Email <span class="field__optional">(optional)</span><% end %><%= f.email_field :email, maxlength: 254 %></div>
+    <div class="field"><%= f.label :phone do %>Mobile <span class="field__optional">(optional)</span><% end %><%= f.telephone_field :phone, maxlength: 30 %></div>
+  </div>
+  <div class="field">
+    <%= f.label :household do %>Household or group <span class="field__optional">(e.g. “The Morenos”, “Work”)</span><% end %>
+    <%= f.text_field :household, maxlength: 60 %>
+  </div>
+  <div class="field">
+    <%= f.label :notes do %>Notes <span class="field__optional">(kids' names, allergies…)</span><% end %>
+    <%= f.text_area :notes, rows: 3, maxlength: 2000 %>
+  </div>
+  <div class="form-actions">
+    <%= f.submit contact.new_record? ? "Add contact" : "Save contact", class: "btn btn--primary" %>
+    <%= link_to "Cancel", contacts_path, class: "btn btn--ghost" %>
+    <% if contact.persisted? %>
+      <%= link_to "Remove", contact_path(contact), class: "btn btn--danger ml-auto", data: { turbo_method: :delete, turbo_confirm: "Remove #{contact.name} from your contacts? Guest lists aren't affected." } %>
+    <% end %>
+  </div>
+<% end %>

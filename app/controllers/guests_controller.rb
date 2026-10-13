@@ -1,7 +1,7 @@
 class GuestsController < ApplicationController
   include EventScoped
   before_action { authorize! :manage_guests }
-  before_action :set_guest, except: %i[index new create export bulk]
+  before_action :set_guest, except: %i[index new create export bulk from_contacts add_contacts]
 
   GUESTS_PER_PAGE = 100
 
@@ -29,6 +29,7 @@ class GuestsController < ApplicationController
     @guest = @event.guests.new(guest_params.merge(source: "manual"))
     if @guest.save
       Activity.record(event: @event, guest: @guest, user: current_user, action: "guest_added")
+      Contact.remember!(current_user, **@guest.slice(:name, :email, :phone).symbolize_keys, household: @guest.group_name) if params[:save_contact] == "1"
       if params[:add_another]
         redirect_to new_event_guest_path(@event), notice: "#{@guest.name} added. Add the next guest below."
       else
@@ -79,6 +80,45 @@ class GuestsController < ApplicationController
     redirect_to event_guests_path(@event), notice: "Invitation re-sent to #{@guest.name}."
   end
 
+  # Pick people from the address book (or another event's list) to add to this guest list.
+  def from_contacts
+    @query = params[:q].to_s.strip
+    contacts = current_user.contacts.alphabetical
+    contacts = contacts.search(@query) if @query.present?
+    @contacts = contacts.limit(300)
+    @on_list = @event.guests.where.not(email: nil).pluck(:email).to_set
+    @other_events = current_user.accessible_events.where.not(id: @event.id).order(starts_at: :desc).limit(30)
+      .select { |e| EventPolicy.new(current_user, e).can?(:view_contacts) }
+  end
+
+  def add_contacts
+    added = skipped = 0
+    on_list = @event.guests.where.not(email: nil).pluck(:email).to_set
+    people = if params[:source_event_id].present?
+      source = current_user.accessible_events.find(params[:source_event_id])
+      authorize_other!(source)
+      source.guests.map { |g| g.slice(:name, :email, :phone, :group_name, :plus_ones_allowed).symbolize_keys }
+    else
+      current_user.contacts.where(id: Array(params[:contact_ids]).map(&:to_i)).map(&:guest_attributes)
+    end
+
+    Guest.transaction do
+      people.each do |person|
+        if person[:email].present? && on_list.include?(person[:email])
+          skipped += 1
+        elsif (guest = @event.guests.new(person.merge(source: "manual", plus_ones_allowed: person[:plus_ones_allowed] || @event.default_plus_ones))).save
+          on_list << guest.email if guest.email
+          added += 1
+        else
+          skipped += 1
+        end
+      end
+    end
+    Activity.record(event: @event, user: current_user, action: "guests_imported", data: { created: added }) if added.positive?
+    redirect_to event_guests_path(@event), notice: added.zero? ? "No one new to add#{" (#{skipped} already on the list)" if skipped.positive?}." :
+      "Added #{pluralize_guests(added)}#{" · #{skipped} already on the list" if skipped.positive?}.", status: :see_other
+  end
+
   def export
     authorize! :view_contacts
     send_data GuestListExport.new(@event).to_csv,
@@ -114,6 +154,10 @@ class GuestsController < ApplicationController
   end
 
   private
+    def authorize_other!(source)
+      raise EventPolicy::NotAuthorized, "You can't copy that event's guest list." unless EventPolicy.new(current_user, source).can?(:view_contacts)
+    end
+
     def pluralize_guests(count)
       helpers.pluralize(count, "guest")
     end

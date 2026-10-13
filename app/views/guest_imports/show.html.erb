@@ -17,7 +17,10 @@
 <div class="panel mt-m">
   <div class="cluster">
     <% if importable > 0 %>
-      <%= button_to "Import #{pluralize(importable, 'guest')}", confirm_event_guest_import_path(@event, @import), method: :patch, class: "btn btn--primary", data: { turbo_submits_with: "Importing…" } %>
+      <%= form_with url: confirm_event_guest_import_path(@event, @import), method: :patch, class: "cluster" do |f| %>
+        <label class="checkbox small"><%= check_box_tag :save_contacts, "1", true %> Also save them to my contacts</label>
+        <%= f.submit "Import #{pluralize(importable, 'guest')}", class: "btn btn--primary", data: { turbo_submits_with: "Importing…" } %>
+      <% end %>
     <% end %>
     <%= button_to "Discard", event_guest_import_path(@event, @import), method: :delete, class: "btn btn--ghost" %>
     <% if counts[:invalid] > 0 %><span class="small muted">Rows that need fixing are skipped. Fix them in your file and import again, or add them by hand.</span><% end %>

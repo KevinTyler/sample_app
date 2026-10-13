@@ -8,8 +8,12 @@ Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
 
-  # Host account settings
+  # Host account settings and address book
   resource :account, only: %i[edit update]
+  resources :contacts, except: :show do
+    collection { get :export }
+  end
+  resource :contact_import, only: %i[new create]
 
   # Host dashboard
   resources :events do
@@ -32,6 +36,8 @@ Rails.application.routes.draw do
       collection do
         get :export
         post :bulk
+        get :from_contacts
+        post :add_contacts
       end
     end
     resources :guest_imports, only: %i[new create show destroy] do

@@ -1,0 +1,6 @@
+<% content_for :title, @contact.name %>
+<div class="container--form container--flush">
+  <%= link_to "Contacts", contacts_path, class: "back-link" %>
+  <header class="page-header mb-s"><div><h1><%= @contact.name %></h1></div></header>
+  <div class="panel mt-m"><%= render "form", contact: @contact %></div>
+</div>

@@ -23,7 +23,7 @@ export default class extends Controller {
       this.allTarget.checked = selected > 0 && selected === this.checkboxTargets.length
       this.allTarget.indeterminate = selected > 0 && selected < this.checkboxTargets.length
     }
-    if (this.hasSubmitTarget) this.submitTarget.disabled = selected === 0 || !this.actionTarget.value
+    if (this.hasSubmitTarget) this.submitTarget.disabled = selected === 0 || (this.hasActionTarget && !this.actionTarget.value)
     if (this.hasBarTarget) this.barTarget.classList.toggle("is-active", selected > 0)
   }
 }

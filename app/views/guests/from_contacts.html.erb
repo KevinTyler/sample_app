@@ -1,0 +1,75 @@
+<% content_for :title, "Add from contacts · #{@event.title}" %>
+<%= link_to "Guest list", event_guests_path(@event), class: "back-link" %>
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Add guests</span>
+    <h1>From your <em>contacts</em></h1>
+    <p class="page-header__meta">Tick the people to invite. Each gets their own private link for this event.</p>
+  </div>
+</header>
+
+<div class="grid grid--sidebar">
+  <section class="panel panel--flush" aria-label="Contacts" data-controller="bulk-select">
+    <div class="guest-tools stack-s">
+      <%= form_with url: from_contacts_event_guests_path(@event), method: :get, class: "toolbar" do |f| %>
+        <div class="search-field">
+          <%= icon(:search, size: 18) %>
+          <%= f.label :q, "Search contacts", class: "visually-hidden" %>
+          <%= f.search_field :q, value: @query, placeholder: "Search your contacts" %>
+        </div>
+        <%= f.submit "Search", class: "btn btn--small" %>
+      <% end %>
+      <% if @contacts.any? %>
+        <%= form_with url: add_contacts_event_guests_path(@event), method: :post, id: "add-contacts", class: "bulk-bar", data: { bulk_select_target: "bar" } do |f| %>
+          <span class="bulk-bar__count" data-bulk-select-target="count">0 selected</span>
+          <%= f.submit "Add to guest list", class: "btn btn--small btn--primary ml-auto", disabled: true, data: { bulk_select_target: "submit" } %>
+        <% end %>
+      <% end %>
+    </div>
+    <% if @contacts.empty? %>
+      <div class="empty-state empty-state--inset">
+        <h2><%= @query.present? ? "No matches" : "No contacts yet" %></h2>
+        <p class="muted">Import your phone or email contacts once, and they're here for every event.</p>
+        <%= link_to "Import contacts", new_contact_import_path, class: "btn btn--primary" %>
+      </div>
+    <% else %>
+      <div class="table-wrap">
+        <table class="table table--responsive">
+          <thead><tr>
+            <th scope="col" class="table__check"><input type="checkbox" aria-label="Select all contacts shown" data-action="bulk-select#toggleAll" data-bulk-select-target="all"></th>
+            <th scope="col">Name</th><th scope="col">Email</th><th scope="col">Household</th>
+          </tr></thead>
+          <tbody>
+            <% @contacts.each do |contact| %>
+              <% on_list = contact.email && @on_list.include?(contact.email) %>
+              <tr>
+                <td class="table__check">
+                  <% if on_list %><span class="badge badge--rsvp-yes" title="Already on this guest list">✓</span><% else %>
+                    <input type="checkbox" name="contact_ids[]" value="<%= contact.id %>" form="add-contacts" aria-label="Select <%= contact.name %>" data-action="bulk-select#update" data-bulk-select-target="checkbox">
+                  <% end %>
+                </td>
+                <td data-label="Guest"><div class="person"><span class="monogram monogram--small" aria-hidden="true"><%= initials(contact.name) %></span><span class="table__primary"><%= contact.name %></span><% if on_list %><span class="faint small">on the list</span><% end %></div></td>
+                <td data-label="Email"><%= contact.email || contact.phone || "—" %></td>
+                <td data-label="Household"><%= contact.household || "—" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </section>
+
+  <aside class="panel" aria-labelledby="copy-heading">
+    <h2 id="copy-heading" class="panel__title mb-s">Copy another event's list</h2>
+    <% if @other_events.any? %>
+      <%= form_with url: add_contacts_event_guests_path(@event), method: :post, class: "form" do |f| %>
+        <%= f.label :source_event_id, "Event", class: "visually-hidden" %>
+        <%= f.select :source_event_id, @other_events.map { |e| [ "#{e.title} (#{e.guests.size})", e.id ] } %>
+        <p class="field__hint m-0">Everyone comes over fresh — no replies, new private links.</p>
+        <div><%= f.submit "Copy guests", class: "btn btn--small" %></div>
+      <% end %>
+    <% else %>
+      <p class="small muted m-0">Your other events' guest lists will show up here.</p>
+    <% end %>
+  </aside>
+</div>

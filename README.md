@@ -276,6 +276,15 @@ view, door), then implemented across every screen:
 - **Installable app**: web app manifest + service worker (offline page), so hosts and door staff can
   add Cordially to their home screen.
 
+### ✅ Stage 10 — contacts
+
+- **Address book** (*Contacts* in the header): private to each host; add, edit, search, export CSV.
+- **Import** from a phone/Google/Outlook export (vCard `.vcf`) or any CSV/pasted list. Existing
+  contacts (same email) only get missing details filled in.
+- **Add from contacts** on any guest list (tick people), or **copy another event's list** (fresh
+  links, no replies; only from events where you can see contact details).
+- New guests and imported lists can be saved to contacts as you go (on by default, per form).
+
 ## Architecture
 
 | Area | Where |

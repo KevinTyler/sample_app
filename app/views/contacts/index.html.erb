@@ -1,0 +1,62 @@
+<% content_for :title, "Contacts" %>
+<header class="page-header mb-s">
+  <div>
+    <span class="eyebrow">Your address book</span>
+    <h1><%= pluralize(@total, "contact") %></h1>
+    <p class="page-header__meta">Everyone you save here can be added to any event in a tap. Only you can see your contacts.</p>
+  </div>
+  <div class="page-header__actions">
+    <% if @total > 0 %><%= link_to export_contacts_path(format: :csv), class: "btn", data: { turbo: false } do %><%= icon(:download, size: 18) %>Export<% end %><% end %>
+    <%= link_to new_contact_import_path, class: "btn" do %><%= icon(:upload, size: 18) %>Import<% end %>
+    <%= link_to new_contact_path, class: "btn btn--primary" do %><%= icon(:plus, size: 18) %>Add contact<% end %>
+  </div>
+</header>
+
+<section class="panel panel--flush mt-m" aria-label="Contacts">
+  <div class="guest-tools">
+    <%= form_with url: contacts_path, method: :get, class: "toolbar" do |f| %>
+      <div class="search-field">
+        <%= icon(:search, size: 18) %>
+        <%= f.label :q, "Search contacts", class: "visually-hidden" %>
+        <%= f.search_field :q, value: @query, placeholder: "Search name, email, phone or household" %>
+      </div>
+      <%= f.submit "Search", class: "btn btn--small" %>
+    <% end %>
+  </div>
+  <% if @contacts.empty? %>
+    <div class="empty-state empty-state--inset">
+      <% if @total.zero? %>
+        <h2>Your address book is empty</h2>
+        <p class="muted">Import from your phone (vCard), Google or Outlook (CSV), or save guests as you add them.</p>
+        <div class="cluster"><%= link_to "Import contacts", new_contact_import_path, class: "btn btn--primary" %><%= link_to "Add one", new_contact_path, class: "btn" %></div>
+      <% else %>
+        <h2>No matches</h2>
+        <%= link_to "Clear search", contacts_path, class: "btn" %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="table-wrap">
+      <table class="table table--responsive">
+        <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Phone</th><th scope="col">Household</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody>
+          <% @contacts.each do |contact| %>
+            <tr id="<%= dom_id(contact) %>">
+              <td data-label="Guest"><div class="person"><span class="monogram" aria-hidden="true"><%= initials(contact.name) %></span><span class="person__text"><span class="table__primary"><%= contact.name %></span><% if contact.notes.present? %><span class="table__secondary"><%= contact.notes.truncate(60) %></span><% end %></span></div></td>
+              <td data-label="Email" class="table__secondary--contact"><%= contact.email || "—" %></td>
+              <td data-label="Phone"><%= contact.phone || "—" %></td>
+              <td data-label="Household"><% if contact.household %><span class="tag"><%= contact.household %></span><% else %>—<% end %></td>
+              <td class="table__actions" data-label="Actions"><%= link_to "Edit", edit_contact_path(contact), class: "btn btn--small btn--ghost" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <% if @total_pages > 1 %>
+      <nav class="pagination" aria-label="Contact pages">
+        <% if @page > 1 %><%= link_to "← Previous", contacts_path(q: @query.presence, page: @page - 1), class: "btn btn--small" %><% end %>
+        <span class="small muted">Page <%= @page %> of <%= @total_pages %></span>
+        <% if @page < @total_pages %><%= link_to "Next →", contacts_path(q: @query.presence, page: @page + 1), class: "btn btn--small" %><% end %>
+      </nav>
+    <% end %>
+  <% end %>
+</section>

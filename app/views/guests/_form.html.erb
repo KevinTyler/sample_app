@@ -31,6 +31,9 @@
     <%= f.label :host_notes do %>Private notes <span class="field__optional">(only hosts see these)</span><% end %>
     <%= f.text_area :host_notes, rows: 2, maxlength: 2000 %>
   </div>
+  <% if guest.new_record? %>
+    <label class="checkbox"><%= check_box_tag :save_contact, "1", params.key?(:save_contact) ? params[:save_contact] == "1" : true %> Save to my contacts for next time</label>
+  <% end %>
   <div class="form-actions">
     <%= f.submit guest.new_record? ? "Add guest" : "Save guest", class: "btn btn--primary" %>
     <% if guest.new_record? %><%= f.submit "Add and add another", name: "add_another", class: "btn" %><% end %>

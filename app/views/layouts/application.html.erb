@@ -20,6 +20,7 @@
         <nav class="app-nav" aria-label="Main">
           <% if authenticated? %>
             <%= nav_link "Events", events_path, active: controller_name == "events" && action_name == "index" %>
+            <%= nav_link "Contacts", contacts_path, active: controller_name.in?(%w[contacts contact_imports]) %>
             <%= link_to new_event_path, class: "btn btn--wax btn--small" do %><%= icon(:plus, size: 16) %>New event<% end %>
             <details class="menu">
               <summary class="icon-button" aria-label="Account menu"><span class="avatar"><%= initials(current_user.name) %></span></summary>

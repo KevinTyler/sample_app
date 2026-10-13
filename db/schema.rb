@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_020000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -66,6 +66,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_010000) do
     t.index ["event_id"], name: "index_cohost_invitations_on_event_id"
     t.index ["invited_by_id"], name: "index_cohost_invitations_on_invited_by_id"
     t.index ["token_digest"], name: "index_cohost_invitations_on_token_digest", unique: true
+  end
+
+  create_table "contacts", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "name", null: false
+    t.string "email"
+    t.string "phone"
+    t.string "household"
+    t.text "notes"
+    t.datetime "last_invited_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "email"], name: "index_contacts_on_user_id_and_email", unique: true, where: "email IS NOT NULL"
+    t.index ["user_id", "name"], name: "index_contacts_on_user_id_and_name"
+    t.index ["user_id"], name: "index_contacts_on_user_id"
   end
 
   create_table "deliveries", force: :cascade do |t|
@@ -316,6 +331,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_010000) do
   add_foreign_key "activities", "users", on_delete: :nullify
   add_foreign_key "cohost_invitations", "events"
   add_foreign_key "cohost_invitations", "users", column: "invited_by_id", on_delete: :nullify
+  add_foreign_key "contacts", "users"
   add_foreign_key "deliveries", "guests"
   add_foreign_key "deliveries", "messages"
   add_foreign_key "event_links", "events"

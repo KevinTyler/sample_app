@@ -37,7 +37,11 @@ class GuestImportsController < ApplicationController
   def confirm
     return redirect_to(event_path(@event), notice: "That import was already applied.") unless @import.pending?
 
+    people = @import.rows.select(&:importable?).map(&:attributes)
     summary = @import.apply!(by: current_user)
+    if params[:save_contacts] == "1"
+      people.each { |p| Contact.remember!(current_user, name: p[:name], email: p[:email], phone: p[:phone], household: p[:group_name]) }
+    end
     redirect_to event_guests_path(@event),
       notice: "Import complete: #{summary['created']} added, #{summary['updated']} updated, #{summary['skipped']} skipped."
   end
