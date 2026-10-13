@@ -1,4 +1,4 @@
-<%# locals: (event:, design: InvitationDesign.for(event), card_id: "invite-card-#{event.id || 'new'}", show_details: true, editor: false) %>
+<%# locals: (event:, design: InvitationDesign.for(event), card_id: "invite-card-#{event.id || 'new'}", show_details: true, editor: false, title_tag: :h1) %>
 <%= render "invitations/design_style", design: design, selector: "##{card_id}" %>
 <% photo = event.artwork if event.artwork.attached? && event.artwork.blob&.persisted? %>
 <% target = ->(name) { editor ? { design_editor_target: name } : {} } %>
@@ -19,7 +19,7 @@
     <% end %>
     <%= tag.p design.tagline, class: "invite-card__tagline", hidden: design.tagline.blank?, data: target.("tagline") %>
     <%= tag.p design.headline, class: "invite-card__headline", hidden: design.headline.blank?, data: target.("headline") %>
-    <h1 class="invite-card__title"><%= event.title %></h1>
+    <%= content_tag title_tag, event.title, class: "invite-card__title" %>
     <div class="invite-card__divider" aria-hidden="true"></div>
     <% if show_details %>
       <p class="invite-card__when"><%= card_when(event) %></p>

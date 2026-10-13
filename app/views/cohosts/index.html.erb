@@ -1,10 +1,15 @@
 <% content_for :title, "Co-hosts · #{@event.title}" %>
-<div class="container--form stack">
-  <%= link_to @event.title, event_path(@event), class: "back-link" %>
-  <div class="page-header"><div><h1>Co-hosts</h1><p class="page-header__meta">Share the work. Only you (the owner) can cancel or delete the event and manage co-hosts.</p></div></div>
+<div class="form-width stack">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">Co-hosts</span>
+      <h1>Host it <em>together</em></h1>
+      <p class="page-header__meta">Share the work. Only you (the owner) can cancel or delete the event and manage co-hosts.</p>
+    </div>
+  </header>
 
   <section class="panel">
-    <h2 class="h3">People with access</h2>
+    <h2 class="panel__title mb-s">People with access</h2>
     <ul class="question-list">
       <li><div><strong><%= @event.owner.name %></strong><div class="small muted">Owner · <%= @event.owner.email_address %></div></div></li>
       <% @memberships.each do |membership| %>
@@ -28,7 +33,7 @@
   </section>
 
   <section class="panel">
-    <h2 class="h3">Invite someone</h2>
+    <h2 class="panel__title mb-s">Invite someone</h2>
     <%= form_with model: @invitation, url: event_cohosts_path(@event), class: "form" do |f| %>
       <%= form_errors(@invitation) %>
       <div class="field">

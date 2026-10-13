@@ -1,17 +1,20 @@
 <% content_for :title, "Messages · #{@event.title}" %>
-<%= link_to @event.title, event_path(@event), class: "back-link" %>
-<div class="page-header">
-  <div><h1>Messages</h1><p class="page-header__meta">Invitations, updates and reminders sent to your guests.</p></div>
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Messages</span>
+    <h1>Keep everyone <em>in the loop</em></h1>
+    <p class="page-header__meta">Invitations, updates and reminders — sent now or scheduled for later.</p>
+  </div>
   <div class="page-header__actions">
     <%= link_to "Remind non-responders", new_event_message_path(@event, preset: "nudge"), class: "btn" %>
-    <%= link_to "New update", new_event_message_path(@event), class: "btn btn--primary" %>
+    <%= link_to new_event_message_path(@event), class: "btn btn--primary" do %><%= icon(:send, size: 18) %>New update<% end %>
   </div>
-</div>
+</header>
 
 <% if @messages.empty? %>
-  <div class="empty-state"><h2>No messages yet</h2><p class="muted">Send invitations from the event page, or post an update to your guests.</p></div>
+  <div class="empty-state"><h2>No messages yet</h2><p class="muted">Send invitations from the Overview, or post an update to your guests.</p></div>
 <% else %>
-  <div class="panel">
+  <div class="panel panel--flush">
     <div class="table-wrap">
       <table class="table table--responsive">
         <thead><tr><th scope="col">Message</th><th scope="col">To</th><th scope="col">Status</th><th scope="col">Deliveries</th></tr></thead>

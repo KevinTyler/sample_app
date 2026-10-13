@@ -1,0 +1,15 @@
+<%# The event workspace: the app shell plus the event's section navigation. %>
+<% content_for :crumb do %>
+  <%= link_to @event.title_in_database.presence || "Untitled event", event_path(@event), class: "crumb" %>
+<% end %>
+<% content_for :workspace do %>
+  <% if content_for?(:full_bleed) %>
+    <%= yield %>
+  <% else %>
+    <div class="workspace">
+      <%= render "events/workspace_nav", event: @event %>
+      <div class="workspace__main"><%= yield %></div>
+    </div>
+  <% end %>
+<% end %>
+<%= render template: "layouts/application" %>

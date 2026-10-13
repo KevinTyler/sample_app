@@ -1,8 +1,55 @@
-<% content_for :title, "Edit #{@event.title}" %>
-<div class="container--form">
-  <%= link_to @event.title, event_path(@event), class: "back-link" %>
-  <div class="page-header"><div><h1>Edit event details</h1>
-    <% if @event.published? %><p class="page-header__meta">This event is live. Guests will see changes right away; date, time or place changes also refresh their calendar entry.</p><% end %>
-  </div></div>
+<% content_for :title, "Settings · #{@event.title_in_database}" %>
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Settings</span>
+    <h1>Event details</h1>
+    <% if @event.published? %><p class="page-header__meta">This event is live. Guests see changes right away; date, time or place changes also refresh their calendar entry.</p><% end %>
+  </div>
+</header>
+
+<div class="grid grid--sidebar">
   <div class="panel"><%= render "form", event: @event %></div>
+
+  <aside class="stack" aria-label="More settings">
+    <% if !@event.draft? %>
+      <section class="panel">
+        <h2 class="panel__title mb-s">Share link</h2>
+        <p class="small muted"><%= @event.allow_link_rsvp ? "Anyone with the link can view the invitation and reply (they're added to your guest list)." : "Anyone with the link can view the invitation. Replies need a personal link — turn on open replies under RSVPs." %></p>
+        <%= button_to "Revoke & create new link", regenerate_share_link_event_path(@event), class: "btn btn--small", form: { data: { turbo_confirm: "The current share link will stop working. Continue?" } } %>
+      </section>
+    <% end %>
+
+    <section class="panel">
+      <h2 class="panel__title mb-s">Duplicate</h2>
+      <p class="small muted">Hosting it again? Start a new draft with the same details and design.</p>
+      <%= form_with url: duplicate_event_path(@event), method: :post, class: "form" do |f| %>
+        <label class="checkbox"><%= f.check_box :include_guests, {}, "1", "0" %> Include the guest list (fresh, no replies)</label>
+        <div><%= f.submit "Duplicate event", class: "btn btn--small" %></div>
+      <% end %>
+    </section>
+
+    <% if policy.role != "owner" %>
+      <section class="panel">
+        <h2 class="panel__title mb-s">Your access</h2>
+        <p class="small muted">You're a <%= EventsHelper::ROLE_LABELS[policy.role].downcase %> on this event.</p>
+        <%= button_to "Leave this event", leave_event_cohosts_path(@event), method: :delete, class: "btn btn--small", form: { data: { turbo_confirm: "Remove your access to this event?" } } %>
+      </section>
+    <% end %>
+
+    <% if (!@event.cancelled? && policy.can?(:cancel)) || policy.can?(:destroy) %>
+      <section class="panel panel--danger">
+        <h2 class="panel__title mb-s">Danger zone</h2>
+        <div class="stack-s">
+          <% if !@event.cancelled? && policy.can?(:cancel) %>
+            <p class="small m-0">Cancelling tells guests and closes replies. The guest list is kept.</p>
+            <%= link_to "Cancel event…", cancellation_event_path(@event), class: "btn btn--small btn--danger" %>
+          <% end %>
+          <% if policy.can?(:destroy) %>
+            <p class="small m-0">Deleting removes the event, its guest list and every reply for good.</p>
+            <%= button_to "Delete event", event_path(@event), method: :delete, class: "btn btn--small btn--danger", form: { data: { turbo_confirm: "Delete this event, its guest list and every response? This can't be undone." } } %>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+  </aside>
 </div>

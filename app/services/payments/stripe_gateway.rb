@@ -39,7 +39,7 @@ module Payments
       # One key per checkout attempt: protects this request against network-level replays, while a new
       # attempt (e.g. after a session expired) still gets a fresh session. Double clicks never reach
       # here twice — Payment#ensure_checkout! reuses the stored session under a row lock.
-      body = post("/checkout/sessions", params, idempotency_key: "larkspur-payment-#{payment.id}-#{Time.current.to_i}")
+      body = post("/checkout/sessions", params, idempotency_key: "cordially-payment-#{payment.id}-#{Time.current.to_i}")
       Checkout.new(url: body.fetch("url"), session_id: body.fetch("id"))
     end
 

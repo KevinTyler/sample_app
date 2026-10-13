@@ -38,13 +38,13 @@ class GuestImportsController < ApplicationController
     return redirect_to(event_path(@event), notice: "That import was already applied.") unless @import.pending?
 
     summary = @import.apply!(by: current_user)
-    redirect_to event_path(@event, anchor: "guests"),
+    redirect_to event_guests_path(@event),
       notice: "Import complete: #{summary['created']} added, #{summary['updated']} updated, #{summary['skipped']} skipped."
   end
 
   def destroy
     @import.destroy!
-    redirect_to event_path(@event, anchor: "guests"), notice: "Import discarded.", status: :see_other
+    redirect_to event_guests_path(@event), notice: "Import discarded.", status: :see_other
   end
 
   # A starter spreadsheet showing the columns we understand.
@@ -54,7 +54,7 @@ class GuestImportsController < ApplicationController
       rows << [ "Dana Whitfield", "dana@example.com", "+1 555 010 2000", "Family", "1", "Vegetarian" ]
       rows << [ "Lee Park", "lee@example.com", "", "Work", "0", "" ]
     end
-    send_data csv, filename: "larkspur-guest-list-template.csv", type: "text/csv"
+    send_data csv, filename: "cordially-guest-list-template.csv", type: "text/csv"
   end
 
   private

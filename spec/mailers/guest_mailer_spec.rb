@@ -9,7 +9,7 @@ RSpec.describe GuestMailer do
 
   it "addresses the guest personally with their private link" do
     expect(mail.to).to eq([ guest.email ])
-    expect(mail[:from].display_names).to eq([ "The Parks via Larkspur" ])
+    expect(mail[:from].display_names).to eq([ "The Parks via Cordially" ])
     expect(mail.reply_to).to eq([ event.owner.email_address ])
     expect(mail.text_part.body.to_s).to include("Hi Dana", "/i/#{guest.access_token}")
   end

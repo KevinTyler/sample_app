@@ -77,7 +77,7 @@ RSpec.describe "Ticketed events", type: :request do
 
     it "creates a Checkout session and records payment from a signed webhook" do
       stub = stub_request(:post, "https://api.stripe.com/v1/checkout/sessions")
-        .with(headers: { "Idempotency-Key" => /\Alarkspur-payment-\d+-\d+\z/ }) { |request|
+        .with(headers: { "Idempotency-Key" => /\Acordially-payment-\d+-\d+\z/ }) { |request|
           form = Rack::Utils.parse_nested_query(request.body)
           form["mode"] == "payment" && form.dig("line_items", "0", "quantity") == "2" &&
             form.dig("line_items", "0", "price_data", "unit_amount") == "2000"

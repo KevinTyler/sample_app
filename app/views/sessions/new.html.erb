@@ -1,6 +1,8 @@
 <% content_for :title, "Sign in" %>
-<div class="panel auth-card">
-  <h1>Welcome back</h1>
+<div class="auth-shell">
+<div class="auth-card">
+  <%= render "shared/brand_mark", css_class: "auth-card__seal" %>
+  <h1>Welcome <em>back</em></h1>
   <%= form_with url: session_path, class: "form" do |form| %>
     <div class="field">
       <%= form.label :email_address, "Email" %>
@@ -15,4 +17,5 @@
     </div>
   <% end %>
   <p class="small muted"><%= link_to "Forgot password?", new_password_path %> · New here? <%= link_to "Create an account", new_registration_path %></p>
+</div>
 </div>

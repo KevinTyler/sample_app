@@ -1,0 +1,64 @@
+<% content_for :title, "RSVP form · #{@event.title}" %>
+<header class="page-header">
+  <div>
+    <span class="eyebrow">RSVP form</span>
+    <h1>What would you like to know?</h1>
+    <p class="page-header__meta">Every guest answers yes, no<%= " or maybe" if @event.allow_maybe %> and their party size. Add your own questions below.</p>
+  </div>
+  <div class="page-header__actions">
+    <%= link_to new_event_question_path(@event), class: "btn btn--primary" do %><%= icon(:plus, size: 18) %>Add a question<% end %>
+  </div>
+</header>
+
+<div class="grid grid--sidebar">
+  <section aria-label="Questions">
+    <% if @questions.empty? %>
+      <div class="empty-state">
+        <h2>Just the essentials, for now</h2>
+        <p class="muted">Ask for meal choices, dietary needs, a song request or anything else.</p>
+        <div class="cluster">
+          <%= link_to "Meal choice", new_event_question_path(@event, kind: "choice"), class: "btn" %>
+          <%= link_to "Short answer", new_event_question_path(@event, kind: "short_text"), class: "btn" %>
+          <%= link_to "Longer note", new_event_question_path(@event, kind: "long_text"), class: "btn" %>
+        </div>
+      </div>
+    <% else %>
+      <ol class="question-list">
+        <% @questions.each_with_index do |question, i| %>
+          <li>
+            <div class="stack-s question-list__body">
+              <strong><%= question.prompt %></strong>
+              <div class="small faint"><%= EventQuestion::KINDS[question.kind] %><%= " · required" if question.required %> · asked of <%= question.applies_to == "all" ? "everyone" : "guests who are coming" %></div>
+              <% if question.choice? %>
+                <% tally = question.rsvp_answers.group_by(&:value).transform_values(&:size) %>
+                <% total = tally.values.sum %>
+                <ul class="tally">
+                  <% question.options.each do |option| %>
+                    <li><span><%= option %></span><strong><%= tally.fetch(option, 0) %></strong><span class="tally__bar"><span class="tally__fill" data-width="<%= percent(tally.fetch(option, 0), total) %>"></span></span></li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <div class="small muted"><%= pluralize(question.rsvp_answers.size, "answer") %> so far</div>
+              <% end %>
+            </div>
+            <div class="cluster">
+              <% if i > 0 %><%= button_to "↑", move_event_question_path(@event, question, direction: "up"), method: :patch, class: "btn btn--small btn--ghost", title: "Move up", aria: { label: "Move “#{question.prompt}” up" } %><% end %>
+              <% if i < @questions.size - 1 %><%= button_to "↓", move_event_question_path(@event, question, direction: "down"), method: :patch, class: "btn btn--small btn--ghost", title: "Move down", aria: { label: "Move “#{question.prompt}” down" } %><% end %>
+              <%= link_to "Edit", edit_event_question_path(@event, question), class: "btn btn--small" %>
+            </div>
+          </li>
+        <% end %>
+      </ol>
+    <% end %>
+  </section>
+
+  <aside class="panel" aria-labelledby="form-preview-heading">
+    <h2 id="form-preview-heading" class="panel__title mb-s">How guests see it</h2>
+    <div class="preview-rsvp">
+      <strong>Will you be there?</strong>
+      <div class="preview-rsvp__choices"><span>Yes</span><% if @event.allow_maybe %><span>Maybe</span><% end %><span>No</span></div>
+      <span class="small muted">Party size<% @questions.first(4).each do |q| %> · <%= q.prompt %><% end %><%= " · …" if @questions.size > 4 %> · A note for the host</span>
+    </div>
+    <p class="small muted mt-s m-0">Change “Maybe”, plus-ones and the reply deadline in <%= link_to "Settings", edit_event_path(@event) %>.</p>
+  </aside>
+</div>

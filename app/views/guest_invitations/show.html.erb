@@ -1,7 +1,7 @@
 <% content_for :title, @event.title %>
 <% design = InvitationDesign.for(@event) %>
 <% content_for :head do %>
-  <style nonce="<%= content_security_policy_nonce %>">.guest-body { --guest-backdrop: color-mix(in srgb, <%= design.valid? ? design.accent_color : "#6b6fd8" %> 14%, #f3efe8); }</style>
+  <style nonce="<%= content_security_policy_nonce %>">.guest-body { --guest-backdrop: color-mix(in srgb, <%= design.valid? ? design.accent_color : "#8e2b4f" %> 16%, #f3efe8); }</style>
 <% end %>
 
 <% if @preview %>
@@ -105,10 +105,13 @@
     <h2 id="updates-heading">Updates from the host</h2>
     <ul class="update-list">
       <% @updates.each do |update| %>
+        <% sent = @event.local(update.dispatched_at) %>
         <li>
-          <h3><%= update.subject_line %></h3>
-          <time datetime="<%= update.dispatched_at.iso8601 %>"><%= @event.local(update.dispatched_at).strftime("%b %-d, %Y") %></time>
-          <% if update.body.present? %><p><%= update.body %></p><% end %>
+          <time class="date-chip" datetime="<%= update.dispatched_at.iso8601 %>"><%= sent.strftime("%b") %><strong><%= sent.day %></strong></time>
+          <div class="update-list__text">
+            <h4><%= update.subject_line %></h4>
+            <% if update.body.present? %><p><%= update.body %></p><% end %>
+          </div>
         </li>
       <% end %>
     </ul>

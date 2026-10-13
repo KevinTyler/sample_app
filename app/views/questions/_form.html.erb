@@ -22,7 +22,7 @@
   <label class="checkbox"><%= f.check_box :required %> Require an answer</label>
   <div class="form-actions">
     <%= f.submit question.new_record? ? "Add question" : "Save question", class: "btn btn--primary" %>
-    <%= link_to "Cancel", event_path(event, anchor: "questions"), class: "btn btn--ghost" %>
+    <%= link_to "Cancel", event_questions_path(event), class: "btn btn--ghost" %>
     <% if question.persisted? %>
       <%= link_to "Delete question", event_question_path(event, question), class: "btn btn--danger", data: { turbo_method: :delete, turbo_confirm: "Delete this question and all its answers?" } %>
     <% end %>

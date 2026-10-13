@@ -18,7 +18,7 @@ module Payments
 
     def verifier
       @verifier ||= ActiveSupport::MessageVerifier.new(
-        Rails.application.key_generator.generate_key("larkspur/fake-checkout", 32),
+        Rails.application.key_generator.generate_key("cordially/fake-checkout", 32),
         digest: "SHA256", serializer: JSON, url_safe: true
       )
     end

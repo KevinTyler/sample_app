@@ -20,7 +20,7 @@ Rails.application.routes.draw do
     end
 
     resource :design, only: %i[edit update], controller: "event_designs"
-    resources :guests, except: %i[index show] do
+    resources :guests, except: :show do
       member do
         patch :rsvp
         post :resend
@@ -49,7 +49,7 @@ Rails.application.routes.draw do
       member { post :retry_failed }
       collection { get :audience_count }
     end
-    resources :questions, except: %i[index show] do
+    resources :questions, except: :show do
       member { patch :move }
     end
   end

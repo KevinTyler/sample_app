@@ -1,5 +1,7 @@
 <% content_for :title, "Reset your password" %>
-<div class="panel auth-card">
+<div class="auth-shell">
+<div class="auth-card">
+  <%= render "shared/brand_mark", css_class: "auth-card__seal" %>
   <h1>Forgot your password?</h1>
   <%= form_with url: passwords_path, class: "form" do |form| %>
     <div class="field">
@@ -8,4 +10,5 @@
     </div>
     <div class="form-actions"><%= form.submit "Email reset instructions", class: "btn btn--primary btn--block" %></div>
   <% end %>
+</div>
 </div>

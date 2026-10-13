@@ -1,6 +1,12 @@
 <% content_for :title, "New event" %>
-<div class="container--form">
+<div class="container--form container--flush">
   <%= link_to "Your events", events_path, class: "back-link" %>
-  <div class="page-header"><div><p class="eyebrow">Step 1 of 3 · Details</p><h1>New event</h1><p class="page-header__meta">You can change anything later. Next you'll pick a design and add guests.</p></div></div>
-  <div class="panel"><%= render "form", event: @event %></div>
+  <header class="page-header mb-s">
+    <div>
+      <span class="eyebrow">Step 1 of 3 · Details</span>
+      <h1>What are we <em>celebrating?</em></h1>
+      <p class="page-header__meta">You can change anything later. Next you'll make the invitation yours, then add guests.</p>
+    </div>
+  </header>
+  <div class="panel mt-m"><%= render "form", event: @event %></div>
 </div>

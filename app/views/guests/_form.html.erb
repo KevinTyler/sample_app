@@ -34,6 +34,6 @@
   <div class="form-actions">
     <%= f.submit guest.new_record? ? "Add guest" : "Save guest", class: "btn btn--primary" %>
     <% if guest.new_record? %><%= f.submit "Add and add another", name: "add_another", class: "btn" %><% end %>
-    <%= link_to "Cancel", event_path(event, anchor: "guests"), class: "btn btn--ghost" %>
+    <%= link_to "Cancel", event_guests_path(event), class: "btn btn--ghost" %>
   </div>
 <% end %>

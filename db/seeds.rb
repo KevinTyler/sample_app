@@ -1,14 +1,14 @@
 # Demo data for local development: `bin/rails db:seed` (safe to run more than once).
-# Sign in as demo@larkspur.test / larkspur-demo-1
+# Sign in as demo@cordially.test / cordially-demo-1
 
 return if Rails.env.production?
 
 # Run deliveries synchronously so seeded emails land in the outbox before this process exits.
 ActiveJob::Base.queue_adapter = :inline
 
-host = User.find_or_create_by!(email_address: "demo@larkspur.test") do |u|
+host = User.find_or_create_by!(email_address: "demo@cordially.test") do |u|
   u.name = "Jordan Rivera"
-  u.password = "larkspur-demo-1"
+  u.password = "cordially-demo-1"
 end
 
 birthday = host.owned_events.find_or_initialize_by(title: "Maya's 30th Birthday")
@@ -60,5 +60,5 @@ dinner = host.owned_events.find_or_create_by!(title: "Autumn Supper Club") do |e
   e.ticket_price = "45" if Payments.enabled? # a ticketed event (test checkout in development)
 end
 
-puts "Seeded #{User.count} host, #{Event.count} events, #{Guest.count} guests. Sign in: demo@larkspur.test / larkspur-demo-1"
+puts "Seeded #{User.count} host, #{Event.count} events, #{Guest.count} guests. Sign in: demo@cordially.test / cordially-demo-1"
 puts "Draft event to publish: #{dinner.title}"

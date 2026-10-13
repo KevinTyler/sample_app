@@ -1,169 +1,33 @@
 /* Self-hosted fonts (SIL Open Font License; see vendor/font-licenses). Latin subset only. */
-@font-face {
-  font-family: "Fraunces";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("fraunces-latin-400-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Fraunces";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("fraunces-latin-600-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Fraunces";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("fraunces-latin-700-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Fraunces";
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-  src: url("fraunces-latin-400-italic.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Playfair Display";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("playfair-display-latin-400-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Playfair Display";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("playfair-display-latin-700-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Playfair Display";
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-  src: url("playfair-display-latin-400-italic.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Cormorant Garamond";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("cormorant-garamond-latin-400-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Cormorant Garamond";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("cormorant-garamond-latin-600-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Cormorant Garamond";
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-  src: url("cormorant-garamond-latin-400-italic.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Great Vibes";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("great-vibes-latin-400-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Montserrat";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("montserrat-latin-400-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Montserrat";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("montserrat-latin-600-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Josefin Sans";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("josefin-sans-latin-400-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Josefin Sans";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("josefin-sans-latin-600-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Lora";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("lora-latin-400-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Lora";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("lora-latin-600-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Lora";
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-  src: url("lora-latin-400-italic.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Abril Fatface";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("abril-fatface-latin-400-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Caveat";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("caveat-latin-400-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "Caveat";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("caveat-latin-700-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "DM Sans";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url("dm-sans-latin-400-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "DM Sans";
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url("dm-sans-latin-500-normal.woff2") format("woff2");
-}
-@font-face {
-  font-family: "DM Sans";
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url("dm-sans-latin-700-normal.woff2") format("woff2");
-}
+@font-face { font-family: "Instrument Serif"; font-style: normal; font-weight: 400; font-display: swap; src: url("instrument-serif-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Instrument Serif"; font-style: italic; font-weight: 400; font-display: swap; src: url("instrument-serif-latin-400-italic.woff2") format("woff2"); }
+@font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url("instrument-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 500; font-display: swap; src: url("instrument-sans-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 600; font-display: swap; src: url("instrument-sans-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Instrument Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url("instrument-sans-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Instrument Sans"; font-style: italic; font-weight: 400; font-display: swap; src: url("instrument-sans-latin-400-italic.woff2") format("woff2"); }
+@font-face { font-family: "Pinyon Script"; font-style: normal; font-weight: 400; font-display: swap; src: url("pinyon-script-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Fraunces"; font-style: normal; font-weight: 400; font-display: swap; src: url("fraunces-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Fraunces"; font-style: normal; font-weight: 600; font-display: swap; src: url("fraunces-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Fraunces"; font-style: normal; font-weight: 700; font-display: swap; src: url("fraunces-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Fraunces"; font-style: italic; font-weight: 400; font-display: swap; src: url("fraunces-latin-400-italic.woff2") format("woff2"); }
+@font-face { font-family: "Playfair Display"; font-style: normal; font-weight: 400; font-display: swap; src: url("playfair-display-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Playfair Display"; font-style: normal; font-weight: 700; font-display: swap; src: url("playfair-display-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Playfair Display"; font-style: italic; font-weight: 400; font-display: swap; src: url("playfair-display-latin-400-italic.woff2") format("woff2"); }
+@font-face { font-family: "Cormorant Garamond"; font-style: normal; font-weight: 400; font-display: swap; src: url("cormorant-garamond-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Cormorant Garamond"; font-style: normal; font-weight: 600; font-display: swap; src: url("cormorant-garamond-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Cormorant Garamond"; font-style: italic; font-weight: 400; font-display: swap; src: url("cormorant-garamond-latin-400-italic.woff2") format("woff2"); }
+@font-face { font-family: "Great Vibes"; font-style: normal; font-weight: 400; font-display: swap; src: url("great-vibes-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Montserrat"; font-style: normal; font-weight: 400; font-display: swap; src: url("montserrat-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Montserrat"; font-style: normal; font-weight: 600; font-display: swap; src: url("montserrat-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Josefin Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url("josefin-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Josefin Sans"; font-style: normal; font-weight: 600; font-display: swap; src: url("josefin-sans-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Lora"; font-style: normal; font-weight: 400; font-display: swap; src: url("lora-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Lora"; font-style: normal; font-weight: 600; font-display: swap; src: url("lora-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Lora"; font-style: italic; font-weight: 400; font-display: swap; src: url("lora-latin-400-italic.woff2") format("woff2"); }
+@font-face { font-family: "Abril Fatface"; font-style: normal; font-weight: 400; font-display: swap; src: url("abril-fatface-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Caveat"; font-style: normal; font-weight: 400; font-display: swap; src: url("caveat-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Caveat"; font-style: normal; font-weight: 700; font-display: swap; src: url("caveat-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "DM Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url("dm-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "DM Sans"; font-style: normal; font-weight: 500; font-display: swap; src: url("dm-sans-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "DM Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url("dm-sans-latin-700-normal.woff2") format("woff2"); }

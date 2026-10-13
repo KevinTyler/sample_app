@@ -13,16 +13,18 @@ RSpec.describe "Design editor and guest RSVP in a browser", type: :system, js: t
     expect(css_var("#editor-card", "--card-bg").downcase).to eq("#1b1f3b")
     expect(page).to have_css("#editor-card .invite-art--starlit")
 
+    click_button "Words"
     fill_in "Headline", with: "Under the stars"
     expect(find("#editor-card .invite-card__headline")).to have_text("Under the stars")
 
+    click_button "Style"
     find("button.palette-button[title='Sea Glass']").click
     expect(css_var("#editor-card", "--card-accent").downcase).to eq("#3f9c8f")
 
     find("label.layout-option", text: "Framed border").click
     expect(page).to have_css("#editor-card.invite-card--framed")
 
-    click_button "Mobile"
+    click_button "Phone"
     expect(page).to have_css(".preview-frame[data-viewport='mobile']")
 
     click_button "Save design"

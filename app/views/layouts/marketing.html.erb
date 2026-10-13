@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= title %></title>
+    <meta name="description" content="Cordially — beautiful digital invitations, effortless RSVPs and a guest list that runs itself.">
+    <%= render "layouts/head" %>
+    <%= yield :head %>
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="mk">
+      <div class="mk-container">
+        <header class="mk-nav">
+          <%= link_to root_path, class: "brand", aria: { label: "Cordially home" } do %>
+            <%= render "shared/brand_mark" %><span class="brand__name">Cordially</span>
+          <% end %>
+          <nav class="mk-nav__links" aria-label="Main">
+            <%= link_to "Designs", root_path(anchor: "designs"), class: "mk-nav__link" %>
+            <%= link_to "How it works", root_path(anchor: "how"), class: "mk-nav__link" %>
+            <%= link_to "About", about_path, class: "mk-nav__link" %>
+            <% if authenticated? %>
+              <%= link_to "Your events", events_path, class: "btn btn--foil btn--small" %>
+            <% else %>
+              <%= link_to "Sign in", new_session_path, class: "mk-nav__link" %>
+              <%= link_to "Start free", new_registration_path, class: "btn btn--foil btn--small" %>
+            <% end %>
+          </nav>
+        </header>
+        <%= yield :hero %>
+      </div>
+    </div>
+
+    <main id="main">
+      <% if flash.any? %><div class="container mt-m"><div class="flash-area"><%= flash_messages %></div></div><% end %>
+      <%= yield %>
+    </main>
+
+    <footer class="mk mk-footer">
+      <div class="mk-container mk-footer__inner">
+        <span>© <%= Date.current.year %> Cordially. Invitations, replies and the door — beautifully handled.</span>
+        <span><%= link_to "About", about_path %> · <%= link_to "Contact", contact_path %> · <%= link_to "Privacy", about_path(anchor: "privacy") %></span>
+      </div>
+    </footer>
+  </body>
+</html>

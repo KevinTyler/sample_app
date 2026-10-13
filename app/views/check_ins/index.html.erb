@@ -1,25 +1,36 @@
 <% content_for :title, "Check-in · #{@event.title}" %>
-<%= link_to @event.title, event_path(@event), class: "back-link" %>
-<div class="page-header">
-  <div><p class="eyebrow">Door</p><h1>Check-in</h1><p class="page-header__meta"><%= event_when(@event) %></p></div>
-</div>
+<header class="door-header" data-controller="qr-scanner">
+  <div class="cluster door-header__top">
+    <div>
+      <span class="eyebrow mk-eyebrow">The door</span>
+      <h1 class="door-header__title"><%= @event.title %></h1>
+      <span class="small door-header__when"><%= event_when(@event) %></span>
+    </div>
+    <button type="button" class="btn btn--foil ml-auto" data-action="qr-scanner#open"><%= icon(:scan, size: 18) %>Scan pass</button>
+  </div>
+  <dialog class="scanner" data-qr-scanner-target="dialog" data-action="close->qr-scanner#close" aria-label="Scan a door pass">
+    <video class="scanner__video" data-qr-scanner-target="video" muted playsinline></video>
+    <p class="scanner__status" data-qr-scanner-target="status" role="status">Starting the camera…</p>
+    <button type="button" class="btn btn--block" data-action="qr-scanner#close">Close</button>
+  </dialog>
+  <div class="door-header__count">
+    <span class="door-header__number"><%= @arrived %></span>
+    <span class="door-header__label">of <%= @expected %> arrived</span>
+  </div>
+  <div class="meter meter--thin" role="img" aria-label="<%= @arrived %> of <%= @expected %> arrived"><span class="meter__bar meter__bar--foil" data-width="<%= percent(@arrived, @expected) %>"></span></div>
+</header>
 
-<section class="stats" aria-label="Arrivals">
-  <div class="stat stat--yes"><span class="stat__value"><%= @arrived %></span><span class="stat__label">Arrived</span></div>
-  <div class="stat"><span class="stat__value"><%= @expected %></span><span class="stat__label">Expected (attending)</span></div>
-</section>
-<div class="meter mt-s" role="img" aria-label="<%= @arrived %> of <%= @expected %> arrived"><span class="meter__bar meter__bar--yes" data-width="<%= percent(@arrived, @expected) %>"></span></div>
-
-<div class="panel mt-m">
+<div class="panel">
   <%= form_with url: event_check_in_path(@event), method: :get, class: "toolbar" do |f| %>
-    <div class="toolbar__search">
+    <div class="search-field">
+      <%= icon(:search, size: 18) %>
       <%= f.label :q, "Find a guest", class: "visually-hidden" %>
       <%= f.search_field :q, value: @query, placeholder: "Find a guest by name…", autofocus: true, autocomplete: "off" %>
     </div>
     <label class="checkbox small"><%= check_box_tag :all, "1", @show_all %> Include guests who didn't say yes</label>
     <%= f.submit "Search", class: "btn btn--small" %>
   <% end %>
-  <p class="small muted">Guests with a QR pass: scan it with any phone camera to open their check-in page.</p>
+  <p class="small muted mt-s">Guests with a pass: tap “Scan pass”, or point any phone camera at their QR code.</p>
 
   <% if @guests.empty? %>
     <p class="muted"><%= @query.present? ? "No guests match “#{@query}”." : "No attending guests yet." %></p>

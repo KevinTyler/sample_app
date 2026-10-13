@@ -12,10 +12,10 @@ class InvitationSendsController < ApplicationController
       author: current_user, channels: channels, audience: {}, body: params[:personal_note].to_s.strip.first(1000).presence)
 
     if message.status == "dispatched"
-      redirect_to event_path(@event, anchor: "guests"), notice: "Those invitations were already sent."
+      redirect_to event_guests_path(@event), notice: "Those invitations were already sent."
     else
       message.dispatch!
-      redirect_to event_path(@event, anchor: "guests"), notice: sent_notice(message)
+      redirect_to event_guests_path(@event), notice: sent_notice(message)
     end
   end
 

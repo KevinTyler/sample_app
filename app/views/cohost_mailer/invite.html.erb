@@ -1,12 +1,12 @@
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F3EFE8;padding:24px 12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F1E9;padding:24px 12px;">
   <tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border-radius:14px;">
-      <tr><td style="padding:32px;font-size:16px;line-height:1.55;color:#24264A;">
-        <p style="margin:0 0 6px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#E8735A;">Co-host invitation</p>
+      <tr><td style="padding:32px;font-size:16px;line-height:1.55;color:#1C1A2E;">
+        <p style="margin:0 0 6px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#C8A45A;">Co-host invitation</p>
         <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-weight:normal;font-size:26px;"><%= @event.title %></h1>
         <p style="margin:0 0 12px;"><%= @invitation.invited_by&.name || "The host" %> invited you to help as <strong><%= @invitation.role_name.downcase %></strong>: <%= EventMembership::ROLES.dig(@invitation.role, :summary).downcase_first %>.</p>
-        <p style="margin:24px 0;"><a href="<%= @url %>" style="display:inline-block;padding:14px 26px;border-radius:999px;background:#5458D1;color:#FFFFFF;text-decoration:none;font-weight:bold;">Accept invitation</a></p>
-        <p style="margin:0;font-size:13px;color:#6B6E8F;">Sign in or create an account with <%= @invitation.email %> to accept. This link expires on <%= @invitation.expires_at.to_date.to_fs(:long) %>.</p>
+        <p style="margin:24px 0;"><a href="<%= @url %>" style="display:inline-block;padding:14px 26px;border-radius:999px;background:#8E2B4F;color:#FFFFFF;text-decoration:none;font-weight:bold;">Accept invitation</a></p>
+        <p style="margin:0;font-size:13px;color:#6F6B82;">Sign in or create an account with <%= @invitation.email %> to accept. This link expires on <%= @invitation.expires_at.to_date.to_fs(:long) %>.</p>
       </td></tr>
     </table>
   </td></tr>

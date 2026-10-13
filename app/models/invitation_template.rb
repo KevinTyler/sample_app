@@ -1,4 +1,4 @@
-# Larkspur's original invitation templates. Each template is a starting point: colors, fonts,
+# Cordially's original invitation templates. Each template is a starting point: colors, fonts,
 # layout, wording and an SVG artwork partial (app/views/invitation_artworks/_<artwork>.html.erb)
 # drawn for this app. Hosts can change everything afterwards in the design editor.
 InvitationTemplate = Data.define(:key, :name, :occasion, :background_color, :text_color, :accent_color,

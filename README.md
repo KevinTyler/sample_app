@@ -1,6 +1,6 @@
-# Larkspur — digital invitations, RSVPs & guest lists
+# Cordially — digital invitations, RSVPs & guest lists
 
-Larkspur is an original web app for designing and sending digital invitations and managing event
+Cordially is an original web app for designing and sending digital invitations and managing event
 guests: hosts create an event, design an invitation, invite guests by email or a shareable link, and
 track RSVPs; guests open a mobile-friendly invitation and reply without creating an account.
 
@@ -9,7 +9,7 @@ project. Fonts are open-source (SIL OFL) and self-hosted; their licenses are in 
 
 > This repository started life as the *Ruby on Rails Tutorial* sample app (Rails 3.0). That app
 > can't run on a modern Ruby, so it was moved — history intact — to `legacy/rails3_sample_app/`,
-> and Larkspur was built on the same stack, upgraded: **Rails 8.1, Ruby 3.3, SQLite, RSpec**.
+> and Cordially was built on the same stack, upgraded: **Rails 8.1, Ruby 3.3, SQLite, RSpec**.
 > The original `PagesController` (home/about/contact) lives on in the new app.
 
 ---
@@ -30,7 +30,7 @@ Open http://localhost:3000 and sign in with the demo host:
 
 | Email                | Password          |
 |----------------------|-------------------|
-| `demo@larkspur.test` | `larkspur-demo-1` |
+| `demo@cordially.test` | `cordially-demo-1` |
 
 …or create your own account at **Get started**.
 
@@ -42,24 +42,29 @@ there and click the personal link to experience the guest side.
 
 1. **Create an event** — *New event*: title, date/time (entered in the event's time zone), location
    or video link, RSVP deadline, capacity, plus-ones.
-2. **Add a guest** — *Add guest* with your own name and any email address.
-3. **Publish** — the *Publish* button on the event page (drafts can't be opened by guests).
-4. **Send invitations** — *Send N invitations*. Click it twice: the second send is a no-op.
+2. **Add a guest** — *Guests* in the event sidebar → *Add guest*, with your own name and any email address.
+3. **Publish** — the *Publish* button on the event's Overview (drafts can't be opened by guests).
+4. **Send invitations** — *Send N invitations* on the Overview. Click it twice: the second send is a no-op.
 5. **Open the invitation as the guest** — go to `/dev/outbox`, open the email, click the personal link.
    Use a private window if you want the view to count as a guest open.
 6. **RSVP** — choose yes/maybe/no, party size, answer questions, leave a note. Reopen the same link
    later to change the response.
-7. **See the response** — back on the event dashboard: stats, the guest's RSVP, answers, activity.
+7. **See the response** — back on the event's Overview (replies, meal tally, activity) and *Guests*
+   (the guest's reply and answers).
 
 ### More to try
 
-- **Design** (event page → *Design*): switch templates, recolor, upload a photo, toggle Desktop/Mobile.
-- **Share link** (event page sidebar): open it in a private window; turn on open RSVPs in *Edit details*.
+Every event opens in a workspace with a sidebar: Overview, Guests, Design, Messages, RSVP form,
+Check-in, Settings and Co-hosts (each person sees only the sections their role allows).
+
+- **Design** (sidebar → *Design*): the studio — templates, words, fonts/colors/layout, photo; Desktop/Phone preview.
+- **Share link** (sidebar card): copy it, or share straight to WhatsApp, Messages or the device share
+  sheet. Turn on open replies in *Settings*.
 - **Import** a CSV or pasted list, **export** the guest list, tick guests for **bulk actions**.
 - **Messages**: *Remind non-responders*, schedule a *Day-before reminder*, open a delivery report.
 - **Co-hosts**: invite a second account you create; the invitation email is in the dev outbox.
 - **Check-in**: open *Check-in*, or scan the QR pass on an attending guest's invitation page.
-- **Tickets**: set a price in *Edit details* (the seeded "Autumn Supper Club" draft has one), RSVP yes
+- **Tickets**: set a price in *Settings* (the seeded "Autumn Supper Club" draft has one), RSVP yes
   as a guest and pay on the local test checkout page.
 
 ### Running the tests
@@ -117,7 +122,7 @@ What works:
   Gallery, Watercolor Bloom, Winter Pines, Retro Sunset, Plain Paper), each with SVG artwork drawn for
   this app (`app/views/invitation_artworks/`). The artwork paints with the invitation's own colors, so
   recoloring a template recolors its art.
-- **Design editor** (*Design* on the event page; also step 2 after creating an event): template,
+- **Design editor** (*Design* in the event sidebar; also step 2 after creating an event): template,
   headline / small line / card message, heading and body fonts (10 self-hosted OFL fonts), background /
   text / accent colors with palette suggestions and a live readability (contrast) warning, four layouts
   (centered, left, framed, side by side), artwork on/off.
@@ -156,7 +161,7 @@ What works:
 
 What works:
 
-- **Updates and reminders** (*Messages* on the event page) to guests filtered by RSVP status and/or
+- **Updates and reminders** (*Messages* in the event sidebar) to guests filtered by RSVP status and/or
   group, by email and/or SMS. Presets: *Remind non-responders* and a *Day-before reminder* for attending
   guests. A live count shows how many guests the message will reach; sending to nobody is refused.
   Only guests who were invited or have replied ever receive updates.
@@ -179,7 +184,7 @@ What works:
 
 What works:
 
-- **Co-hosts** (*Co-hosts* on the event page, owner only): invite by email as **Co-host** (edit event
+- **Co-hosts** (*Co-hosts* in the event sidebar, owner only): invite by email as **Co-host** (edit event
   and design, manage guests, send messages, check-in) or **Door staff** (check-in only). Only the owner
   can cancel or delete the event and manage co-hosts. Co-hosts see the event in their dashboard with
   their role, and can leave. Invitation links are single-use, expire after 14 days, are stored only as
@@ -187,7 +192,7 @@ What works:
   (sign-in/sign-up returns to the invitation).
 - **Permissions** are enforced server-side per action (`EventPolicy`): door staff never see contact
   details, personal RSVP links, answers or exports — they're taken straight to the door screen.
-- **Check-in** (*Check-in* on the event page): arrivals vs. expected headcount, search by name,
+- **Check-in** (*Check-in* in the event sidebar; *Scan pass* uses the camera where the browser supports it): arrivals vs. expected headcount, search by name,
   check a whole party or part of it in, undo mistakes, optionally include guests who didn't say yes.
 - **QR passes**: attending guests see a pass on their invitation page. It encodes a check-in code that
   is separate from their RSVP link (so scanning it never grants the power to change the RSVP); any
@@ -203,7 +208,7 @@ What works:
 
 What works:
 
-- **Ticketed events**: the owner sets a price per person and currency in *Edit details* (blank = free;
+- **Ticketed events**: the owner sets a price per person and currency in *Settings* (blank = free;
   co-hosts can't change pricing). Guests who RSVP **yes** see what they owe for their party and pay
   through hosted checkout; maybes and declines owe nothing. Adding people later asks only for the
   difference.
@@ -221,6 +226,24 @@ Not included (by design, for now): refunds and partial-attendance credits are ha
 dashboard; unpaid "yes" RSVPs hold their seats until the host follows up.
 
 ---
+
+### ✅ Stage 7 — Cordially redesign ("Midnight Letterpress")
+
+Designed first on a Claude Design canvas (foundations, landing, overview, guests, studio, guest phone
+view, door), then implemented across every screen:
+
+- **Brand**: wax-seal mark (`app/views/shared/_brand_mark.html.erb`, `public/icon.svg|png`), night-ink
+  marketing, porcelain app ground, wax-berry and gold-foil accents; Instrument Serif / Instrument Sans
+  (self-hosted, OFL — licenses in `vendor/font-licenses/`).
+- **Layouts**: `marketing` (landing, about, contact), `application` (app header with event crumb and
+  account menu), `event` (workspace sidebar, nested in the app layout; role-aware links, share card).
+- **Event workspace**: Overview (live card on its envelope, replies with meter and meal tally, getting-ready
+  checklist or send panel, reminders, activity), Guests (search, segmented filter, bulk bar, monograms),
+  RSVP form (questions with tallies and a guest-eye preview), Settings (details, share link, duplicate,
+  danger zone), Studio (tab rail + live Desktop/Phone stage), Door (night header, camera pass scanner).
+- **Sharing**: WhatsApp / Messages / native share sheet for the public link (never a personal link);
+  guest pages carry a "Hosting something?" link back to Cordially.
+- Icons are drawn for the app (`IconHelper`); every page still passes the strict CSP (no inline styles).
 
 ## Architecture
 

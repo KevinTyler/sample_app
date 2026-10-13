@@ -44,6 +44,6 @@ module GuestAccessToken
   end
 
   def secret
-    @secret ||= Rails.application.key_generator.generate_key("larkspur/guest-access-token", 32)
+    @secret ||= Rails.application.key_generator.generate_key("cordially/guest-access-token", 32)
   end
 end

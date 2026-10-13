@@ -1,8 +1,8 @@
 <% content_for :title, "Check in #{@guest.name}" %>
-<div class="container--narrow">
+<div class="form-width">
   <%= link_to "Check-in list", event_check_in_path(@event), class: "back-link" %>
   <div class="panel">
-    <p class="eyebrow"><%= @event.title %></p>
+    <span class="eyebrow">Door pass</span>
     <h1><%= @guest.name %></h1>
     <% unless @guest.rsvp_yes? || @guest.rsvp_maybe? %>
       <p class="badge badge--warning">RSVP: <%= RsvpHelper::STATUS_LABELS[@guest.rsvp_status] %></p>

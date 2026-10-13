@@ -1,0 +1,41 @@
+<%# locals: (event:) %>
+<% section = workspace_section %>
+<nav class="workspace__nav" aria-label="Event sections">
+  <% if policy.can?(:edit) || policy.can?(:manage_guests) %>
+    <%= workspace_link "Overview", event_path(event), :overview, section %>
+  <% end %>
+  <% if policy.can?(:manage_guests) %>
+    <%= workspace_link "Guests", event_guests_path(event), :guests, section, count: event.guests.size %>
+  <% end %>
+  <% if policy.can?(:edit) %>
+    <%= workspace_link "Design", edit_event_design_path(event), :design, section %>
+  <% end %>
+  <% if policy.can?(:send_messages) %>
+    <%= workspace_link "Messages", event_messages_path(event), :mail, section %>
+  <% end %>
+  <% if policy.can?(:edit) %>
+    <%= workspace_link "RSVP form", event_questions_path(event), :form, section, count: event.questions.size %>
+  <% end %>
+  <% if policy.can?(:check_in) && !event.draft? %>
+    <%= workspace_link "Check-in", event_check_in_path(event), :scan, section %>
+  <% end %>
+  <% if policy.can?(:edit) %>
+    <%= workspace_link "Settings", edit_event_path(event), :settings, section %>
+  <% end %>
+  <% if policy.can?(:manage_cohosts) %>
+    <%= workspace_link "Co-hosts", event_cohosts_path(event), :cohosts, section %>
+  <% end %>
+
+  <% if policy.can?(:edit) && !event.draft? %>
+    <div class="side-card" id="share">
+      <span class="side-card__label">Share link</span>
+      <div class="copy-field" data-controller="clipboard">
+        <label class="visually-hidden" for="share-link">Share link</label>
+        <input id="share-link" type="text" readonly value="<%= public_event_url(event.share_token) %>" data-clipboard-target="source">
+        <button type="button" class="btn btn--small" data-action="clipboard#copy" data-clipboard-target="button">Copy</button>
+      </div>
+      <%= render "events/share_buttons", event: event %>
+      <span class="small faint"><%= event.allow_link_rsvp ? "Anyone with it can reply." : "View only — replies need a personal link." %></span>
+    </div>
+  <% end %>
+</nav>

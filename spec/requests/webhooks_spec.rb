@@ -8,7 +8,7 @@ RSpec.describe "Provider webhooks", type: :request do
   describe "email" do
     let!(:delivery) do
       message.deliveries.create!(guest: guest, channel: "email", recipient: guest.email, status: "sent",
-        provider_message_id: "delivery-1-123@larkspur.localhost")
+        provider_message_id: "delivery-1-123@cordially.localhost")
     end
 
     around do |example|
@@ -23,14 +23,14 @@ RSpec.describe "Provider webhooks", type: :request do
     end
 
     it "marks bounces" do
-      post_event({ message_id: "<delivery-1-123@larkspur.localhost>", event: "bounced", reason: "Mailbox does not exist" })
+      post_event({ message_id: "<delivery-1-123@cordially.localhost>", event: "bounced", reason: "Mailbox does not exist" })
       expect(response).to have_http_status(:ok)
       expect(delivery.reload).to have_attributes(status: "bounced", error_message: "Mailbox does not exist")
     end
 
     it "accepts SendGrid's event format and unsubscribes on spam complaints" do
-      post_event([ { "smtp-id" => "<delivery-1-123@larkspur.localhost>", "event" => "delivered" },
-                   { "smtp-id" => "<delivery-1-123@larkspur.localhost>", "event" => "spamreport" } ])
+      post_event([ { "smtp-id" => "<delivery-1-123@cordially.localhost>", "event" => "delivered" },
+                   { "smtp-id" => "<delivery-1-123@cordially.localhost>", "event" => "spamreport" } ])
       expect(delivery.reload.status).to eq("delivered")
       expect(guest.reload).to be_unsubscribed
     end

@@ -1,6 +1,6 @@
 <% content_for :title, "Cancel #{@event.title}" %>
-<div class="container--narrow">
-  <%= link_to @event.title, event_path(@event), class: "back-link" %>
+<div class="form-width">
+  <%= link_to "Settings", edit_event_path(@event), class: "back-link" %>
   <div class="panel panel--danger">
     <h1>Cancel this event?</h1>
     <p>Guests opening their invitation will see that the event is cancelled, RSVPs will close, and calendar files will mark it as cancelled. Your guest list and responses are kept.</p>

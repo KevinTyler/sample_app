@@ -1,14 +1,17 @@
 <li class="checkin-row <%= "is-in" if guest.checked_in? %>" id="<%= dom_id(guest, :check_in) %>">
-  <div>
+  <div class="person">
+    <span class="monogram monogram--small <%= guest.checked_in? ? "monogram--yes" : "" %>" aria-hidden="true"><%= initials(guest.name) %></span>
+    <div class="person__text">
     <strong><%= guest.name %></strong> <% if guest.group_name %><span class="tag"><%= guest.group_name %></span><% end %>
     <div class="small muted">
       <%= RsvpHelper::STATUS_LABELS[guest.rsvp_status] %><% if guest.rsvp_yes? || guest.rsvp_maybe? %> · party of <%= guest.party_size %><% end %>
       <% if guest.checked_in? %> · <strong>arrived <%= event.local(guest.checked_in_at).strftime("%-l:%M %p") %></strong><% if guest.checked_in_count > 1 %> (<%= guest.checked_in_count %>)<% end %><% end %>
     </div>
+    </div>
   </div>
   <div class="cluster">
     <% if guest.checked_in? %>
-      <%= button_to "Undo", event_check_in_guest_path(event, guest), method: :delete, params: { q: local_assigns[:query] }, class: "btn btn--small btn--ghost" %>
+      <%= button_to "Undo", event_check_in_guest_path(event, guest), method: :delete, params: { q: local_assigns[:query] }, class: "btn btn--ghost" %>
     <% else %>
       <%= form_with url: event_check_in_guest_path(event, guest), method: :post, class: "cluster" do |f| %>
         <%= hidden_field_tag :q, local_assigns[:query] %>
@@ -17,7 +20,7 @@
           <%= label_tag "count_#{guest.id}", "Arriving", class: "visually-hidden" %>
           <%= select_tag :count, options_for_select((1..max).to_a, [ guest.party_size, 1 ].max), id: "count_#{guest.id}", class: "checkin-count" %>
         <% end %>
-        <%= f.submit "Check in", class: "btn btn--small btn--primary" %>
+        <%= f.submit "Check in", class: "btn btn--primary" %>
       <% end %>
     <% end %>
   </div>

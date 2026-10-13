@@ -89,8 +89,8 @@ RSpec.describe "Bulk guest tools", type: :request do
   end
 
   it "paginates long guest lists" do
-    create_list(:guest, EventsController::GUESTS_PER_PAGE + 5, event: event)
-    get event_path(event, page: 2)
+    create_list(:guest, GuestsController::GUESTS_PER_PAGE + 5, event: event)
+    get event_guests_path(event, page: 2)
     expect(page_text).to include("Page 2 of 2")
   end
 end

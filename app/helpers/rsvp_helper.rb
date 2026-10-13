@@ -1,5 +1,6 @@
 module RsvpHelper
   STATUS_LABELS = { "pending" => "Awaiting reply", "yes" => "Attending", "no" => "Declined", "maybe" => "Maybe" }.freeze
+  REPLY_PHRASES = { "yes" => "is coming", "no" => "can't make it", "maybe" => "might come", "pending" => "hasn't decided" }.freeze
   GUEST_CHOICE_LABELS = { "yes" => "Joyfully accepts", "maybe" => "Maybe", "no" => "Regretfully declines" }.freeze
 
   def rsvp_badge(status)
@@ -36,8 +37,8 @@ module RsvpHelper
     data = activity.data || {}
     name = activity.actor_name
     case activity.action
-    when "rsvp_submitted" then "#{name} replied #{STATUS_LABELS.fetch(data['to'], data['to']).downcase}#{party_suffix(data)}"
-    when "rsvp_changed" then "#{name} changed their RSVP to #{STATUS_LABELS.fetch(data['to'], data['to']).downcase}#{party_suffix(data)}"
+    when "rsvp_submitted" then "#{name} #{REPLY_PHRASES.fetch(data['to'], 'replied')}#{party_suffix(data)}"
+    when "rsvp_changed" then "#{name} changed their reply: now #{REPLY_PHRASES.fetch(data['to'], 'replied').delete_prefix('is ')}#{party_suffix(data)}"
     when "viewed" then "#{name} opened the invitation"
     when "guest_added" then "#{name} was added to the guest list"
     when "event_created" then "#{name} created the event"

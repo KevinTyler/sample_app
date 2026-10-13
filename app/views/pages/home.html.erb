@@ -1,44 +1,104 @@
-<% content_for :title, "Invitations & RSVPs" %>
-<section class="hero">
-  <div>
-    <p class="eyebrow">Digital invitations · Guest lists · RSVPs</p>
-    <h1>Invitations that feel <em>handmade</em>, guest lists that run themselves.</h1>
-    <p class="hero__lede">Design an invitation in minutes, send it by email or a shareable link, and watch the RSVPs roll in. Guests reply from any phone — no account, no app.</p>
-    <div class="hero__actions">
-      <% if authenticated? %>
-        <%= link_to "Go to your events", events_path, class: "btn btn--primary" %>
-        <%= link_to "Start a new event", new_event_path, class: "btn" %>
-      <% else %>
-        <%= link_to "Create your first invitation", new_registration_path, class: "btn btn--primary" %>
-        <%= link_to "Sign in", new_session_path, class: "btn" %>
+<% content_for :title, "Digital invitations, RSVPs and guest lists" %>
+<% content_for :hero do %>
+  <section class="mk-hero" aria-labelledby="hero-title">
+    <div>
+      <span class="eyebrow mk-eyebrow">Digital invitations · RSVPs · Guest lists</span>
+      <h1 class="mk-hero__title" id="hero-title">Invitations <em>worth</em> opening.</h1>
+      <p class="mk-hero__lede">Design a card your guests will want to keep, send it by email, text or WhatsApp, and watch the replies arrive. Nobody you invite needs an app or an account.</p>
+      <div class="mk-hero__actions">
+        <% if authenticated? %>
+          <%= link_to "Go to your events", events_path, class: "btn btn--foil btn--large" %>
+          <%= link_to "Start a new event", new_event_path, class: "btn btn--on-dark btn--large" %>
+        <% else %>
+          <%= link_to "Create your invitation", new_registration_path, class: "btn btn--foil btn--large" %>
+          <%= link_to "Browse designs", "#designs", class: "btn btn--on-dark btn--large" %>
+        <% end %>
+      </div>
+      <p class="mk-hero__note">Guests reply from any phone in seconds.</p>
+    </div>
+    <div class="mk-stage" aria-hidden="true">
+      <% hero_cards.each_with_index do |(css, event, design), i| %>
+        <div class="<%= css %> mk-stage__card">
+          <%= render "invitations/card", event: event, design: design, card_id: "hero-card-#{i}", title_tag: :p, show_details: i == 2 %>
+        </div>
+      <% end %>
+      <div class="mk-stage__envelope"></div>
+      <div class="mk-stage__seal"><%= render "shared/brand_mark", css_class: "mk-stage__seal-mark" %></div>
+    </div>
+  </section>
+<% end %>
+
+<section class="mk-section" id="how" aria-labelledby="how-title">
+  <div class="mk-section__intro">
+    <span class="eyebrow">How it works</span>
+    <h2 class="mk-title" id="how-title">From blank card to a full table in an afternoon.</h2>
+  </div>
+  <div class="steps">
+    <div class="step"><span class="step__numeral">i.</span><h3>Design it</h3><p>Start from an original design or your own photo. Change the words, fonts and colors, and see it on a phone and a laptop as you go.</p></div>
+    <div class="step"><span class="step__numeral">ii.</span><h3>Send it</h3><p>Import your list from a spreadsheet. Each guest gets a personal link by email or text — or share one link in the group chat.</p></div>
+    <div class="step"><span class="step__numeral">iii.</span><h3>Watch the replies</h3><p>Yes, no or maybe, party size, meal choices and notes land in one place. Remind the stragglers and update everyone in a tap.</p></div>
+  </div>
+</section>
+
+<div class="mk-band">
+  <section class="mk-section" id="designs" aria-labelledby="designs-title">
+    <div class="mk-section__intro">
+      <span class="eyebrow">Designs</span>
+      <h2 class="mk-title" id="designs-title">Cards drawn for the occasion.</h2>
+      <p class="muted mt-s">Every design is original to Cordially, and every detail is yours to change.</p>
+    </div>
+    <div class="design-gallery">
+      <% PagesHelper::GALLERY.each do |key, title, overrides| %>
+        <% template = InvitationTemplate.find(key) %>
+        <figure>
+          <%= render "invitations/card", event: sample_event(template, title: title), design: sample_design(key, **overrides), card_id: "tpl-#{key}", show_details: false, title_tag: :p %>
+          <figcaption><strong><%= template.name %></strong><span class="faint"><%= template.occasion %></span></figcaption>
+        </figure>
       <% end %>
     </div>
-  </div>
-  <div class="hero__stage" aria-hidden="true">
-    <% sample_events.each_with_index do |(sample, design), i| %>
-      <%= render "invitations/card", event: sample, design: design, card_id: "hero-card-#{i}" %>
-    <% end %>
-  </div>
-</section>
+  </section>
+</div>
 
-<section aria-labelledby="features-heading">
-  <h2 id="features-heading">Everything between “save the date” and “see you there”</h2>
+<section class="mk-section" aria-labelledby="hosts-title">
+  <div class="mk-section__intro">
+    <span class="eyebrow">For hosts</span>
+    <h2 class="mk-title" id="hosts-title">Everything that happens after <em>“you're invited.”</em></h2>
+  </div>
   <div class="feature-grid">
-    <div class="feature"><div class="feature__icon">✎</div><h3>Design it your way</h3><p>Original templates and artwork, your own photos, fonts and colors — previewed on desktop and phone as you edit.</p></div>
-    <div class="feature"><div class="feature__icon">✉</div><h3>Send with confidence</h3><p>Email invitations with personal RSVP links, or share one link anywhere. Re-sending never double-sends.</p></div>
-    <div class="feature"><div class="feature__icon">✓</div><h3>Effortless RSVPs</h3><p>Yes, no or maybe, party size and your custom questions. Guests can change their answer any time before the deadline.</p></div>
-    <div class="feature"><div class="feature__icon">☰</div><h3>A guest list that keeps up</h3><p>Import a CSV, organize groups, track opens and replies, send reminders and updates to exactly who needs them.</p></div>
+    <div class="feature"><%= icon(:form, size: 28) %><h3>Replies that tell you everything</h3><p>Party size, meal choices and any question you add. Guests change their answer with the same link, right up to your deadline.</p></div>
+    <div class="feature"><%= icon(:guests, size: 28) %><h3>A guest list that keeps up</h3><p>Import a spreadsheet, group families and tables, see who opened and who replied, and export it all when the caterer asks.</p></div>
+    <div class="feature"><%= icon(:clock, size: 28) %><h3>Reminders, on schedule</h3><p>Schedule a nudge for anyone who hasn't replied and a day-before note for everyone coming. Sends are never doubled.</p></div>
+    <div class="feature"><%= icon(:mail, size: 28) %><h3>Updates in one tap</h3><p>Changed the venue? Message everyone, just the yeses, or one group — by email or text.</p></div>
+    <div class="feature"><%= icon(:scan, size: 28) %><h3>A calm door</h3><p>Guests carry a pass on their phone. Your door team checks parties in from theirs, without seeing anyone's contact details.</p></div>
+    <div class="feature"><%= icon(:ticket, size: 28) %><h3>Tickets when you need them</h3><p>Charging for a fundraiser or a supper club? Guests pay per seat right after they say yes.</p></div>
   </div>
 </section>
 
-<section aria-labelledby="templates-heading">
-  <h2 id="templates-heading">Start from an original template</h2>
-  <div class="template-strip">
-    <% @templates.each do |template| %>
-      <figure>
-        <%= render "invitations/card", event: sample_event(template), design: InvitationDesign.new(template.design_defaults), card_id: "tpl-#{template.key}", show_details: false %>
-        <figcaption><%= template.name %><span class="muted"><%= template.occasion %></span></figcaption>
-      </figure>
-    <% end %>
-  </div>
+<div class="mk-band mk-band--sand">
+  <section class="mk-section showcase" aria-labelledby="guests-title">
+    <div class="phone" aria-hidden="true">
+      <div class="phone__screen">
+        <%= render "invitations/card", event: hero_cards.last[1], design: hero_cards.last[2], card_id: "phone-card", title_tag: :p %>
+        <div class="preview-rsvp">
+          <strong>Will you be there, Dana?</strong>
+          <div class="preview-rsvp__choices"><span>Yes</span><span>Maybe</span><span>No</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <span class="eyebrow">For guests</span>
+      <h2 class="mk-title" id="guests-title">Opened in a tap. Answered in ten seconds.</h2>
+      <ul class="dash-list mt-m">
+        <li>An envelope that opens on their phone, addressed to them.</li>
+        <li>No app, no account, no password — the link is theirs alone.</li>
+        <li>Add to Apple, Google or Outlook calendars in one tap.</li>
+        <li>A door pass that appears the moment they say yes.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<section class="mk cta-band" aria-labelledby="cta-title">
+  <h2 id="cta-title">Your next table is waiting.</h2>
+  <%= link_to (authenticated? ? "Plan an event" : "Create your invitation"), (authenticated? ? new_event_path : new_registration_path), class: "btn btn--foil btn--large" %>
 </section>

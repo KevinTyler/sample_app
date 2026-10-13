@@ -11,6 +11,6 @@ RSpec.describe "Pages", type: :request do
 
   it "titles pages per page" do
     get "/about"
-    expect(page_text).to include("<title>About · Larkspur</title>")
+    expect(page_text).to include("<title>About · Cordially</title>")
   end
 end

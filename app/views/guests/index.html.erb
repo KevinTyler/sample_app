@@ -1,0 +1,153 @@
+<% content_for :title, "Guests · #{@event.title}" %>
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Guest list</span>
+    <h1><%= pluralize(@summary[:invited], "guest") %></h1>
+    <p class="page-header__meta"><%= @summary[:attending] %> attending · <%= @summary[:pending] %> awaiting a reply · <%= @summary[:viewed] %> opened</p>
+  </div>
+  <div class="page-header__actions">
+    <% if policy.can?(:view_contacts) %>
+      <%= link_to export_event_guests_path(@event, format: :csv), class: "btn", data: { turbo: false } do %><%= icon(:download, size: 18) %>Export<% end %>
+    <% end %>
+    <%= link_to new_event_guest_import_path(@event), class: "btn" do %><%= icon(:upload, size: 18) %>Import<% end %>
+    <%= link_to new_event_guest_path(@event), class: "btn btn--primary" do %><%= icon(:plus, size: 18) %>Add guest<% end %>
+  </div>
+</header>
+
+<section class="panel panel--flush" id="guests" aria-label="Guests" data-controller="bulk-select">
+  <div class="stack-s guest-tools">
+    <%= form_with url: event_guests_path(@event), method: :get, class: "toolbar", data: { turbo_frame: "_top" } do |f| %>
+      <div class="search-field">
+        <%= icon(:search, size: 18) %>
+        <%= f.label :q, "Search guests", class: "visually-hidden" %>
+        <%= f.search_field :q, value: @query, placeholder: "Search name, email, phone or group" %>
+      </div>
+      <% if (groups = @event.group_names).any? %>
+        <%= f.label :group, "Group", class: "visually-hidden" %>
+        <%= f.select :group, options_for_select([ [ "All groups", "" ] ] + groups.map { |g| [ g, g ] }, @group_filter) %>
+      <% end %>
+      <%= f.hidden_field :status, value: @status_filter %>
+      <%= f.submit "Search", class: "btn btn--small" %>
+    <% end %>
+
+    <nav class="segmented" aria-label="Filter by reply">
+      <%= link_to event_guests_path(@event, q: @query.presence, group: @group_filter), class: "segmented__item", aria: { current: (@status_filter ? nil : "true") } do %>All <span class="segmented__count"><%= @summary[:invited] %></span><% end %>
+      <% { "yes" => [ "Yes", :yes ], "maybe" => [ "Maybe", :maybe ], "no" => [ "No", :no ], "pending" => [ "Awaiting", :pending ] }.each do |status, (label, key)| %>
+        <% next if status == "maybe" && !@event.allow_maybe && @summary[:maybe].zero? %>
+        <%= link_to event_guests_path(@event, status: status, q: @query.presence, group: @group_filter), class: "segmented__item", aria: { current: (@status_filter == status ? "true" : nil) } do %><%= label %> <span class="segmented__count"><%= @summary[key] %></span><% end %>
+      <% end %>
+    </nav>
+
+    <% if @guests.any? %>
+      <%= form_with url: bulk_event_guests_path(@event), method: :post, id: "bulk-guests", class: "bulk-bar",
+            data: { bulk_select_target: "bar", turbo_confirm: "Apply this to the selected guests?" } do |f| %>
+        <%= f.hidden_field :idempotency_key, value: SecureRandom.uuid %>
+        <span class="bulk-bar__count" data-bulk-select-target="count">0 selected</span>
+        <%= f.label :bulk_action, "Action", class: "visually-hidden" %>
+        <%= f.select :bulk_action, options_for_select([ [ "Choose an action…", "" ], [ "Send invitation", "invite" ], [ "Set group…", "group" ], [ "Remove from list", "remove" ] ]),
+              {}, data: { action: "bulk-select#actionChanged", bulk_select_target: "action" } %>
+        <%= f.label :group_name, "Group name", class: "visually-hidden" %>
+        <%= f.text_field :group_name, placeholder: "Group name (blank clears)", maxlength: 60, list: "bulk-groups", hidden: true, data: { bulk_select_target: "group" } %>
+        <datalist id="bulk-groups"><% @event.group_names.each do |g| %><option value="<%= g %>"></option><% end %></datalist>
+        <%= f.submit "Apply", class: "btn btn--small btn--primary", disabled: true, data: { bulk_select_target: "submit" } %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if @guests.empty? %>
+    <div class="empty-state empty-state--inset">
+      <% if @summary[:invited].zero? %>
+        <h2>Who's coming?</h2>
+        <p class="muted">Add guests one at a time or bring a whole list from a spreadsheet.</p>
+        <div class="cluster">
+          <%= link_to "Add a guest", new_event_guest_path(@event), class: "btn btn--primary" %>
+          <%= link_to "Import a CSV", new_event_guest_import_path(@event), class: "btn" %>
+        </div>
+      <% else %>
+        <h2>No matches</h2>
+        <p class="muted">No guests match these filters.</p>
+        <%= link_to "Clear filters", event_guests_path(@event), class: "btn" %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="table-wrap">
+      <table class="table table--responsive">
+        <thead>
+          <tr>
+            <th scope="col" class="table__check"><input type="checkbox" aria-label="Select all guests on this page" data-action="bulk-select#toggleAll" data-bulk-select-target="all"></th>
+            <th scope="col">Guest</th><th scope="col">Invitation</th><th scope="col">Reply</th><th scope="col">Party</th><th scope="col">Answers</th><th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @guests.each do |guest| %>
+            <% mood = { "yes" => "yes", "maybe" => "maybe", "no" => "no" }[guest.rsvp_status] || (guest.first_viewed_at ? "seen" : nil) %>
+            <tr id="<%= dom_id(guest) %>">
+              <td class="table__check"><input type="checkbox" name="guest_ids[]" value="<%= guest.id %>" form="bulk-guests" aria-label="Select <%= guest.name %>" data-action="bulk-select#update" data-bulk-select-target="checkbox"></td>
+              <td data-label="Guest">
+                <div class="person">
+                  <span class="monogram <%= "monogram--#{mood}" if mood %>" aria-hidden="true"><%= initials(guest.name) %></span>
+                  <span class="person__text">
+                    <span class="table__primary"><%= guest.name %> <% if guest.group_name %><span class="tag"><%= guest.group_name %></span><% end %></span>
+                    <% if policy.can?(:view_contacts) %>
+                      <span class="table__secondary table__secondary--contact"><%= [ guest.email, guest.phone ].compact.join(" · ").presence || "No contact details" %></span>
+                    <% end %>
+                    <% if guest.plus_ones_allowed > 0 %><span class="table__secondary">+<%= guest.plus_ones_allowed %> allowed</span><% end %>
+                    <% if guest.unsubscribed? %><span class="table__secondary">Unsubscribed from emails</span><% end %>
+                  </span>
+                </div>
+              </td>
+              <td data-label="Invitation"><%= delivery_badge(guest) %></td>
+              <td data-label="Reply">
+                <%= rsvp_badge(guest.rsvp_status) %>
+                <% if (state = guest.payment_state) %>
+                  <span class="badge <%= { 'paid' => 'badge--rsvp-yes', 'partial' => 'badge--warning', 'unpaid' => 'badge--failed' }[state] %>"><%= { "paid" => "Paid", "partial" => "Part paid", "unpaid" => "Unpaid" }[state] %></span>
+                <% end %>
+                <% if guest.responded_at %><div class="table__secondary"><%= time_ago_in_words(guest.responded_at) %> ago</div><% end %>
+              </td>
+              <td data-label="Party"><%= party_label(guest) %></td>
+              <td data-label="Answers">
+                <% answers = guest.rsvp_answers.index_by(&:event_question_id) %>
+                <% if answers.any? || guest.guest_note.present? %>
+                  <ul class="answers">
+                    <% @questions.each do |q| %>
+                      <% if (a = answers[q.id]) %><li><strong><%= q.prompt %>:</strong> <%= a.value %></li><% end %>
+                    <% end %>
+                    <% if guest.guest_note.present? %><li><strong>Note:</strong> <%= guest.guest_note %></li><% end %>
+                  </ul>
+                <% else %>
+                  <span class="faint">—</span>
+                <% end %>
+              </td>
+              <td class="table__actions" data-label="Actions">
+                <details class="disclosure">
+                  <summary>Manage</summary>
+                  <div class="stack-s mt-s manage-menu">
+                    <div class="copy-field" data-controller="clipboard">
+                      <label class="visually-hidden" for="link-<%= guest.id %>">Personal link for <%= guest.name %></label>
+                      <input id="link-<%= guest.id %>" type="text" readonly value="<%= guest_invitation_url(guest.access_token) %>" data-clipboard-target="source">
+                      <button type="button" class="btn btn--small" data-action="clipboard#copy" data-clipboard-target="button">Copy</button>
+                    </div>
+                    <div class="cluster">
+                      <%= link_to "Edit", edit_event_guest_path(@event, guest), class: "btn btn--small" %>
+                      <% if policy.can?(:send_messages) && @event.published? && guest.emailable? && guest.invited_at %>
+                        <%= button_to "Resend", resend_event_guest_path(@event, guest), params: { idempotency_key: SecureRandom.uuid }, class: "btn btn--small" %>
+                      <% end %>
+                      <%= button_to "Remove", event_guest_path(@event, guest), method: :delete, class: "btn btn--small btn--danger", form: { data: { turbo_confirm: "Remove #{guest.name} and their RSVP?" } } %>
+                    </div>
+                  </div>
+                </details>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <% if @total_pages > 1 %>
+      <nav class="pagination" aria-label="Guest list pages">
+        <% if @page > 1 %><%= link_to "← Previous", event_guests_path(@event, request.query_parameters.merge(page: @page - 1)), class: "btn btn--small" %><% end %>
+        <span class="small muted">Page <%= @page %> of <%= @total_pages %></span>
+        <% if @page < @total_pages %><%= link_to "Next →", event_guests_path(@event, request.query_parameters.merge(page: @page + 1)), class: "btn btn--small" %><% end %>
+      </nav>
+    <% end %>
+  <% end %>
+</section>

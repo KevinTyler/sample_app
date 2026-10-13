@@ -1,6 +1,6 @@
 <% content_for :title, "Import guests" %>
-<div class="container--form">
-  <%= link_to @event.title, event_path(@event, anchor: "guests"), class: "back-link" %>
+<div class="form-width">
+  <%= link_to "Guest list", event_guests_path(@event), class: "back-link" %>
   <div class="page-header"><div><h1>Import guests</h1>
     <p class="page-header__meta">Upload a CSV from Excel, Numbers or Google Sheets, or paste a list. You'll review every row before anything is added.</p></div></div>
 
@@ -29,7 +29,7 @@
       <label class="checkbox"><%= check_box_tag :update_existing, "1", params[:update_existing] == "1" %> Update details for guests already on the list (matched by email). Their RSVPs are never changed.</label>
       <div class="form-actions">
         <%= f.submit "Review import", class: "btn btn--primary" %>
-        <%= link_to "Cancel", event_path(@event, anchor: "guests"), class: "btn btn--ghost" %>
+        <%= link_to "Cancel", event_guests_path(@event), class: "btn btn--ghost" %>
       </div>
     <% end %>
   </div>

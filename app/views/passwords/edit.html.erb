@@ -1,5 +1,7 @@
 <% content_for :title, "Choose a new password" %>
-<div class="panel auth-card">
+<div class="auth-shell">
+<div class="auth-card">
+  <%= render "shared/brand_mark", css_class: "auth-card__seal" %>
   <h1>Choose a new password</h1>
   <%= form_with url: password_path(params[:token]), method: :put, class: "form" do |form| %>
     <div class="field">
@@ -12,4 +14,5 @@
     </div>
     <div class="form-actions"><%= form.submit "Save password", class: "btn btn--primary btn--block" %></div>
   <% end %>
+</div>
 </div>

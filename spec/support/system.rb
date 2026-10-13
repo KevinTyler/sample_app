@@ -6,7 +6,7 @@ require "capybara/cuprite"
 CHROME_PATH = ENV["BROWSER_PATH"].presence ||
   [ "/opt/pw-browsers/chromium", "/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/google-chrome" ].find { |p| File.executable?(p) }
 
-Capybara.register_driver(:larkspur_cuprite) do |app|
+Capybara.register_driver(:cordially_cuprite) do |app|
   options = { window_size: [ 1280, 900 ], headless: true, process_timeout: 20, timeout: 10,
               browser_options: { "no-sandbox" => nil } }
   options[:browser_path] = CHROME_PATH if CHROME_PATH
@@ -30,7 +30,7 @@ RSpec.configure do |config|
   config.before(:each, type: :system) do |example|
     if example.metadata[:js]
       skip "No Chrome/Chromium found (set BROWSER_PATH)" unless CHROME_PATH || system("which chrome > /dev/null 2>&1")
-      driven_by :larkspur_cuprite
+      driven_by :cordially_cuprite
     else
       driven_by :rack_test
     end

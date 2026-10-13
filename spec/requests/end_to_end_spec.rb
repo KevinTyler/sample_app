@@ -47,7 +47,7 @@ RSpec.describe "Invitation and RSVP flow", type: :request do
       post event_invitation_send_path(event), params: { idempotency_key: key, personal_note: "Hope you can come!" }
       # A double-submitted form (same key) must not send a second email
       post event_invitation_send_path(event), params: { idempotency_key: key }
-      expect(response).to redirect_to(event_path(event, anchor: "guests"))
+      expect(response).to redirect_to(event_guests_path(event))
       expect(flash[:notice]).to eq("Those invitations were already sent.")
     end
     expect(ActionMailer::Base.deliveries.size).to eq(1)
@@ -88,6 +88,8 @@ RSpec.describe "Invitation and RSVP flow", type: :request do
     # Host sees the response on the dashboard
     sign_in User.find_by!(email_address: "jordan@example.com")
     get event_path(event)
+    expect(page_text).to include("Replies", "Dana Whitfield is coming (party of 2)")
+    get event_guests_path(event)
     expect(page_text).to include("Dana Whitfield", "Attending", "Chicken")
     expect(event.rsvp_summary).to include(yes: 1, attending: 2)
     expect(event.activities.pluck(:action)).to include("viewed", "rsvp_submitted", "rsvp_changed")

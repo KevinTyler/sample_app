@@ -1,20 +1,25 @@
 <% design = InvitationDesign.for(event) %>
+<% summary = event.rsvp_summary %>
 <%= link_to event_path(event), class: "event-card" do %>
-  <%= render "invitations/design_style", design: design, selector: "#event-swatch-#{event.id}" %>
-  <div class="event-card__swatch invite-card" id="event-swatch-<%= event.id %>" aria-hidden="true">
-    <% if design.artwork && lookup_context.exists?(design.artwork, [ "invitation_artworks" ], true) %>
-      <div class="invite-art"><%= render "invitation_artworks/#{design.artwork}" %></div>
-    <% end %>
+  <div class="event-card__stage" id="event-stage-<%= event.id %>">
+    <style nonce="<%= content_security_policy_nonce %>">#event-stage-<%= event.id %> { background: color-mix(in srgb, <%= design.valid? ? design.accent_color : "#8e2b4f" %> 16%, #f6f1e9); }</style>
+    <%= render "invitations/card", event: event, design: design, card_id: "event-card-#{event.id}", show_details: false, title_tag: :p %>
   </div>
   <div class="event-card__body">
     <div class="cluster"><%= event_status_badge(event) %>
       <% if (role = event.role_for(current_user)) != "owner" %><span class="tag"><%= EventsHelper::ROLE_LABELS[role] %></span><% end %></div>
     <h3 class="event-card__title"><%= event.title %></h3>
     <p class="event-card__meta"><%= event_date_short(event) %><% if (place = event_where(event)) %> · <%= place %><% end %></p>
+    <% if summary[:invited] > 0 %>
+      <div class="meter meter--thin mt-xs" aria-hidden="true">
+        <span class="meter__bar meter__bar--yes" data-width="<%= percent(summary[:yes], summary[:invited]) %>"></span>
+        <span class="meter__bar meter__bar--maybe" data-width="<%= percent(summary[:maybe], summary[:invited]) %>"></span>
+        <span class="meter__bar meter__bar--no" data-width="<%= percent(summary[:no], summary[:invited]) %>"></span>
+      </div>
+    <% end %>
     <div class="event-card__footer">
-      <% yes = event.guests.where(rsvp_status: "yes").sum(:party_size) %>
-      <span><%= pluralize(event.guests.count, "guest") %></span>
-      <span><%= yes %> attending</span>
+      <span><%= pluralize(summary[:invited], "guest") %></span>
+      <span><strong><%= summary[:attending] %></strong> attending<% if summary[:pending] > 0 %> · <%= summary[:pending] %> awaiting<% end %></span>
     </div>
   </div>
 <% end %>

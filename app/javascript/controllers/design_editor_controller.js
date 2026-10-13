@@ -89,6 +89,9 @@ export default class extends Controller {
     for (const [property, value] of Object.entries(colors)) {
       if (HEX.test(value || "")) card.style.setProperty(property, value)
     }
+    if (HEX.test(colors["--card-accent"] || "")) {
+      this.element.style.setProperty("--studio-backdrop", `color-mix(in srgb, ${colors["--card-accent"]} 16%, #f3efe8)`)
+    }
 
     const headingFont = this.read("heading_font")
     const bodyFont = this.read("body_font")

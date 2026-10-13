@@ -65,6 +65,33 @@ module EventsHelper
     options_for_select(zones, selected)
   end
 
+  SECTIONS = {
+    "events" => { "show" => :overview, "edit" => :settings, "update" => :settings, "cancellation" => :settings },
+    "guests" => :guests, "guest_imports" => :guests, "event_designs" => :design, "messages" => :mail,
+    "questions" => :form, "check_ins" => :scan, "cohosts" => :cohosts
+  }.freeze
+
+  def workspace_section
+    entry = SECTIONS[controller_name]
+    entry.is_a?(Hash) ? entry[action_name] : entry
+  end
+
+  def workspace_link(label, path, key, current, count: nil)
+    active = key == current
+    link_to path, class: [ "side-link", ("is-active" if active) ], aria: { current: (active ? "page" : nil) } do
+      safe_join([ icon(key), tag.span(label), (tag.span(count, class: "side-link__count") if count) ].compact)
+    end
+  end
+
+  # Prefilled share text for messaging apps; the link is the public share page (no personal data).
+  def share_blurb(event)
+    "You're invited: #{event.title} — #{event_date_short(event)}"
+  end
+
+  def share_text(event)
+    "#{share_blurb(event)} #{public_event_url(event.share_token)}"
+  end
+
   def percent(part, whole)
     return 0 if whole.to_i.zero?
 

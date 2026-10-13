@@ -1,0 +1,7 @@
+<%# locals: (event:) %>
+<%# Share the public link through the apps guests already use; nothing is sent by Cordially. %>
+<div class="share-buttons" data-controller="share" data-share-title-value="<%= event.title %>" data-share-text-value="<%= share_blurb(event) %>" data-share-url-value="<%= public_event_url(event.share_token) %>">
+  <%= link_to "https://wa.me/?#{ { text: share_text(event) }.to_query }", class: "btn btn--small", target: "_blank", rel: "noopener noreferrer" do %><%= icon(:chat, size: 16) %>WhatsApp<% end %>
+  <%= link_to "sms:?&body=#{ERB::Util.url_encode(share_text(event))}", class: "btn btn--small" do %>Text<% end %>
+  <button type="button" class="btn btn--small" hidden data-share-target="native" data-action="share#open"><%= icon(:share, size: 16) %>More</button>
+</div>

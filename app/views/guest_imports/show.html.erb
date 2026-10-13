@@ -1,7 +1,7 @@
 <% content_for :title, "Review import" %>
 <% counts = @import.counts %>
 <% importable = counts[:new] + counts[:update] %>
-<%= link_to @event.title, event_path(@event, anchor: "guests"), class: "back-link" %>
+<%= link_to "Guest list", event_guests_path(@event), class: "back-link" %>
 <div class="page-header">
   <div><h1>Review import</h1>
     <p class="page-header__meta"><%= @import.filename.presence || "Pasted list" %> · <%= pluralize(@import.rows.size, "row") %></p></div>

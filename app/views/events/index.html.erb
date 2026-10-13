@@ -1,35 +1,36 @@
 <% content_for :title, "Your events" %>
-<div class="page-header">
+<header class="page-header mb-s">
   <div>
-    <p class="eyebrow">Dashboard</p>
-    <h1>Your events</h1>
+    <span class="eyebrow">Hello, <%= current_user.first_name %></span>
+    <h1>Your <em>events</em></h1>
   </div>
   <div class="page-header__actions">
-    <%= link_to "New event", new_event_path, class: "btn btn--primary" %>
+    <%= link_to new_event_path, class: "btn btn--wax" do %><%= icon(:plus, size: 18) %>New event<% end %>
   </div>
-</div>
+</header>
 
 <% if @upcoming.empty? && @past.empty? && @cancelled.empty? %>
-  <div class="empty-state">
-    <svg class="empty-state__art" viewBox="0 0 120 90" aria-hidden="true">
-      <rect x="18" y="22" width="84" height="56" rx="6" fill="#ECECFC"/>
-      <path d="M18 28l42 28 42-28" fill="none" stroke="#5458D1" stroke-width="3" stroke-linejoin="round"/>
-      <circle cx="92" cy="20" r="10" fill="#E8735A"/>
-      <path d="M88 20h8M92 16v8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
-    </svg>
-    <h2>No events yet</h2>
-    <p class="muted">Create an event, pick a design, and invite your guests.</p>
+  <div class="empty-state mt-m">
+    <%= render "shared/brand_mark", css_class: "auth-card__seal" %>
+    <h2>Your first invitation awaits</h2>
+    <p class="muted">Pick a design, add your guests and send — replies arrive here as they happen.</p>
     <%= link_to "Plan your first event", new_event_path, class: "btn btn--primary" %>
   </div>
 <% else %>
-  <% [ [ "Upcoming & drafts", @upcoming ], [ "Past", @past ], [ "Cancelled", @cancelled ] ].each do |heading, events| %>
-    <% next if events.empty? %>
-    <section class="stack" aria-label="<%= heading %>">
-      <h2><%= heading %></h2>
+  <% [ [ "Upcoming & drafts", @upcoming, true ], [ "Past", @past, false ], [ "Cancelled", @cancelled, false ] ].each do |heading, events, with_new| %>
+    <% next if events.empty? && !with_new %>
+    <section class="stack-s mt-l" aria-label="<%= heading %>">
+      <h2 class="eyebrow"><%= heading %></h2>
       <div class="event-grid">
         <%= render partial: "events/event_card", collection: events, as: :event %>
+        <% if with_new %>
+          <%= link_to new_event_path, class: "event-card event-card--new" do %>
+            <span class="event-card__plus"><%= icon(:plus, size: 26) %></span>
+            <strong>Plan something new</strong>
+            <span class="small">Birthdays, weddings, dinners, launches</span>
+          <% end %>
+        <% end %>
       </div>
     </section>
-    <hr>
   <% end %>
 <% end %>

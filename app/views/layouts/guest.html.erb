@@ -3,6 +3,7 @@
   <head>
     <title><%= content_for(:title) || "You're invited" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#15132b">
     <meta name="robots" content="noindex, nofollow">
     <meta name="referrer" content="same-origin">
     <%= csrf_meta_tags %>
@@ -18,7 +19,10 @@
       <%= yield %>
       <footer class="guest-footer">
         <%= yield :guest_footer %>
-        <p>Made with <%= link_to "Larkspur", root_path %> — invitations &amp; RSVPs.</p>
+        <%= link_to root_path(ref: "invite"), class: "host-cta" do %>
+          <%= render "shared/brand_mark" %>
+          <span><strong>Hosting something?</strong><span class="small muted">Make an invitation like this with Cordially.</span></span>
+        <% end %>
       </footer>
     </main>
   </body>

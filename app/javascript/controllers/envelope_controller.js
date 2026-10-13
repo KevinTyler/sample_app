@@ -32,7 +32,7 @@ export default class extends Controller {
   }
 
   storageKey() {
-    return `larkspur:opened:${this.keyValue}`
+    return `cordially:opened:${this.keyValue}`
   }
 
   seen() {

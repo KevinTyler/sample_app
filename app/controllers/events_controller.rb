@@ -2,8 +2,6 @@ class EventsController < ApplicationController
   include EventScoped
   skip_before_action :set_event, only: %i[index new create]
 
-  GUESTS_PER_PAGE = 100
-
   def index
     events = current_user.accessible_events.includes(:owner)
     @upcoming = events.where.not(status: "cancelled").upcoming
@@ -16,17 +14,6 @@ class EventsController < ApplicationController
     # Door staff only need the door: names and party sizes, nothing else.
     return redirect_to(event_check_in_path(@event)) if policy.role == "checkin"
     @summary = @event.rsvp_summary
-    @query = params[:q].to_s.strip
-    @status_filter = params[:status].presence_in(Guest::RSVP_STATUSES)
-    @group_filter = params[:group].presence
-    guests = @event.guests.order(:name)
-    guests = guests.search(@query) if @query.present?
-    guests = guests.where(rsvp_status: @status_filter) if @status_filter
-    guests = guests.where(group_name: @group_filter) if @group_filter
-    @page = [ params[:page].to_i, 1 ].max
-    @total_pages = [ (guests.count / GUESTS_PER_PAGE.to_f).ceil, 1 ].max
-    @page = [ @page, @total_pages ].min
-    @guests = guests.includes(:rsvp_answers, :payments, deliveries: :message).limit(GUESTS_PER_PAGE).offset((@page - 1) * GUESTS_PER_PAGE)
     @questions = @event.questions.to_a
     @activities = @event.activities.recent.includes(:guest, :user).limit(12)
     @uninvited_count = invitation_preview.recipients.count
@@ -104,7 +91,7 @@ class EventsController < ApplicationController
   def regenerate_share_link
     authorize! :edit
     @event.regenerate_share_token!
-    redirect_to event_path(@event, anchor: "share"), notice: "New share link created. The old link no longer works."
+    redirect_to event_path(@event), notice: "New share link created. The old link no longer works."
   end
 
   # The host's view of the guest-facing invitation, using a sample guest.

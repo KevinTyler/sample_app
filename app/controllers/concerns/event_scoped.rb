@@ -6,6 +6,7 @@ module EventScoped
   included do
     before_action :set_event
     helper_method :policy
+    layout -> { @event&.persisted? ? "event" : "application" }
     rescue_from EventPolicy::NotAuthorized, with: :forbidden
   end
 

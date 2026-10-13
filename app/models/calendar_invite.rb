@@ -1,7 +1,7 @@
 # Builds an iCalendar (.ics) file and "add to calendar" links for an event.
 # Times are emitted in UTC, which every calendar client converts to the viewer's zone.
 class CalendarInvite
-  PRODID = "-//Larkspur//Invitations//EN".freeze
+  PRODID = "-//Cordially//Invitations//EN".freeze
 
   # include_private: false leaves out the video-call link (for the public share page).
   def initialize(event, url: nil, include_private: true)
@@ -56,7 +56,7 @@ class CalendarInvite
 
   private
     def uid
-      "event-#{@event.id}-#{@event.share_token.first(8)}@larkspur"
+      "event-#{@event.id}-#{@event.share_token.first(8)}@cordially"
     end
 
     def summary

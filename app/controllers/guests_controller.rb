@@ -1,7 +1,25 @@
 class GuestsController < ApplicationController
   include EventScoped
   before_action { authorize! :manage_guests }
-  before_action :set_guest, except: %i[new create export bulk]
+  before_action :set_guest, except: %i[index new create export bulk]
+
+  GUESTS_PER_PAGE = 100
+
+  def index
+    @summary = @event.rsvp_summary
+    @query = params[:q].to_s.strip
+    @status_filter = params[:status].presence_in(Guest::RSVP_STATUSES)
+    @group_filter = params[:group].presence
+    guests = @event.guests.order(:name)
+    guests = guests.search(@query) if @query.present?
+    guests = guests.where(rsvp_status: @status_filter) if @status_filter
+    guests = guests.where(group_name: @group_filter) if @group_filter
+    @page = [ params[:page].to_i, 1 ].max
+    @total_pages = [ (guests.count / GUESTS_PER_PAGE.to_f).ceil, 1 ].max
+    @page = [ @page, @total_pages ].min
+    @guests = guests.includes(:rsvp_answers, :payments, deliveries: :message).limit(GUESTS_PER_PAGE).offset((@page - 1) * GUESTS_PER_PAGE)
+    @questions = @event.questions.to_a
+  end
 
   def new
     @guest = @event.guests.new(plus_ones_allowed: @event.default_plus_ones)
@@ -14,7 +32,7 @@ class GuestsController < ApplicationController
       if params[:add_another]
         redirect_to new_event_guest_path(@event), notice: "#{@guest.name} added. Add the next guest below."
       else
-        redirect_to event_path(@event, anchor: "guests"), notice: "#{@guest.name} added to the guest list."
+        redirect_to event_guests_path(@event), notice: "#{@guest.name} added to the guest list."
       end
     else
       render :new, status: :unprocessable_content
@@ -27,7 +45,7 @@ class GuestsController < ApplicationController
 
   def update
     if @guest.update(guest_params)
-      redirect_to event_path(@event, anchor: "guests"), notice: "#{@guest.name} updated."
+      redirect_to event_guests_path(@event), notice: "#{@guest.name} updated."
     else
       @rsvp = RsvpSubmission.from_guest(@guest)
       render :edit, status: :unprocessable_content
@@ -38,7 +56,7 @@ class GuestsController < ApplicationController
   def rsvp
     @rsvp = RsvpSubmission.new(rsvp_params.merge(guest: @guest, by_host: true, user: current_user))
     if @rsvp.save
-      redirect_to event_path(@event, anchor: "guests"), notice: "RSVP for #{@guest.name} saved."
+      redirect_to event_guests_path(@event), notice: "RSVP for #{@guest.name} saved."
     else
       render :edit, status: :unprocessable_content
     end
@@ -46,7 +64,7 @@ class GuestsController < ApplicationController
 
   def destroy
     @guest.destroy!
-    redirect_to event_path(@event, anchor: "guests"), notice: "#{@guest.name} removed from the guest list.", status: :see_other
+    redirect_to event_guests_path(@event), notice: "#{@guest.name} removed from the guest list.", status: :see_other
   end
 
   # Sends this guest a fresh copy of the invitation, even if one was already delivered.
@@ -58,7 +76,7 @@ class GuestsController < ApplicationController
     message = @event.messages.idempotent_create!(idempotency_key: params[:idempotency_key].presence || SecureRandom.uuid,
       kind: "invitation", author: current_user, channels: %w[email], audience: { "guest_ids" => [ @guest.id ], "resend" => true })
     message.dispatch! unless message.status == "dispatched"
-    redirect_to event_path(@event, anchor: "guests"), notice: "Invitation re-sent to #{@guest.name}."
+    redirect_to event_guests_path(@event), notice: "Invitation re-sent to #{@guest.name}."
   end
 
   def export
@@ -70,7 +88,7 @@ class GuestsController < ApplicationController
   # Applies one action to the guests ticked in the guest list.
   def bulk
     guests = @event.guests.where(id: Array(params[:guest_ids]).map(&:to_i))
-    return redirect_to(event_path(@event, anchor: "guests"), alert: "Select at least one guest first.") if guests.none?
+    return redirect_to(event_guests_path(@event), alert: "Select at least one guest first.") if guests.none?
 
     notice = case params[:bulk_action]
     when "group"
@@ -90,9 +108,9 @@ class GuestsController < ApplicationController
     when "remove"
       "Removed #{pluralize_guests(guests.destroy_all.size)}."
     else
-      return redirect_to(event_path(@event, anchor: "guests"), alert: "Choose an action.")
+      return redirect_to(event_guests_path(@event), alert: "Choose an action.")
     end
-    redirect_to event_path(@event, anchor: "guests"), notice: notice, status: :see_other
+    redirect_to event_guests_path(@event), notice: notice, status: :see_other
   end
 
   private

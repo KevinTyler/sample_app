@@ -22,7 +22,7 @@ class GuestMailer < ApplicationMailer
 
     mail(
       to: email_address_with_name(@delivery.recipient, @guest.name),
-      from: email_address_with_name(sender_address, "#{@event.display_host_name} via Larkspur"),
+      from: email_address_with_name(sender_address, "#{@event.display_host_name} via Cordially"),
       reply_to: @event.owner.email_address,
       subject: @message.subject_line,
       # A stable Message-ID per delivery lets mail servers and providers recognize a retry.
@@ -32,7 +32,7 @@ class GuestMailer < ApplicationMailer
 
   private
     def sender_address
-      Mail::Address.new(ENV.fetch("MAIL_FROM", "invitations@larkspur.localhost")).address
+      Mail::Address.new(ENV.fetch("MAIL_FROM", "invitations@cordially.localhost")).address
     end
 
     def message_id_domain

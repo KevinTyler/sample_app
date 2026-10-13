@@ -1,5 +1,5 @@
 module ApplicationHelper
-  BRAND = "Larkspur".freeze
+  BRAND = "Cordially".freeze
 
   # Returns a title on a per-page basis (kept from the original sample app).
   def title
@@ -22,8 +22,15 @@ module ApplicationHelper
     end
   end
 
-  def nav_link(label, path, **options)
-    active = current_page?(path)
-    link_to label, path, class: [ "nav__link", ("is-active" if active) ], aria: { current: (active ? "page" : nil) }, **options
+  def nav_link(label, path, active: current_page?(path), **options)
+    link_to label, path, class: [ "app-nav__link", ("is-active" if active) ], aria: { current: (active ? "page" : nil) }, **options
+  end
+
+  # Two-letter monogram for avatars and guest rows: "Dana Whitfield" → "DW".
+  def initials(name)
+    parts = name.to_s.scan(/[[:alpha:]][[:alpha:]'’-]*/)
+    return "?" if parts.empty?
+
+    (parts.size == 1 ? parts.first.first(2) : parts.first.first + parts.last.first).upcase
   end
 end
