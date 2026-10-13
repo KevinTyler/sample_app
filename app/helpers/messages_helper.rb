@@ -25,6 +25,6 @@ module MessagesHelper
   end
 
   def channel_label(channel)
-    channel == "sms" ? "Text" : "Email"
+    { "sms" => "Text", "whatsapp" => "WhatsApp" }.fetch(channel.to_s, "Email")
   end
 end

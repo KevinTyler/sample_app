@@ -8,6 +8,12 @@ Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
 
+  # One-time sign-in links the texting assistant sends, and linking a phone to an existing account.
+  get "m/:token" => "sign_in_links#show", as: :sign_in_link, constraints: { token: /[A-Za-z0-9_-]{32}/ }
+  post "m/:token" => "sign_in_links#create", constraints: { token: /[A-Za-z0-9_-]{32}/ }
+  get "assistant/connect/:token" => "assistant_links#show", as: :assistant_link, constraints: { token: %r{[^/]+} }
+  post "assistant/connect/:token" => "assistant_links#create", constraints: { token: %r{[^/]+} }
+
   # Host account settings and address book
   resource :account, only: %i[edit update]
   resources :contacts, except: :show do
@@ -105,6 +111,7 @@ Rails.application.routes.draw do
     post "email" => "email#create"
     post "twilio/status" => "twilio#status"
     post "twilio/inbound" => "twilio#inbound"
+    post "twilio/assistant" => "twilio#assistant"
     post "stripe" => "stripe#create"
   end
 
@@ -114,9 +121,10 @@ Rails.application.routes.draw do
     post "dev/checkout/:token" => "dev/checkouts#create", constraints: { token: /[A-Za-z0-9_=-]+/ }
   end
 
-  # Local development outbox: captured emails and SMS.
+  # Local development outbox: captured emails and SMS, and a phone simulator for the texting assistant.
   if Rails.application.config.x.outbox_enabled
     namespace :dev do
+      resource :assistant, only: %i[show create], controller: "assistant"
       resources :outbox, only: %i[index show], controller: "outbox" do
         member { get :html }
         collection { delete :clear }

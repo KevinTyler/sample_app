@@ -142,7 +142,7 @@ class Guest < ApplicationRecord
   def address_for(channel)
     case channel.to_s
     when "email" then email if emailable?
-    when "sms" then phone if phone.present? && !unsubscribed?
+    when "sms", "whatsapp" then phone if phone.present? && !unsubscribed?
     end
   end
 

@@ -715,3 +715,16 @@ textarea.handwritten { font-size: 1.35rem; }
 .capture__buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .capture__button { position: relative; min-height: 52px; }
 .btn svg { flex: none; }
+/* Dev: texting assistant simulator */
+.sim-phone { width: 390px; height: 760px; }
+.sim-phone__screen { background: var(--paper); padding: 16px 12px 12px; display: flex; flex-direction: column; gap: 10px; }
+.sim-thread { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.sim-empty { color: var(--ink-3); text-align: center; margin: auto 12px; }
+.sim-bubble { max-width: 82%; padding: 10px 14px; font-size: 0.95rem; line-height: 1.38; overflow-wrap: anywhere; }
+.sim-bubble--me { align-self: flex-end; background: var(--night); color: var(--paper); border-radius: 20px 20px 6px 20px; }
+.sim-bubble--them { align-self: flex-start; background: var(--porcelain); border-radius: 20px 20px 20px 6px; }
+.sim-bubble a { color: inherit; }
+.sim-compose { display: flex; gap: 6px; align-items: center; }
+.sim-compose input[type="text"] { border-radius: 999px; min-height: 44px; }
+.sim-attach { position: relative; font-size: 1.2rem; }
+.event-card--text { cursor: default; padding: 20px; text-align: center; }

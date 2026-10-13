@@ -4,6 +4,7 @@
 #   Email: ActionMailer. Development/test use the local Outbox (see /dev/outbox);
 #          production uses SMTP (Postmark, SES, SendGrid, Mailgun, … all speak SMTP).
 #   SMS:   SMS_PROVIDER=outbox (development default) or twilio. Disabled when unset in production.
+#   WhatsApp: WHATSAPP_PROVIDER=outbox (development default) or twilio (see Whatsapp::TwilioAdapter).
 module Messaging
   Receipt = Data.define(:provider, :message_id)
 
@@ -15,6 +16,7 @@ module Messaging
     case channel.to_s
     when "email" then EmailGateway
     when "sms" then sms_gateway || raise(NotConfigured, "SMS is not configured")
+    when "whatsapp" then whatsapp_gateway || raise(NotConfigured, "WhatsApp is not configured")
     else raise ArgumentError, "Unknown channel #{channel.inspect}"
     end
   end
@@ -32,6 +34,25 @@ module Messaging
 
   def sms_enabled?
     sms_gateway.present? && sms_gateway.configured?
+  end
+
+  def whatsapp_gateway
+    case whatsapp_provider
+    when "outbox" then Whatsapp::OutboxAdapter
+    when "twilio" then Whatsapp::TwilioAdapter
+    end
+  end
+
+  def whatsapp_provider
+    ENV.fetch("WHATSAPP_PROVIDER") { Rails.env.production? ? nil : "outbox" }.presence
+  end
+
+  def whatsapp_enabled?
+    whatsapp_gateway.present? && whatsapp_gateway.configured?
+  end
+
+  def enabled_channels
+    [ "email", ("sms" if sms_enabled?), ("whatsapp" if whatsapp_enabled?) ].compact
   end
 
   def url_options

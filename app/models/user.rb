@@ -4,6 +4,7 @@ class User < ApplicationRecord
   has_many :owned_events, class_name: "Event", foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
   has_many :event_memberships, dependent: :destroy
   has_many :contacts, dependent: :delete_all
+  has_many :assistant_conversations, dependent: :nullify
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
   normalizes :name, with: ->(n) { n.squish }

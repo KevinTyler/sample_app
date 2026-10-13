@@ -13,7 +13,7 @@ class Message < ApplicationRecord
   KINDS = %w[invitation save_the_date announcement update reminder cancellation rsvp_confirmation].freeze
   # The card itself, in its three forms (Event#card_type). Each guest gets each at most once.
   CARD_KINDS = %w[invitation save_the_date announcement].freeze
-  CHANNELS = %w[email sms].freeze
+  CHANNELS = %w[email sms whatsapp].freeze
   STATUSES = %w[draft scheduled dispatching dispatched].freeze
 
   belongs_to :event
@@ -146,14 +146,17 @@ class Message < ApplicationRecord
   private
     def reachable_guests
       channels.map do |channel|
-        channel == "sms" ? Guest.where.not(phone: nil).where(unsubscribed_at: nil) : Guest.emailable
+        channel.in?(%w[sms whatsapp]) ? Guest.where.not(phone: nil).where(unsubscribed_at: nil) : Guest.emailable
       end.reduce { |a, b| a.or(b) } || Guest.none
     end
 
     def channels_supported
-      errors.add(:channels, "must include at least one of email or SMS") if channels.empty?
+      errors.add(:channels, "must include at least one of email, SMS or WhatsApp") if channels.empty?
       if channels.include?("sms") && !Messaging.sms_enabled?
         errors.add(:channels, "SMS isn't configured yet (see README: SMS integration)")
+      end
+      if channels.include?("whatsapp") && !Messaging.whatsapp_enabled?
+        errors.add(:channels, "WhatsApp isn't configured yet (see README: WhatsApp)")
       end
     end
 

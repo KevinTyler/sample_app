@@ -74,6 +74,31 @@
   </div>
 </section>
 
+<% if assistant_available? %>
+  <section class="mk-section showcase" aria-labelledby="text-title">
+    <div>
+      <span class="eyebrow">No app, no forms</span>
+      <h2 class="mk-title" id="text-title">Or just <em>text us</em> your party.</h2>
+      <p class="muted mt-s">“Jonah's 5th, Sat Nov 14 at 2, Lakeside Park.” Cordially's assistant makes the card, takes your guest list from a quick paste, and sends it when you say SEND. Replies come back as texts. Afterwards, text a video of the birthday kid saying thanks and it goes to the right guest.</p>
+      <div class="cluster mt-m">
+        <% assistant_links.each do |label, href| %><%= link_to label, href, class: "btn btn--primary" %><% end %>
+      </div>
+    </div>
+    <div class="phone" aria-hidden="true">
+      <div class="phone__screen sim-phone__screen">
+        <div class="sim-thread">
+          <div class="sim-bubble sim-bubble--me">Jonah's 5th birthday, Sat Nov 14 at 2pm, Lakeside Park pavilion</div>
+          <div class="sim-bubble sim-bubble--them">Happy almost-5, Jonah! I've made a draft for Sat Nov 14, 2 PM at Lakeside Park. Pick a look: 1 Balloon Bunch, 2 Confetti Burst, 3 Retro Sunset</div>
+          <div class="sim-bubble sim-bubble--me">1, but make it green</div>
+          <div class="sim-bubble sim-bubble--them">Done! Who's invited? Paste names with numbers or emails.</div>
+          <div class="sim-bubble sim-bubble--me">Dana 555-010-0100, the Morenos 555-014-4000, Lee lee@example.com</div>
+          <div class="sim-bubble sim-bubble--them">3 guests added. Reply SEND to text the invitations.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+<% end %>
+
 <div class="mk-band mk-band--sand">
   <section class="mk-section showcase" aria-labelledby="guests-title">
     <div class="phone" aria-hidden="true">

@@ -301,6 +301,37 @@ Designed on the canvas first (row "Thank-yous & texting"), then built:
   palette, the video or photo, the note; *Send a heart back* and *Save video*. Opens and hearts show up
   in the Overview's activity. Media is served through the app (CSP-friendly, range requests for video).
 
+### ✅ Stage 12 — make a card by texting (SMS or WhatsApp)
+
+Designed on the canvas (row "Thank-yous & texting"). Hosts text the assistant's number and get the same
+result as logging in and designing: an account, a card, a guest list, invitations sent, replies texted
+back as they arrive, and thank-yous afterwards.
+
+- **Two brains, one set of actions.** `Assistant::Actions` does everything through the same models and
+  validations as the web app (create/update the event, design, guests, questions, card-back links, publish,
+  send, status, gifts, thank-yous, one-time sign-in links to the studio).
+  - **Claude** (`Assistant::ClaudeBrain`, when `ANTHROPIC_API_KEY` is set): plain language
+    ("Jonah's 5th, Sat Nov 14 at 2, Lakeside Park — make it green"). Uses the official `anthropic` gem's
+    tool runner with typed tool schemas (`Assistant::Tools`), model `claude-opus-5-5` at medium effort,
+    a cached system prompt, and the API's server-side refusal fallback (`fallbacks: :default`).
+    Each text is one turn; only the plain-text thread is replayed (state lives in the database).
+  - **Guided** (`Assistant::GuidedBrain`, no API key needed): name → email → occasion → when → where →
+    pick a design by number → paste guests → SEND; plus STATUS, EDIT, GUESTS, NEW, HELP.
+- **Safety rails in code, not just the prompt**: sending invitations or thank-yous requires the host's
+  latest text to say so (SEND/yes); an email that already has an account is only linked after its owner
+  taps an emailed link; sign-in links are single-use, 30-minute, digest-stored, and need a button press
+  (so link previews can't use them); STOP/START honored; per-number daily limit; Twilio signatures verified;
+  provider retries de-duplicated.
+- **Thank-yous by text**: text a photo or video (MMS/WhatsApp media is downloaded with Twilio credentials),
+  say who it's for, reply SEND.
+- **Replies texted back**: hosts who set up by text get "Dana is coming · 12 coming, 3 to reply" on the
+  same thread (respecting their notification setting and WhatsApp's 24-hour window).
+- **WhatsApp** is also a guest channel now (Messages → *WhatsApp*), via Twilio; guest-initiated
+  invitations use an approved template (`WHATSAPP_TEMPLATE_SID`).
+- **Try it locally**: `/dev/assistant` is a phone simulator wired to the real pipeline (guided mode unless
+  `ANTHROPIC_API_KEY` is set). The landing page and dashboard show "make one by text" when
+  `ASSISTANT_PHONE_NUMBER` / `ASSISTANT_WHATSAPP_NUMBER` are set (or the dev simulator in development).
+
 ## Architecture
 
 | Area | Where |
@@ -396,6 +427,18 @@ SMS is a channel adapter with the same interface as email (`deliver(delivery) �
   `/webhooks/twilio/status`; point your number's incoming-message webhook at `/webhooks/twilio/inbound`
   so STOP replies are recorded. Only text guests who agreed to receive texts — regulations such as
   the US TCPA apply to the host.
+
+### Texting assistant & WhatsApp
+
+1. In Twilio, buy (or reuse) a number for the assistant and set its *A message comes in* webhook to
+   `https://<APP_HOST>/webhooks/twilio/assistant` (POST). For WhatsApp, register a WhatsApp sender and point
+   it at the same URL.
+2. Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `ASSISTANT_PHONE_NUMBER` (shown to hosts), and for
+   WhatsApp `WHATSAPP_PROVIDER=twilio`, `WHATSAPP_FROM_NUMBER`, `ASSISTANT_WHATSAPP_NUMBER`.
+3. Set `ANTHROPIC_API_KEY` for the plain-language assistant (otherwise the guided assistant answers).
+4. For WhatsApp *guest* messages (invitations you start), create a Content Template in Twilio with two
+   variables ({{1}} message, {{2}} link), get it approved by Meta, and set `WHATSAPP_TEMPLATE_SID`.
+   Replies to the assistant need no template (they're inside the 24-hour window).
 
 ### Payments (Stripe)
 

@@ -48,6 +48,9 @@
               <% else %>
                 <span class="field__hint">Text messages aren't set up yet (see README).</span>
               <% end %>
+              <% if Messaging.whatsapp_enabled? %>
+                <label class="checkbox"><%= check_box_tag "message[channels][]", "whatsapp", @message.channels.include?("whatsapp"), id: "channel_whatsapp" %> WhatsApp<% if Messaging.whatsapp_provider == "outbox" %> <span class="field__optional">— dev outbox</span><% end %></label>
+              <% end %>
             </div>
           </div>
           <p class="callout small m-0" aria-live="polite">

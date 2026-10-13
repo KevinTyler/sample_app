@@ -29,6 +29,14 @@
             <strong>Plan something new</strong>
             <span class="small">Birthdays, weddings, dinners, launches</span>
           <% end %>
+          <% if assistant_available? %>
+            <div class="event-card event-card--new event-card--text">
+              <span class="event-card__plus"><%= icon(:chat, size: 24) %></span>
+              <strong>Or make one by text</strong>
+              <span class="small">Text the assistant what you're planning.</span>
+              <div class="cluster"><% assistant_links.each do |label, href| %><%= link_to label, href, class: "btn btn--small" %><% end %></div>
+            </div>
+          <% end %>
         <% end %>
       </div>
     </section>

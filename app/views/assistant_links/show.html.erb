@@ -1,0 +1,10 @@
+<% content_for :title, "Connect your phone" %>
+<div class="auth-shell">
+  <div class="auth-card">
+    <%= render "shared/brand_mark", css_class: "auth-card__seal" %>
+    <h1>Connect your <em>phone</em></h1>
+    <p class="muted">Someone texting from a phone asked to use your Cordially account. If that was you, connect it — then you can make cards, add guests and send thank-yous by text.</p>
+    <%= button_to "Connect this phone", assistant_link_path(params[:token]), class: "btn btn--primary btn--block btn--large" %>
+    <p class="small faint m-0">Not you? Ignore this — nothing changes.</p>
+  </div>
+</div>

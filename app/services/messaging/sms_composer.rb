@@ -17,6 +17,11 @@ module Messaging
       lines.join("\n").truncate(MAX_LENGTH)
     end
 
+    # The one-line message for template-based channels (WhatsApp templates fill in the link separately).
+    def headline_text
+      [ headline, (@message.body.to_s.squish.truncate(200) if @message.body.present?) ].compact.join(" ")
+    end
+
     private
       def headline
         case @message.kind

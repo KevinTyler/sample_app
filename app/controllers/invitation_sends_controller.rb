@@ -36,7 +36,7 @@ class InvitationSendsController < ApplicationController
 
     def channels
       requested = Array(params[:channels]).map(&:to_s) & Message::CHANNELS
-      requested -= [ "sms" ] unless Messaging.sms_enabled?
+      requested &= Messaging.enabled_channels
       requested.presence || %w[email]
     end
 

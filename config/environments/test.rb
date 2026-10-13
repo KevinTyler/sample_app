@@ -36,6 +36,9 @@ Rails.application.configure do
   # ActionMailer::Base.deliveries array.
   config.action_mailer.delivery_method = :test
 
+  # Don't shell out to ffprobe/image analyzers for fixture uploads.
+  config.active_storage.analyzers = []
+
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "example.com" }
   config.x.outbox_enabled = true

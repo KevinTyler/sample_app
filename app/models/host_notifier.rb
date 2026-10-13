@@ -11,7 +11,19 @@ class HostNotifier
       next if user.id == activity.user_id || user.rsvp_notifications != "instant"
 
       HostMailer.with(user: user, activity: activity).reply_received.deliver_later
+      text_host(user, activity)
     end
+  end
+
+  # Hosts who set up by text also get a text (on the same thread as the assistant).
+  def self.text_host(user, activity)
+    conversations = user.assistant_conversations.select(&:can_message?)
+    return if conversations.empty?
+
+    summary = activity.event.rsvp_summary
+    text = "#{ApplicationController.helpers.activity_sentence(activity)} · #{activity.event.title}: " \
+           "#{summary[:attending]} coming, #{summary[:pending]} still to reply."
+    conversations.each { |conversation| AssistantNotifyJob.perform_later(conversation.id, text) }
   end
 
   # Owner plus co-hosts with guest-list access.

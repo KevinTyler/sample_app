@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_030000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_040000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -50,6 +50,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_030000) do
     t.index ["event_id"], name: "index_activities_on_event_id"
     t.index ["guest_id"], name: "index_activities_on_guest_id"
     t.index ["user_id"], name: "index_activities_on_user_id"
+  end
+
+  create_table "assistant_conversations", force: :cascade do |t|
+    t.string "channel", default: "sms", null: false
+    t.string "address", null: false
+    t.integer "user_id"
+    t.integer "event_id"
+    t.string "stage"
+    t.json "data", default: {}, null: false
+    t.datetime "opted_out_at"
+    t.datetime "last_inbound_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["channel", "address"], name: "index_assistant_conversations_on_channel_and_address", unique: true
+    t.index ["event_id"], name: "index_assistant_conversations_on_event_id"
+    t.index ["user_id"], name: "index_assistant_conversations_on_user_id"
+  end
+
+  create_table "assistant_messages", force: :cascade do |t|
+    t.integer "assistant_conversation_id", null: false
+    t.string "direction", null: false
+    t.text "body"
+    t.json "media", default: [], null: false
+    t.string "provider_message_id"
+    t.datetime "created_at", null: false
+    t.index ["assistant_conversation_id"], name: "index_assistant_messages_on_assistant_conversation_id"
+    t.index ["provider_message_id"], name: "index_assistant_messages_on_provider_message_id", unique: true, where: "provider_message_id IS NOT NULL"
   end
 
   create_table "cohost_invitations", force: :cascade do |t|
@@ -325,6 +352,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_030000) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "sign_in_links", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "token_digest", null: false
+    t.string "redirect_path", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "used_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["token_digest"], name: "index_sign_in_links_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_sign_in_links_on_user_id"
+  end
+
   create_table "thank_yous", force: :cascade do |t|
     t.integer "event_id", null: false
     t.integer "guest_id"
@@ -363,6 +402,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_030000) do
   add_foreign_key "activities", "events"
   add_foreign_key "activities", "guests", on_delete: :nullify
   add_foreign_key "activities", "users", on_delete: :nullify
+  add_foreign_key "assistant_conversations", "events", on_delete: :nullify
+  add_foreign_key "assistant_conversations", "users", on_delete: :nullify
+  add_foreign_key "assistant_messages", "assistant_conversations", on_delete: :cascade
   add_foreign_key "cohost_invitations", "events"
   add_foreign_key "cohost_invitations", "users", column: "invited_by_id", on_delete: :nullify
   add_foreign_key "contacts", "users"
@@ -388,6 +430,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_030000) do
   add_foreign_key "rsvp_answers", "event_questions"
   add_foreign_key "rsvp_answers", "guests"
   add_foreign_key "sessions", "users"
+  add_foreign_key "sign_in_links", "users", on_delete: :cascade
   add_foreign_key "thank_yous", "events"
   add_foreign_key "thank_yous", "gifts", on_delete: :nullify
   add_foreign_key "thank_yous", "guests", on_delete: :nullify

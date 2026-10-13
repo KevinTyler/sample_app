@@ -23,6 +23,9 @@ gem "csv"
 # QR codes for guest check-in passes
 gem "rqrcode", "~> 3.0"
 
+# Claude, for the texting assistant (set ANTHROPIC_API_KEY; without it a guided step-by-step assistant runs).
+gem "anthropic", "~> 1.78"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 

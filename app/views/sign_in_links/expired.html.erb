@@ -1,0 +1,9 @@
+<% content_for :title, "Link expired" %>
+<div class="auth-shell">
+  <div class="auth-card">
+    <%= render "shared/brand_mark", css_class: "auth-card__seal" %>
+    <h1>That link has expired</h1>
+    <p class="muted">Sign-in links work once, for 30 minutes. Text EDIT to the assistant for a fresh one, or sign in with your email.</p>
+    <%= link_to "Sign in", new_session_path, class: "btn btn--primary btn--block" %>
+  </div>
+</div>

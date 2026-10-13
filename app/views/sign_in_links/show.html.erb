@@ -1,0 +1,10 @@
+<% content_for :title, "Continue to Cordially" %>
+<div class="auth-shell">
+  <div class="auth-card">
+    <%= render "shared/brand_mark", css_class: "auth-card__seal" %>
+    <h1>Welcome <em>in</em></h1>
+    <p class="muted">You're signing in as <strong><%= @link.user.name %></strong> from your texts with Cordially.</p>
+    <%= button_to "Continue", sign_in_link_path(params[:token]), class: "btn btn--primary btn--block btn--large" %>
+    <p class="small faint m-0">This link works once and expires in 30 minutes.</p>
+  </div>
+</div>

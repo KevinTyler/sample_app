@@ -30,7 +30,7 @@ class MessagesController < ApplicationController
     @message.scheduled_for_local = nil unless scheduling?
 
     if !@message.scheduled? && @message.valid? && @message.recipients.none?
-      @message.errors.add(:base, "No one would receive this: no invited guests match these filters with an email address#{' or phone' if @message.channels.include?('sms')}. Invite them first, or widen the filters.")
+      @message.errors.add(:base, "No one would receive this: no invited guests match these filters with an email address#{' or phone' if (@message.channels & %w[sms whatsapp]).any?}. Invite them first, or widen the filters.")
       return render(:new, status: :unprocessable_content)
     end
 

@@ -1,0 +1,38 @@
+<% content_for :title, "Texting assistant simulator" %>
+<header class="page-header mb-s">
+  <div>
+    <span class="eyebrow">Development</span>
+    <h1>Text the <em>assistant</em></h1>
+    <p class="page-header__meta">Running in <%= @provider %>. Messages use the real pipeline; replies are captured in the dev outbox.</p>
+  </div>
+  <%= form_with url: dev_assistant_path, method: :get, class: "cluster" do |f| %>
+    <%= f.label :phone, "Phone", class: "visually-hidden" %>
+    <%= f.telephone_field :phone, value: @phone, class: "w-auto" %>
+    <%= f.select :channel, AssistantConversation::CHANNELS.map { |c| [ c == "sms" ? "SMS" : "WhatsApp", c ] }, { selected: params[:channel] }, class: "w-auto" %>
+    <%= f.submit "Switch", class: "btn btn--small" %>
+  <% end %>
+</header>
+
+<div class="phone sim-phone mt-m">
+  <div class="phone__screen sim-phone__screen">
+    <div class="sim-thread" id="thread">
+      <% if @messages.empty? %>
+        <p class="sim-empty">Say hi to start — e.g. “Hi! I want to make an invitation for my son's 5th birthday.”</p>
+      <% end %>
+      <% @messages.each do |message| %>
+        <div class="sim-bubble <%= message.inbound? ? 'sim-bubble--me' : 'sim-bubble--them' %>">
+          <%= simple_format(message.body, {}, wrapper_tag: "span") %>
+          <% if message.media.any? %><span class="small">[<%= message.media.size %> attachment]</span><% end %>
+        </div>
+      <% end %>
+    </div>
+    <%= form_with url: dev_assistant_path, multipart: true, class: "sim-compose" do |f| %>
+      <%= hidden_field_tag :phone, @phone %>
+      <%= hidden_field_tag :channel, params[:channel] %>
+      <label class="visually-hidden" for="body">Message</label>
+      <%= text_field_tag :body, nil, placeholder: "Text message", autocomplete: "off", autofocus: true %>
+      <label class="btn btn--small btn--ghost sim-attach" title="Attach a photo or video">+<%= file_field_tag :media, accept: "image/*,video/*", class: "visually-hidden" %></label>
+      <%= submit_tag "Send", class: "btn btn--small btn--wax", data: { turbo_submits_with: "…" } %>
+    <% end %>
+  </div>
+</div>

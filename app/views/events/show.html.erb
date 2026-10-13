@@ -108,11 +108,13 @@
           <%= f.label :personal_note do %>Personal note <span class="field__optional">(optional, appears in the email)</span><% end %>
           <%= f.text_area :personal_note, rows: 3, maxlength: 1000, placeholder: "Can't wait to celebrate with you!" %>
         </div>
-        <% if Messaging.sms_enabled? %>
+        <% if Messaging.enabled_channels.size > 1 %>
           <div class="cluster">
             <label class="checkbox"><%= check_box_tag "channels[]", "email", true, id: "invite_channel_email" %> Email</label>
-            <label class="checkbox"><%= check_box_tag "channels[]", "sms", false, id: "invite_channel_sms" %> Text message (guests with a phone number)</label>
+            <% if Messaging.sms_enabled? %><label class="checkbox"><%= check_box_tag "channels[]", "sms", false, id: "invite_channel_sms" %> Text message</label><% end %>
+            <% if Messaging.whatsapp_enabled? %><label class="checkbox"><%= check_box_tag "channels[]", "whatsapp", false, id: "invite_channel_whatsapp" %> WhatsApp</label><% end %>
           </div>
+          <p class="field__hint m-0">Texts and WhatsApp go to guests with a mobile number.</p>
         <% end %>
         <fieldset class="send-when" data-controller="schedule-toggle">
           <legend class="field__label">When</legend>
@@ -126,7 +128,7 @@
             <p class="field__hint">Everyone not yet invited at that moment gets their invitation, including guests you add before then.</p>
           </div>
         </fieldset>
-        <div class="form-actions"><%= f.submit Messaging.sms_enabled? ? "Send" : "Send #{pluralize(@uninvited_count, @event.invitation? ? 'invitation' : @event.card_type_name.downcase)}", class: "btn btn--wax", data: { turbo_submits_with: "Sending…" } %></div>
+        <div class="form-actions"><%= f.submit Messaging.enabled_channels.size > 1 ? "Send" : "Send #{pluralize(@uninvited_count, @event.invitation? ? 'invitation' : @event.card_type_name.downcase)}", class: "btn btn--wax", data: { turbo_submits_with: "Sending…" } %></div>
       <% end %>
     </section>
   <% elsif policy.can?(:edit) %>

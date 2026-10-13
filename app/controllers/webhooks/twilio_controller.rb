@@ -28,6 +28,17 @@ class Webhooks::TwilioController < Webhooks::BaseController
     render xml: "<Response/>"
   end
 
+  # The texting assistant's number (SMS and WhatsApp): point its "A message comes in" webhook here.
+  def assistant
+    from = params[:From].to_s
+    media = (0...params[:NumMedia].to_i.clamp(0, 5)).map do |i|
+      { "url" => params["MediaUrl#{i}"].to_s, "content_type" => params["MediaContentType#{i}"].to_s }
+    end
+    Assistant::Inbound.receive(channel: from.start_with?("whatsapp:") ? "whatsapp" : "sms", address: from,
+      body: params[:Body], media: media, provider_message_id: params[:MessageSid])
+    render xml: "<Response/>"
+  end
+
   private
     def verify_signature
       token = ENV["TWILIO_AUTH_TOKEN"].to_s
