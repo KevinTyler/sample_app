@@ -11,7 +11,7 @@ RSpec.describe "Event workspace", type: :request do
 
     nav = Nokogiri::HTML(response.body).at_css("nav.workspace__nav")
     expect(nav.css(".side-link").map { |link| link.css("span").map(&:text).join(" ") }).to eq(
-      [ "Overview", "Guests 3", "Design", "Messages", "RSVP form 0", "Thank-yous", "Check-in", "Settings", "Co-hosts" ]
+      [ "Overview", "Guests 3", "Design", "Messages", "RSVP form 0", "Schedule", "Thank-yous", "Check-in", "Settings", "Co-hosts" ]
     )
     expect(nav.at_css(".side-link.is-active").text).to include("Overview")
     expect(response.body).to include(%(class="crumb"), "Maya turns thirty")

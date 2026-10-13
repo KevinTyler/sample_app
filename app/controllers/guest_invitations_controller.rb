@@ -90,7 +90,7 @@ class GuestInvitationsController < ApplicationController
     end
 
     def rsvp_params
-      permitted = params.fetch(:rsvp, {}).permit(:status, :party_size, :adults, :kids, :guest_note, answers: {}, plus_one_names: [])
+      permitted = params.fetch(:rsvp, {}).permit(:status, :party_size, :adults, :kids, :guest_note, answers: {}, plus_one_names: [], schedule: {})
       permitted.to_h.symbolize_keys
     end
 

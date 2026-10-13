@@ -17,7 +17,7 @@ class LinkRsvp
   attribute :adults, :integer
   attribute :kids, :integer
   attribute :guest_note, :string
-  attr_accessor :event, :answers, :plus_one_names
+  attr_accessor :event, :answers, :plus_one_names, :schedule
   attr_reader :guest, :outcome
 
   validates :name, presence: true, length: { maximum: 100 }
@@ -43,7 +43,7 @@ class LinkRsvp
 
     @guest = event.guests.new(name: name, email: email, source: "link", plus_ones_allowed: event.default_plus_ones)
     rsvp = RsvpSubmission.new(guest: @guest, status: status, party_size: party_size, adults: adults, kids: kids,
-      plus_one_names: plus_one_names, guest_note: guest_note, answers: answers)
+      plus_one_names: plus_one_names, schedule: schedule, guest_note: guest_note, answers: answers)
     return copy_errors(@guest) unless @guest.valid?
     return copy_errors(rsvp) unless rsvp.valid?
 

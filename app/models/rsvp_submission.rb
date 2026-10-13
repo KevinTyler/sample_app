@@ -15,7 +15,7 @@ class RsvpSubmission
   attribute :kids, :integer
   attribute :guest_note, :string
   attr_accessor :guest, :answers, :by_host, :user
-  attr_writer :plus_one_names
+  attr_writer :plus_one_names, :schedule
 
   validates :status, inclusion: { in: STATUSES, message: "Please choose a response" }
   validates :guest_note, length: { maximum: 1000 }
@@ -24,13 +24,32 @@ class RsvpSubmission
   validate :rsvps_open, unless: :by_host
   validate :answers_valid
   validate :plus_one_names_valid
+  validate :picks_a_schedule_item
 
   def self.from_guest(guest)
     new(guest: guest, status: guest.rsvp_pending? ? nil : guest.rsvp_status,
       party_size: guest.responded? ? guest.party_size : 1, guest_note: guest.guest_note,
       adults: guest.responded? ? [ guest.adults_count, 1 ].max : 1, kids: guest.responded? ? guest.kids_count : 0,
       plus_one_names: guest.plus_one_names,
+      schedule: guest.schedule_replies.to_h { |r| [ r.schedule_item_id.to_s, r.attending ? "1" : "0" ] },
       answers: guest.rsvp_answers.to_h { |a| [ a.event_question_id.to_s, a.value ] })
+  end
+
+  # { "<schedule item id>" => "1" | "0" } for multi-part events; unanswered parts count as attending.
+  def schedule
+    raw = @schedule
+    raw = raw.to_unsafe_h if raw.respond_to?(:to_unsafe_h)
+    (raw || {}).to_h.transform_keys(&:to_s).transform_values(&:to_s)
+  end
+
+  def attending_item?(item)
+    return false if status == "no"
+
+    schedule.key?(item.id.to_s) ? schedule[item.id.to_s] == "1" : true
+  end
+
+  def replyable_items
+    @replyable_items ||= guest.event.schedule_for(guest).select(&:collects_replies)
   end
 
   def plus_one_names
@@ -82,6 +101,7 @@ class RsvpSubmission
         plus_one_names: (status == "no" || !event.ask_plus_one_names? ? [] : plus_one_names.first([ effective_party_size - 1, 0 ].max)),
         guest_note: guest_note.to_s.strip.presence, responded_at: Time.current)
       save_answers!
+      save_schedule_replies!
       Activity.record(event: event, guest: guest, user: (user if by_host),
         action: previous_status == "pending" ? "rsvp_submitted" : "rsvp_changed",
         data: { from: previous_status, to: status, party_size: effective_party_size, by_host: by_host.present? })
@@ -125,6 +145,19 @@ class RsvpSubmission
         errors.add(:base, "This event isn't accepting responses yet.")
       elsif !event.accepting_rsvps?
         errors.add(:base, "The RSVP deadline has passed. Please contact the host to change your response.")
+      end
+    end
+
+    def picks_a_schedule_item
+      return unless status.in?(%w[yes maybe]) && replyable_items.any?
+
+      errors.add(:base, "Choose at least one of the events, or answer No") if replyable_items.none? { |item| attending_item?(item) }
+    end
+
+    def save_schedule_replies!
+      replyable_items.each do |item|
+        reply = guest.schedule_replies.find_or_initialize_by(schedule_item: item)
+        reply.update!(attending: attending_item?(item))
       end
     end
 

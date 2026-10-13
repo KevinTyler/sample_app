@@ -52,6 +52,20 @@
   <%= f.hidden_field :party_size, value: 1 %>
 <% end %>
 
+<% items = event.schedule_for(guest).select(&:collects_replies) %>
+<% if items.any? %>
+  <fieldset class="schedule-picks" data-rsvp-form-target="attendingOnly">
+    <legend class="field__label">Which will you join?</legend>
+    <% items.each do |item| %>
+      <label class="schedule-pick">
+        <%= hidden_field_tag "rsvp[schedule][#{item.id}]", "0", id: nil %>
+        <%= check_box_tag "rsvp[schedule][#{item.id}]", "1", schedule_checked?(rsvp, item), id: "rsvp_schedule_#{item.id}" %>
+        <span><strong><%= item.name %></strong><% if item.starts_at %> <span class="small muted"><%= schedule_when(item) %></span><% end %></span>
+      </label>
+    <% end %>
+  </fieldset>
+<% end %>
+
 <% event.questions.each do |question| %>
   <% field_id = "rsvp_answer_#{question.id}" %>
   <div class="field" <%= 'data-rsvp-form-target=attendingOnly' if question.applies_to == "attending" %>>

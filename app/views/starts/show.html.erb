@@ -1,0 +1,24 @@
+<% content_for :title, "Make one like this" %>
+<% sample = Event.new(title: "Your celebration", host_name: "You", status: "published", card_type: @source.card_type,
+     starts_at: @source.starts_at, time_zone: @source.time_zone) %>
+<div class="grid grid--2 mt-l start-page">
+  <div class="start-page__card">
+    <%= render "invitations/card", event: sample, design: InvitationDesign.new(@design.to_storage.except("message", "headline")), card_id: "start-card", show_details: false, title_tag: :p %>
+  </div>
+  <div class="stack">
+    <span class="eyebrow">Make one like this</span>
+    <h1>Start from the <em><%= @design.template_record.name %></em> design</h1>
+    <p class="muted">You'll get a fresh card with the same look — your own words, date, guests and photos. Free to design; guests never need an app or account.</p>
+    <% if authenticated? %>
+      <%= button_to "Start my card", start_path(from: @source.share_token), class: "btn btn--wax btn--large" %>
+    <% else %>
+      <div class="cluster">
+        <%= link_to "Create my card", new_registration_path, class: "btn btn--wax btn--large" %>
+        <%= link_to "I have an account", new_session_path, class: "btn btn--large" %>
+      </div>
+      <% if assistant_available? %>
+        <p class="small muted">Or text it: <% assistant_links("Hi! I'd like a card like the #{@design.template_record.name} one.").each do |label, href| %><%= link_to label, href %> <% end %></p>
+      <% end %>
+    <% end %>
+  </div>
+</div>

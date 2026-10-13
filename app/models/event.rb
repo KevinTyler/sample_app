@@ -4,6 +4,7 @@ class Event < ApplicationRecord
   DEFAULT_DURATION = 3.hours
 
   belongs_to :owner, class_name: "User", inverse_of: :owned_events
+  belongs_to :inspired_by_event, class_name: "Event", optional: true
   has_many :guests, dependent: :destroy
   has_many :questions, -> { order(:position, :id) }, class_name: "EventQuestion",
     dependent: :destroy, inverse_of: :event
@@ -23,6 +24,7 @@ class Event < ApplicationRecord
   has_many :payments, dependent: :destroy
   has_many :guestbook_entries, dependent: :delete_all
   has_many :links, class_name: "EventLink", dependent: :delete_all
+  has_many :schedule_items, dependent: :destroy
   has_many :gifts, dependent: :destroy
   has_many :thank_yous, dependent: :destroy
   has_many_attached :photos
@@ -189,6 +191,11 @@ class Event < ApplicationRecord
   # Only invitations collect replies; save-the-dates and announcements are one-way.
   def collects_replies?
     invitation?
+  end
+
+  # The parts of a multi-part event this guest is invited to.
+  def schedule_for(guest)
+    schedule_items.select { |item| item.invited?(guest) }
   end
 
   def card_type_name

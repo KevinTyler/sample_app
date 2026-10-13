@@ -16,6 +16,9 @@
   <% if policy.can?(:edit) && event.collects_replies? %>
     <%= workspace_link "RSVP form", event_questions_path(event), :form, section, count: event.questions.size %>
   <% end %>
+  <% if policy.can?(:edit) && event.collects_replies? %>
+    <%= workspace_link "Schedule", event_schedule_items_path(event), :calendar, section, count: (event.schedule_items.size if event.schedule_items.any?) %>
+  <% end %>
   <% if policy.can?(:manage_guests) && !event.draft? %>
     <%= workspace_link "Thank-yous", event_thank_yous_path(event), :gift, section, count: (event.gifts.size if event.gifts.any?) %>
   <% end %>

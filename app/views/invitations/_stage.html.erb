@@ -1,4 +1,4 @@
-<%# locals: (event:, design:, card_id:, envelope_name: nil, envelope_key: nil, private_details: true) %>
+<%# locals: (event:, design:, card_id:, envelope_name: nil, envelope_key: nil, private_details: true, schedule: event.schedule_items.select(&:for_everyone?)) %>
 <%# The card as guests meet it: sealed in its envelope on the first visit, then flippable to its back. %>
 <% content_for :head do %>
   <style nonce="<%= content_security_policy_nonce %>">.guest-body { --guest-backdrop: <%= design.valid? ? design.backdrop_css : "#ebdce1" %>; }</style>
@@ -12,7 +12,7 @@
         <%= render "invitations/card", event: event, design: design, card_id: card_id %>
       </div>
       <div class="card-flip__face card-flip__face--back" data-flip-target="back">
-        <%= render "invitations/back", event: event, design: design, card_id: "#{card_id}-back", private_details: private_details %>
+        <%= render "invitations/back", event: event, design: design, card_id: "#{card_id}-back", private_details: private_details, schedule: schedule %>
       </div>
     </div>
     <button type="button" class="flip-button" hidden data-flip-target="button" data-action="flip#toggle" aria-pressed="false">

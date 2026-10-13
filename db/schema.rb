@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_040000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_060000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -205,6 +205,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_040000) do
     t.boolean "auto_day_before", default: false, null: false
     t.string "card_type", default: "invitation", null: false
     t.boolean "show_ride_links", default: true, null: false
+    t.integer "inspired_by_event_id"
+    t.index ["inspired_by_event_id"], name: "index_events_on_inspired_by_event_id"
     t.index ["owner_id"], name: "index_events_on_owner_id"
     t.index ["share_token"], name: "index_events_on_share_token", unique: true
     t.index ["status"], name: "index_events_on_status"
@@ -343,6 +345,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_040000) do
     t.index ["guest_id"], name: "index_rsvp_answers_on_guest_id"
   end
 
+  create_table "schedule_items", force: :cascade do |t|
+    t.integer "event_id", null: false
+    t.string "name", null: false
+    t.datetime "starts_at"
+    t.datetime "ends_at"
+    t.string "location_name"
+    t.string "address"
+    t.text "description"
+    t.json "audience_groups", default: [], null: false
+    t.boolean "collects_replies", default: true, null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_schedule_items_on_event_id"
+  end
+
+  create_table "schedule_replies", force: :cascade do |t|
+    t.integer "schedule_item_id", null: false
+    t.integer "guest_id", null: false
+    t.boolean "attending", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["guest_id"], name: "index_schedule_replies_on_guest_id"
+    t.index ["schedule_item_id", "guest_id"], name: "index_schedule_replies_on_schedule_item_id_and_guest_id", unique: true
+    t.index ["schedule_item_id"], name: "index_schedule_replies_on_schedule_item_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "ip_address"
@@ -415,6 +444,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_040000) do
   add_foreign_key "event_memberships", "users"
   add_foreign_key "event_memberships", "users", column: "invited_by_id", on_delete: :nullify
   add_foreign_key "event_questions", "events"
+  add_foreign_key "events", "events", column: "inspired_by_event_id", on_delete: :nullify
   add_foreign_key "events", "users", column: "owner_id"
   add_foreign_key "gifts", "events"
   add_foreign_key "gifts", "guests", on_delete: :nullify
@@ -429,6 +459,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_040000) do
   add_foreign_key "payments", "guests", on_delete: :nullify
   add_foreign_key "rsvp_answers", "event_questions"
   add_foreign_key "rsvp_answers", "guests"
+  add_foreign_key "schedule_items", "events"
+  add_foreign_key "schedule_replies", "guests", on_delete: :cascade
+  add_foreign_key "schedule_replies", "schedule_items", on_delete: :cascade
   add_foreign_key "sessions", "users"
   add_foreign_key "sign_in_links", "users", on_delete: :cascade
   add_foreign_key "thank_yous", "events"

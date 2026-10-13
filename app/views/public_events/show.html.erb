@@ -1,3 +1,4 @@
+<% content_for :start_from, @event.share_token unless @preview || !@event.published? %>
 <% content_for :title, @event.title %>
 <% design = @event.design_settings %>
 

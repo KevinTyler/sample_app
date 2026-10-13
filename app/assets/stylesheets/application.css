@@ -728,3 +728,4 @@ textarea.handwritten { font-size: 1.35rem; }
 .sim-compose input[type="text"] { border-radius: 999px; min-height: 44px; }
 .sim-attach { position: relative; font-size: 1.2rem; }
 .event-card--text { cursor: default; padding: 20px; text-align: center; }
+.start-page__card { max-width: 380px; margin: 0 auto; width: 100%; } .start-page__card .invite-card { box-shadow: var(--shadow-card); transform: rotate(-2deg); }

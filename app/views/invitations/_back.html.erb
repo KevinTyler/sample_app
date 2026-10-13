@@ -1,11 +1,18 @@
-<%# locals: (event:, design:, card_id:, private_details: true) %>
+<%# locals: (event:, design:, card_id:, private_details: true, schedule: []) %>
 <%# The back of the card: the practical details and the host's links, in the card's own palette. %>
 <%= render "invitations/design_style", design: design, selector: "##{card_id}" %>
 <% links = event.links.to_a %>
 <%= tag.article id: card_id, class: "invite-back", data: { heading_font: design.heading_font }, aria: { label: "Details for #{event.title}" } do %>
   <div class="invite-back__inner">
     <p class="invite-back__eyebrow"><%= event.save_the_date? ? "Save the date" : "The details" %></p>
-    <% if event.starts_at %>
+    <% if schedule.any? %>
+      <div class="invite-back__item">
+        <span class="invite-back__label">The schedule</span>
+        <% schedule.each do |item| %>
+          <span><strong><%= item.name %></strong><% if item.starts_at %> · <%= schedule_when(item) %><% end %><% if item.location_name.present? %> · <%= item.location_name %><% end %></span>
+        <% end %>
+      </div>
+    <% elsif event.starts_at %>
       <div class="invite-back__item">
         <span class="invite-back__label">When</span>
         <span><%= event_when(event) %></span>

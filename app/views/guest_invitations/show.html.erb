@@ -1,3 +1,4 @@
+<% content_for :start_from, @event.share_token unless @preview || !@event.published? %>
 <% content_for :title, @event.title %>
 <% design = InvitationDesign.for(@event) %>
 
@@ -11,7 +12,7 @@
   </div>
 <% end %>
 
-<%= render "invitations/stage", event: @event, design: design, card_id: "guest-card",
+<%= render "invitations/stage", event: @event, design: design, card_id: "guest-card", schedule: @event.schedule_for(@guest),
       envelope_name: (@guest.name unless @preview || flash.any? || @show_form),
       envelope_key: Digest::SHA256.hexdigest(@guest.token_key.to_s).first(12) %>
 <% if @event.collects_replies? %>
@@ -89,6 +90,28 @@
       <p class="small muted m-0">Show this at the door for quick check-in<%= " (party of #{@guest.party_size})" if @guest.party_size > 1 %>.</p>
       <% if @guest.checked_in? %><p class="badge badge--rsvp-yes m-0">Checked in</p><% end %>
     </div>
+  </section>
+<% end %>
+
+<% if (items = @event.schedule_for(@guest)).any? %>
+  <% replies = @guest.schedule_replies.index_by(&:schedule_item_id) %>
+  <section class="guest-panel" aria-labelledby="schedule-heading">
+    <h2 id="schedule-heading">The schedule</h2>
+    <ol class="schedule-list">
+      <% items.each do |item| %>
+        <li>
+          <% if item.starts_at %><% at = @event.local(item.starts_at) %><span class="date-chip"><%= at.strftime("%b") %><strong><%= at.day %></strong></span><% end %>
+          <div class="schedule-list__text">
+            <strong><%= item.name %></strong>
+            <span class="small muted"><%= [ (short_time(@event.local(item.starts_at)) if item.starts_at), item.where_text ].compact.join(" · ") %></span>
+            <% if item.description.present? %><p class="small"><%= item.description %></p><% end %>
+            <% if (reply = replies[item.id]) && @guest.responded? %>
+              <span class="badge <%= reply.attending ? 'badge--rsvp-yes' : 'badge--muted' %>"><%= reply.attending ? "You're coming" : "Not coming" %></span>
+            <% end %>
+          </div>
+        </li>
+      <% end %>
+    </ol>
   </section>
 <% end %>
 

@@ -1,0 +1,30 @@
+<% content_for :title, "Schedule · #{@event.title}" %>
+<header class="page-header">
+  <div>
+    <span class="eyebrow">Schedule</span>
+    <h1>More than one <em>moment?</em></h1>
+    <p class="page-header__meta">For wedding weekends and multi-day celebrations: each part gets its own time, place and guest groups. Guests say which parts they'll join.</p>
+  </div>
+  <div class="page-header__actions"><%= link_to new_event_schedule_item_path(@event), class: "btn btn--primary" do %><%= icon(:plus, size: 18) %>Add a part<% end %></div>
+</header>
+
+<% if @items.empty? %>
+  <div class="empty-state">
+    <h2>One event, one moment — for now</h2>
+    <p class="muted">Add parts like “Mehndi”, “Sangeet”, “Ceremony” and “Reception”, or “Welcome drinks” and “Brunch”.</p>
+    <%= link_to "Add the first part", new_event_schedule_item_path(@event), class: "btn btn--primary" %>
+  </div>
+<% else %>
+  <ol class="question-list">
+    <% @items.each do |item| %>
+      <li>
+        <div class="stack-s question-list__body">
+          <strong><%= item.name %></strong>
+          <span class="small muted"><%= [ schedule_when(item).presence, item.where_text ].compact.join(" · ").presence || "Time and place to come" %></span>
+          <span class="small faint">For <%= item.for_everyone? ? "everyone" : item.audience_groups.to_sentence %><%= item.collects_replies ? " · #{item.headcount} coming" : " · no replies needed" %></span>
+        </div>
+        <%= link_to "Edit", edit_event_schedule_item_path(@event, item), class: "btn btn--small" %>
+      </li>
+    <% end %>
+  </ol>
+<% end %>

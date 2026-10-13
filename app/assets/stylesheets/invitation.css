@@ -382,3 +382,13 @@ input.stepper__input:focus { box-shadow: none; }
 .thank-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .thank-from { text-align: center; color: var(--ink-2); font-size: 0.9rem; margin: 18px 0 0; }
 .guest-body--dark .thank-from { color: #cfcadf; }
+
+/* Multi-part events */
+.schedule-picks { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; background: none; }
+.schedule-pick { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--line-strong); border-radius: var(--radius-m); background: var(--paper); cursor: pointer; }
+.schedule-pick input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--night); flex: none; }
+.schedule-pick:has(input:checked) { border-color: var(--night); box-shadow: 0 0 0 1px var(--night); }
+.schedule-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.schedule-list li { display: flex; gap: 14px; align-items: flex-start; }
+.schedule-list__text { display: grid; gap: 2px; min-width: 0; }
+.schedule-list__text p { margin: 4px 0 0; color: var(--ink-2); }

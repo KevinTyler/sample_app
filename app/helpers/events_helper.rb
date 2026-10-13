@@ -62,6 +62,22 @@ module EventsHelper
     ]
   end
 
+  def schedule_when(item)
+    return "" unless item.starts_at
+
+    starts = item.event.local(item.starts_at)
+    text = "#{starts.strftime('%a %b %-d')} · #{short_time(starts)}"
+    text += " – #{short_time(item.event.local(item.ends_at))}" if item.ends_at && item.ends_at.to_date == item.starts_at.to_date
+    text
+  end
+
+  def schedule_checked?(rsvp, item)
+    raw = rsvp.respond_to?(:schedule) ? rsvp.schedule : nil
+    raw = raw.to_unsafe_h if raw.respond_to?(:to_unsafe_h)
+    value = raw.to_h.transform_keys(&:to_s)[item.id.to_s]
+    value.nil? || value.to_s == "1"
+  end
+
   def deadline_text(event)
     return unless event.rsvp_deadline
 
@@ -81,7 +97,7 @@ module EventsHelper
   SECTIONS = {
     "events" => { "show" => :overview, "edit" => :settings, "update" => :settings, "cancellation" => :settings },
     "guests" => :guests, "guest_imports" => :guests, "event_designs" => :design, "messages" => :mail,
-    "questions" => :form, "check_ins" => :scan, "cohosts" => :cohosts, "thank_yous" => :gift, "gifts" => :gift
+    "questions" => :form, "check_ins" => :scan, "cohosts" => :cohosts, "thank_yous" => :gift, "gifts" => :gift, "schedule_items" => :calendar
   }.freeze
 
   def workspace_section

@@ -82,6 +82,15 @@
     <% if @event.ticketed? %>
       <p class="small mt-xs m-0"><strong><%= Money.format(@event.collected_cents, @event.currency) %></strong> collected · <%= Money.format(@event.ticket_price_cents, @event.currency) %> per person</p>
     <% end %>
+    <% if (items = @event.schedule_items.select(&:collects_replies)).any? %>
+      <h3 class="mt-m small faint">By part of the event</h3>
+      <ul class="tally">
+        <% items.each do |item| %>
+          <% invited = item.guests.count %>
+          <li><span><%= item.name %></span><strong><%= item.headcount %></strong><span class="tally__bar"><span class="tally__fill" data-width="<%= percent(item.headcount, [ invited, @summary[:attending] ].max) %>"></span></span></li>
+        <% end %>
+      </ul>
+    <% end %>
     <% if (choice = @questions.find(&:choice?)) %>
       <% tally = choice.rsvp_answers.group(:value).count %>
       <% total = tally.values.sum %>

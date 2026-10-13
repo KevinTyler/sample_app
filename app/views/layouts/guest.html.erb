@@ -19,9 +19,9 @@
       <%= yield %>
       <footer class="guest-footer">
         <%= yield :guest_footer %>
-        <%= link_to root_path(ref: "invite"), class: "host-cta" do %>
+        <%= link_to (content_for?(:start_from) ? start_path(from: content_for(:start_from).strip) : root_path), class: "host-cta" do %>
           <%= render "shared/brand_mark" %>
-          <span><strong>Hosting something?</strong><span class="small muted">Make an invitation like this with Cordially.</span></span>
+          <span><strong>Hosting something?</strong><span class="small muted">Make one like this with Cordially — start from this design.</span></span>
         <% end %>
       </footer>
     </main>

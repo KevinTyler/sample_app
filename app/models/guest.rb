@@ -9,6 +9,7 @@ class Guest < ApplicationRecord
   has_many :deliveries, dependent: :destroy
   has_many :activities, dependent: :nullify
   has_many :payments, dependent: :nullify
+  has_many :schedule_replies, dependent: :delete_all
   has_many :gifts, dependent: :nullify
   has_many :thank_yous, dependent: :nullify
 

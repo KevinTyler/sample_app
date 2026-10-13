@@ -1,0 +1,39 @@
+<%# locals: (event:, item:) %>
+<%= form_with model: [ event, item ], class: "form" do |f| %>
+  <%= form_errors(item) %>
+  <div class="field">
+    <%= f.label :name, "What's this part called?" %>
+    <%= f.text_field :name, required: true, maxlength: 80, placeholder: "Sangeet", autofocus: item.new_record? %>
+  </div>
+  <div class="form-row form-row--2">
+    <div class="field"><%= f.label :starts_at_local, "Starts (#{event.zone.tzinfo.abbreviation})" %><%= f.datetime_local_field :starts_at_local, value: item.starts_at_local %></div>
+    <div class="field"><%= f.label :ends_at_local do %>Ends <span class="field__optional">(optional)</span><% end %><%= f.datetime_local_field :ends_at_local, value: item.ends_at_local %></div>
+  </div>
+  <div class="form-row form-row--2">
+    <div class="field"><%= f.label :location_name, "Venue" %><%= f.text_field :location_name, maxlength: 120, placeholder: "Leave blank if it's the main venue" %></div>
+    <div class="field"><%= f.label :address %><%= f.text_field :address, maxlength: 300 %></div>
+  </div>
+  <div class="field">
+    <%= f.label :description do %>Details <span class="field__optional">(dress code, what to expect)</span><% end %>
+    <%= f.text_area :description, rows: 3, maxlength: 1000 %>
+  </div>
+  <fieldset>
+    <legend>Who's invited to this part?</legend>
+    <% if (groups = event.group_names).any? %>
+      <p class="field__hint">Leave all unticked for everyone on the guest list.</p>
+      <div class="cluster">
+        <% groups.each do |group| %>
+          <label class="checkbox"><%= check_box_tag "schedule_item[audience_groups][]", group, item.audience_groups.include?(group), id: "group_#{group.parameterize}" %> <%= group %></label>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="field__hint m-0">Everyone on the guest list. (Give guests groups like “Family” or “Bride's side” to invite only some of them to a part.)</p>
+    <% end %>
+  </fieldset>
+  <label class="checkbox"><%= f.check_box :collects_replies %> Ask guests whether they'll come to this part</label>
+  <div class="form-actions">
+    <%= f.submit item.new_record? ? "Add to schedule" : "Save", class: "btn btn--primary" %>
+    <%= link_to "Cancel", event_schedule_items_path(event), class: "btn btn--ghost" %>
+    <% if item.persisted? %><%= link_to "Remove", event_schedule_item_path(event, item), class: "btn btn--danger ml-auto", data: { turbo_method: :delete, turbo_confirm: "Remove this part and its replies?" } %><% end %>
+  </div>
+<% end %>

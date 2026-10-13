@@ -1,0 +1,6 @@
+<% content_for :title, "Edit #{@item.name}" %>
+<div class="form-width">
+  <%= link_to "Schedule", event_schedule_items_path(@event), class: "back-link" %>
+  <header class="page-header mb-s"><div><h1><%= @item.name %></h1></div></header>
+  <div class="panel mt-m"><%= render "form", event: @event, item: @item %></div>
+</div>

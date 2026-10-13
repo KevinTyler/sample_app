@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   root "pages#home"
   get "about" => "pages#about"
   get "contact" => "pages#contact"
+  resource :start, only: %i[show create] # "Make one like this"
 
   # Host accounts
   resource :registration, only: %i[new create]
@@ -53,6 +54,7 @@ Rails.application.routes.draw do
     resource :invitation_send, only: :create
     resources :guestbook_entries, only: :update
     resources :gifts, only: %i[create update destroy]
+    resources :schedule_items, except: :show
     resources :thank_yous, except: :show do
       member do
         post :deliver
