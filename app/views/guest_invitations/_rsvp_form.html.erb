@@ -1,7 +1,7 @@
 <%= form_with model: rsvp, scope: :rsvp, url: (@preview ? "#" : guest_rsvp_path(params[:token])), method: :patch, class: "form" do |f| %>
-  <%= form_errors(rsvp) %>
+  <%= form_errors(rsvp, title: gt("errors.form_title"), full: false) %>
   <%= render "guest_invitations/rsvp_fields", f: f, rsvp: rsvp, event: event, guest: guest %>
   <div class="form-actions">
-    <%= f.submit guest.responded? ? "Update my RSVP" : "Send my RSVP", class: "btn btn--primary btn--block", disabled: @preview, data: { turbo_submits_with: "Saving…" } %>
+    <%= f.submit guest.responded? ? gt("form.update") : gt("form.send"), class: "btn btn--primary btn--block", disabled: @preview, data: { turbo_submits_with: gt("form.saving") } %>
   </div>
 <% end %>

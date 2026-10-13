@@ -9,13 +9,15 @@ class GuestInvitationsController < ApplicationController
   skip_forgery_protection only: :unsubscribe # RFC 8058 one-click unsubscribe; the token authenticates
   before_action :set_private_headers
   before_action :set_guest
+  include GuestLocale
+  around_action :with_guest_locale
 
   rate_limit to: 20, within: 10.minutes, only: :rsvp, by: -> { "#{request.remote_ip}:#{params[:token].to_s.first(16)}" },
-    with: -> { redirect_to guest_invitation_path(params[:token]), alert: "Too many attempts. Please wait a few minutes and try again." }
+    with: -> { redirect_to guest_invitation_path(params[:token]), alert: helpers.gt("flash.too_many") }
   rate_limit to: 10, within: 10.minutes, only: :pay, by: -> { "#{request.remote_ip}:#{params[:token].to_s.first(16)}" }, name: "guest-pay",
-    with: -> { redirect_to guest_invitation_path(params[:token]), alert: "Too many attempts. Please wait a few minutes." }
+    with: -> { redirect_to guest_invitation_path(params[:token]), alert: helpers.gt("flash.too_many") }
   rate_limit to: 6, within: 1.hour, only: :sign_guestbook, by: -> { params[:token].to_s.first(16) }, name: "guestbook",
-    with: -> { redirect_to guest_invitation_path(params[:token], anchor: "guestbook"), alert: "That's a lot of notes! Please try again later." }
+    with: -> { redirect_to guest_invitation_path(params[:token], anchor: "guestbook"), alert: helpers.gt("flash.too_many_notes") }
   rate_limit to: 120, within: 1.minute, by: -> { request.remote_ip }, name: "guest-pages",
     with: -> { head :too_many_requests }
 
@@ -40,13 +42,13 @@ class GuestInvitationsController < ApplicationController
   def pay
     payment = Payment.checkout_for!(@guest,
       success_url: guest_invitation_url(params[:token], paid: 1), cancel_url: guest_invitation_url(params[:token]))
-    return redirect_to(guest_invitation_path(params[:token]), notice: "Nothing to pay — you're all set.") unless payment
+    return redirect_to(guest_invitation_path(params[:token]), notice: helpers.gt("flash.nothing_to_pay")) unless payment
     raise "unexpected checkout host for payment #{payment.id}" unless (url = payment.safe_checkout_url(app_host: request.host))
 
     redirect_to url, allow_other_host: true
   rescue Payments::NotConfigured, RuntimeError => e
     Rails.logger.error("[payments] checkout failed: #{e.message}")
-    redirect_to guest_invitation_path(params[:token]), alert: "We couldn't start the payment just now. Please try again in a moment."
+    redirect_to guest_invitation_path(params[:token]), alert: helpers.gt("flash.payment_failed")
   end
 
   def sign_guestbook
@@ -55,9 +57,9 @@ class GuestInvitationsController < ApplicationController
     entry = @event.guestbook_entries.new(guest: @guest, author_name: @guest.name, body: params.dig(:guestbook_entry, :body))
     if entry.save
       Activity.record(event: @event, guest: @guest, action: "guestbook_signed")
-      redirect_to guest_invitation_path(params[:token], anchor: "guestbook"), notice: "Thanks — your note is in the guestbook."
+      redirect_to guest_invitation_path(params[:token], anchor: "guestbook"), notice: helpers.gt("flash.guestbook_thanks")
     else
-      redirect_to guest_invitation_path(params[:token], anchor: "guestbook"), alert: "Your note #{entry.errors[:body].first || 'could not be saved'}."
+      redirect_to guest_invitation_path(params[:token], anchor: "guestbook"), alert: helpers.gt(entry.body.blank? ? "errors.guestbook_blank" : "errors.guestbook_long")
     end
   end
 
@@ -69,7 +71,7 @@ class GuestInvitationsController < ApplicationController
   def unsubscribe
     @guest.update!(unsubscribed_at: Time.current) unless @guest.unsubscribed?
     respond_to do |format|
-      format.html { redirect_to guest_invitation_path(params[:token]), notice: "You won't receive more messages about this event. Your RSVP is unchanged." }
+      format.html { redirect_to guest_invitation_path(params[:token]), notice: helpers.gt("flash.unsubscribed") }
       format.any { head :ok }
     end
   end
@@ -106,12 +108,8 @@ class GuestInvitationsController < ApplicationController
     end
 
     def thank_you_message
-      return "You're on the list! One more step: complete your payment below to confirm your tickets." if @guest.reload.amount_due_cents.positive?
+      return helpers.gt("flash.pay_next") if @guest.reload.amount_due_cents.positive?
 
-      case @rsvp.status
-      when "yes" then "Wonderful — you're on the list! We've saved your RSVP."
-      when "maybe" then "Thanks for letting the host know. You can update your RSVP any time before the deadline."
-      else "Thanks for letting the host know. Your RSVP is saved."
-      end
+      helpers.gt("flash.#{@rsvp.status.presence_in(%w[yes maybe]) || 'no'}")
     end
 end

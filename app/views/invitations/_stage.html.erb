@@ -6,7 +6,7 @@
 <% content_for :body_class, "guest-body--dark" if design.dark_backdrop? %>
 <div class="envelope-stage" data-controller="envelope" data-envelope-key-value="<%= envelope_key %>" data-action="click->envelope#open">
   <%= render "invitations/design_style", design: design, selector: "##{card_id}-envelope" %>
-  <div class="card-flip" data-controller="flip">
+  <div class="card-flip" data-controller="flip" data-flip-front-label-value="<%= gt("card.flip") %>" data-flip-back-label-value="<%= gt("card.flip_back") %>">
     <div class="card-flip__inner" data-flip-target="inner">
       <div class="card-flip__face card-flip__face--front" data-flip-target="front">
         <%= render "invitations/card", event: event, design: design, card_id: card_id %>
@@ -17,7 +17,7 @@
     </div>
     <button type="button" class="flip-button" hidden data-flip-target="button" data-action="flip#toggle" aria-pressed="false">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/></svg>
-      <span data-flip-target="label">Flip for the details</span>
+      <span data-flip-target="label"><%= gt("card.flip") %></span>
     </button>
   </div>
   <% if envelope_name %>

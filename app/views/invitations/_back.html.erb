@@ -2,25 +2,25 @@
 <%# The back of the card: the practical details and the host's links, in the card's own palette. %>
 <%= render "invitations/design_style", design: design, selector: "##{card_id}" %>
 <% links = event.links.to_a %>
-<%= tag.article id: card_id, class: "invite-back", data: { heading_font: design.heading_font }, aria: { label: "Details for #{event.title}" } do %>
+<%= tag.article id: card_id, class: "invite-back", data: { heading_font: design.heading_font }, aria: { label: gt("card.the_details") } do %>
   <div class="invite-back__inner">
-    <p class="invite-back__eyebrow"><%= event.save_the_date? ? "Save the date" : "The details" %></p>
+    <p class="invite-back__eyebrow"><%= event.save_the_date? ? gt("show.save_the_date") : gt("card.the_details") %></p>
     <% if schedule.any? %>
       <div class="invite-back__item">
-        <span class="invite-back__label">The schedule</span>
+        <span class="invite-back__label"><%= gt("show.schedule") %></span>
         <% schedule.each do |item| %>
           <span><strong><%= item.name %></strong><% if item.starts_at %> · <%= schedule_when(item) %><% end %><% if item.location_name.present? %> · <%= item.location_name %><% end %></span>
         <% end %>
       </div>
     <% elsif event.starts_at %>
       <div class="invite-back__item">
-        <span class="invite-back__label">When</span>
+        <span class="invite-back__label"><%= gt("details.when") %></span>
         <span><%= event_when(event) %></span>
       </div>
     <% end %>
     <% if event.in_person? %>
       <div class="invite-back__item">
-        <span class="invite-back__label">Where</span>
+        <span class="invite-back__label"><%= gt("details.where") %></span>
         <span><%= event_where(event) %></span>
         <% if event.show_ride_links? && (directions = directions_links(event)).any? %>
           <span class="invite-back__chips">
@@ -31,8 +31,8 @@
     <% end %>
     <% if event.online? && private_details %>
       <div class="invite-back__item">
-        <span class="invite-back__label">Join online</span>
-        <%= link_to "Video call link", event.video_url, target: "_blank", rel: "noopener noreferrer" %>
+        <span class="invite-back__label"><%= gt("details.join_online") %></span>
+        <%= link_to gt("card.video_call"), event.video_url, target: "_blank", rel: "noopener noreferrer" %>
       </div>
     <% end %>
     <% if event.description.present? %>
@@ -45,6 +45,6 @@
         <% end %>
       </div>
     <% end %>
-    <p class="invite-back__host">With love, <%= event.display_host_name %></p>
+    <p class="invite-back__host"><%= gt("card.with_love", host: event.display_host_name) %></p>
   </div>
 <% end %>

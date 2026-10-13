@@ -16,6 +16,11 @@
         </div>
       </div>
       <div class="field">
+        <%= f.label :locale, "Language guests see" %>
+        <%= f.select :locale, Event::LOCALES.invert, {}, class: "w-auto" %>
+        <p class="field__hint">The invitation page, reply form, emails and texts. Your card's own words stay as you write them; guests can switch languages too.</p>
+      </div>
+      <div class="field">
         <%= f.label :title, "Event name" %>
         <%= f.text_field :title, required: true, maxlength: 120, placeholder: "e.g. Maya's 30th Birthday", autofocus: event.new_record? %>
       </div>

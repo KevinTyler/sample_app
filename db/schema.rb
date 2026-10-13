@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_060000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_070000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -206,6 +206,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_060000) do
     t.string "card_type", default: "invitation", null: false
     t.boolean "show_ride_links", default: true, null: false
     t.integer "inspired_by_event_id"
+    t.string "locale", default: "en", null: false
     t.index ["inspired_by_event_id"], name: "index_events_on_inspired_by_event_id"
     t.index ["owner_id"], name: "index_events_on_owner_id"
     t.index ["share_token"], name: "index_events_on_share_token", unique: true

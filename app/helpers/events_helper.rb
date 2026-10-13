@@ -9,13 +9,13 @@ module EventsHelper
 
   # "Saturday, November 7, 2026 · 7:00 PM – 10:00 PM EST"
   def event_when(event, with_zone: true)
-    return "Date to be announced" unless event.starts_at
+    return t("guest.show.date_tba") unless event.starts_at
 
     starts = event.local(event.starts_at)
-    text = "#{starts.strftime('%A, %B %-d, %Y')} · #{short_time(starts)}"
+    text = "#{l(starts, format: :guest_day)} · #{short_time(starts)}"
     if event.ends_at
       ends = event.local(event.ends_at)
-      text += ends.to_date == starts.to_date ? " – #{short_time(ends)}" : " – #{ends.strftime('%b %-d')}, #{short_time(ends)}"
+      text += ends.to_date == starts.to_date ? " – #{short_time(ends)}" : " – #{l(ends, format: '%b %-d')}, #{short_time(ends)}"
     end
     text += " #{starts.strftime('%Z')}" if with_zone
     text
@@ -23,10 +23,10 @@ module EventsHelper
 
   # Two-line date for the card face: "Saturday, November 7 · 7 PM".
   def card_when(event)
-    return "Date to be announced" unless event.starts_at
+    return t("guest.show.date_tba") unless event.starts_at
 
     starts = event.local(event.starts_at)
-    "#{starts.strftime('%A, %B %-d, %Y')} · #{short_time(starts)}"
+    "#{l(starts, format: :guest_day)} · #{short_time(starts)}"
   end
 
   def event_date_short(event)
@@ -35,12 +35,13 @@ module EventsHelper
     event.local(event.starts_at).strftime("%a, %b %-d, %Y")
   end
 
+  # "7 PM" / "7:30 PM" in English; "19:30" etc. in the guest's language.
   def short_time(time)
-    time.min.zero? ? time.strftime("%-l %p") : time.strftime("%-l:%M %p")
+    I18n.l(time, format: time.min.zero? ? :guest_clock_hour : :guest_clock)
   end
 
   def event_where(event)
-    [ event.location_name, event.address ].compact_blank.join(", ").presence || (event.online? ? "Online" : nil)
+    [ event.location_name, event.address ].compact_blank.join(", ").presence || (event.online? ? t("guest.details.online") : nil)
   end
 
   def map_url(event)
@@ -66,7 +67,7 @@ module EventsHelper
     return "" unless item.starts_at
 
     starts = item.event.local(item.starts_at)
-    text = "#{starts.strftime('%a %b %-d')} · #{short_time(starts)}"
+    text = "#{l(starts, format: :guest_day_short)} · #{short_time(starts)}"
     text += " – #{short_time(item.event.local(item.ends_at))}" if item.ends_at && item.ends_at.to_date == item.starts_at.to_date
     text
   end
@@ -82,7 +83,7 @@ module EventsHelper
     return unless event.rsvp_deadline
 
     deadline = event.local(event.rsvp_deadline)
-    "Please RSVP by #{deadline.strftime('%A, %B %-d')} at #{short_time(deadline)} #{deadline.strftime('%Z')}"
+    t("guest.details.deadline", date: l(deadline, format: :guest_weekday), time: "#{short_time(deadline)} #{deadline.strftime('%Z')}")
   end
 
   # IANA identifiers grouped by Rails' friendly names, deduplicated.

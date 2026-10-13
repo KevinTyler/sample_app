@@ -108,7 +108,7 @@ class EventsController < ApplicationController
     @rsvp = RsvpSubmission.new(guest: @guest, party_size: 1)
     @preview = true
     @updates = []
-    render "guest_invitations/show", layout: "guest"
+    I18n.with_locale(@event.locale) { render "guest_invitations/show", layout: "guest" }
   end
 
   private
@@ -116,7 +116,7 @@ class EventsController < ApplicationController
       permitted = params.expect(event: %i[
         title host_name description starts_at_local ends_at_local time_zone location_name address video_url
         rsvp_deadline_local capacity allow_maybe default_plus_ones allow_link_rsvp show_guest_count ticket_price currency
-        track_kids ask_plus_one_names guestbook_enabled auto_nudge nudge_days_before auto_day_before card_type show_ride_links
+        track_kids ask_plus_one_names guestbook_enabled auto_nudge nudge_days_before auto_day_before card_type show_ride_links locale
       ])
       # Only the owner decides whether and what guests pay.
       permitted = permitted.except(:ticket_price, :currency) if @event&.persisted? && !policy.can?(:manage_payments)

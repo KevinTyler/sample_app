@@ -25,6 +25,10 @@ module SampleApp
     # Stored times are UTC; each event carries its own IANA time zone for display.
     config.time_zone = "UTC"
 
+    # Guest-facing pages, emails and texts can be in these languages (Event#locale); the host app is English.
+    config.i18n.available_locales = %i[en es pt-BR fr hi]
+    config.i18n.default_locale = :en
+
     # The local outbox (/dev/outbox) captures email and SMS instead of sending them.
     config.x.outbox_enabled = false
 

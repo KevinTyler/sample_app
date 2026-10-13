@@ -1,4 +1,5 @@
-# Every guest-facing email (invitation, update, reminder, cancellation) for one Delivery.
+# Every guest-facing email (invitation, update, reminder, cancellation) for one Delivery, written in
+# the event's language.
 class GuestMailer < ApplicationMailer
   helper :events
 
@@ -20,14 +21,16 @@ class GuestMailer < ApplicationMailer
       attachments[invite.filename] = { mime_type: "text/calendar", content: invite.to_ics }
     end
 
-    mail(
-      to: email_address_with_name(@delivery.recipient, @guest.name),
-      from: email_address_with_name(sender_address, "#{@event.display_host_name} via Cordially"),
-      reply_to: @event.owner.email_address,
-      subject: @message.subject_line,
-      # A stable Message-ID per delivery lets mail servers and providers recognize a retry.
-      message_id: "<delivery-#{@delivery.id}-#{@delivery.created_at.to_i}@#{message_id_domain}>"
-    )
+    I18n.with_locale(@event.locale.presence || I18n.default_locale) do
+      mail(
+        to: email_address_with_name(@delivery.recipient, @guest.name),
+        from: email_address_with_name(sender_address, "#{@event.display_host_name} via Cordially"),
+        reply_to: @event.owner.email_address,
+        subject: @message.subject_line,
+        # A stable Message-ID per delivery lets mail servers and providers recognize a retry.
+        message_id: "<delivery-#{@delivery.id}-#{@delivery.created_at.to_i}@#{message_id_domain}>"
+      )
+    end
   end
 
   private

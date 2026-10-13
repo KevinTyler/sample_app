@@ -1,0 +1,235 @@
+# Guest-facing text (invitation pages, RSVP form, emails, SMS). Generated from one table so every
+# language has every key; hi/fr/es/pt-BR were drafted for Cordially — have a native speaker review before launch.
+en:
+  guest:
+    layout:
+      default_title: You're invited
+      host_cta_title: Hosting something?
+      host_cta_body: Make one like this with Cordially — start from this design.
+      language: Language
+      stopped_emails: You've stopped emails about this event.
+      stop_emails: Stop emails about this event
+      stop_emails_confirm: Stop all emails about this event? Your RSVP stays as it is.
+    show:
+      preview_banner: Preview — this is what %{name} sees. Nothing you do here is saved.
+      a_guest: a guest
+      cancelled: This event has been cancelled.
+      status_yes: You're going!
+      status_no: You can't make it
+      status_maybe: You might come
+      party_of: party of %{count}
+      replied_ago: replied %{time} ago
+      your_note: 'Your note:'
+      change_response: Change your response
+      closed_contact_host: RSVPs are closed. To change your response, reply to your invitation email to reach the host.
+      will_you_be_there: Will you be there, %{name}?
+      full: This event is currently full — you can still let the host know.
+      spots_left:
+        one: Only 1 spot left.
+        other: Only %{count} spots left.
+      closed: RSVPs are closed
+      closed_deadline: The RSVP deadline has passed. Reply to your invitation email to reach the host.
+      save_the_date: Save the date
+      date_tba: Date to be announced
+      formal_to_follow: A formal invitation will follow from %{host}. Add it to your calendar so you don't double-book.
+      tickets: Tickets
+      tickets_count:
+        one: 1 ticket
+        other: '%{count} tickets'
+      already_paid: '%{amount} already paid'
+      paid_refresh: Thanks! If you just paid, confirmation can take a few seconds — refresh this page.
+      pay: Pay %{amount}
+      secure_checkout: Secure checkout. Your spot is held while you pay.
+      paid: Paid
+      paid_for: '%{amount} for %{tickets}. See you there!'
+      pass_title: Your check-in pass
+      pass_alt: Check-in QR code for %{name}
+      pass_hint: Show this at the door for quick check-in.
+      checked_in: Checked in
+      schedule: The schedule
+      schedule_yes: You're coming
+      schedule_no: Not coming
+      updates: Updates from the host
+      guestbook_title: Notes for %{host}
+      guestbook_preview: Invited guests can leave a note here for you and each other.
+      guestbook_label: Leave a note
+      guestbook_placeholder: Can't wait to celebrate!
+      guestbook_submit: Sign the guestbook
+      ago: '%{time} ago'
+    form:
+      update: Update my RSVP
+      send: Send my RSVP
+      saving: Saving…
+      will_you_attend: Will you attend?
+      choice_yes: Joyfully accepts
+      choice_maybe: Maybe
+      choice_no: Regretfully declines
+      tickets_note: Tickets are %{price} per person, paid after you RSVP.
+      adults: Adults
+      kids: Kids
+      fewer: Fewer %{what}
+      more: More %{what}
+      party_size: How many in your party (including you)?
+      up_to:
+        one: This invitation is for 1 person.
+        other: This invitation is for up to %{count} people.
+      whos_coming: Who's coming with you?
+      names_help: (names help with place cards)
+      guest_name_placeholder: Guest %{n}'s name
+      which_parts: Which will you join?
+      optional: (optional)
+      choose_one: Choose one…
+      only_if_coming: Only needed if you're coming.
+      note_for_host: A note for the host
+    details:
+      title: Details
+      when: When
+      where: Where
+      map: Map
+      join_online: Join online
+      video_private: The video link is shared with guests through their personal invitation.
+      host: Host
+      whos_coming: Who's coming
+      guests_so_far:
+        one: 1 guest so far
+        other: '%{count} guests so far'
+      from_host: From the host
+      add_to_calendar: Add to your calendar
+      local_time: That's %{time} where you are.
+      deadline: Please RSVP by %{date} at %{time}
+      online: Online
+    card:
+      hosted_by: Hosted by %{host}
+      cancelled: CANCELLED
+      aria: Invitation for %{title}
+      the_details: The details
+      video_call: Video call link
+      with_love: With love, %{host}
+      flip: Flip for the details
+      flip_back: Back to the front
+      photos: Photos
+      photo_alt: Photo %{n} of %{count}
+    public:
+      will_you_be_there: Will you be there?
+      use_personal_link: Already have a personal invitation link? Use that instead to update your RSVP.
+      your_name: Your name
+      email: Email
+      email_hint: We'll email you a personal link to change your RSVP.
+      deadline_passed: The RSVP deadline has passed.
+      personal_title: RSVP with your personal link
+      personal_body: This event is invitation-only. Use the personal link from your invitation email to RSVP, or contact %{host}.
+    thank_you:
+      for: For %{name}
+      thank: Thank
+      you: you!
+      video_label: Thank-you video
+      photo_alt: Thank-you photo
+      photo_alt_gift: Thank-you photo with the %{gift}
+      for_gift_html: for the %{gift}
+      hearted: You sent a heart
+      heart: Send a heart back
+      save_video: Save video
+      save_photo: Save photo
+      from: From %{host}, after %{title}
+      sent_love: Sent with love.
+    flash:
+      'yes': Wonderful — you're on the list! We've saved your RSVP.
+      maybe: Thanks for letting the host know. You can update your RSVP any time before the deadline.
+      'no': Thanks for letting the host know. Your RSVP is saved.
+      pay_next: 'You''re on the list! One more step: complete your payment below to confirm your tickets.'
+      guestbook_thanks: Thanks — your note is in the guestbook.
+      unsubscribed: You won't receive more messages about this event. Your RSVP is unchanged.
+      too_many: Too many attempts. Please wait a few minutes and try again.
+      too_many_rsvps: Too many RSVPs from this connection. Please try again later.
+      too_many_notes: That's a lot of notes! Please try again later.
+      invitation_only: RSVPs for this event are by invitation.
+      nothing_to_pay: Nothing to pay — you're all set.
+      payment_failed: We couldn't start the payment just now. Please try again in a moment.
+      link_sent: Your RSVP is saved! We've emailed you this personal link so you can change it later.
+      check_email: You're already on the guest list — we've emailed your personal RSVP link to that address.
+    errors:
+      choose_response: Please choose a response
+      no_maybe: Maybe isn't an option for this event
+      need_adult: Please include at least one adult
+      party_min: Your party must include at least 1 person
+      party_max:
+        one: This invitation is for one person
+        other: This invitation is for up to %{count} people
+      cancelled: This event has been cancelled.
+      no_replies: This card doesn't take replies.
+      not_open: This event isn't accepting responses yet.
+      deadline_passed: The RSVP deadline has passed. Please contact the host to change your response.
+      full: Sorry — this event is full.
+      spots_left:
+        one: Only 1 spot left. Please reduce your party size.
+        other: Only %{count} spots left. Please reduce your party size.
+      answer_required: 'Please answer: %{question}'
+      answer_too_long: Your answer to “%{question}” is too long
+      answer_choice: 'Please pick one of the listed answers for: %{question}'
+      names_too_long: Please keep each name under 80 characters
+      pick_a_part: Choose at least one of the events, or answer No
+      note_too_long: Your note is too long (1,000 characters max)
+      form_title: 'Please fix the following:'
+      guestbook_blank: Your note can't be empty.
+      guestbook_long: Your note is too long (500 characters max).
+      name_required: Please enter your name
+      email_invalid: Please enter a valid email address
+    invalid:
+      title: We couldn't find that invitation
+      body: This link may be incomplete or out of date. Try opening it again from your invitation email, or ask the host to send you a fresh link.
+    unavailable:
+      title: This invitation isn't available yet
+      body: The host is still putting the finishing touches on it. Please check back soon.
+    mail:
+      invited_you: '%{host} invited you'
+      label_save_the_date: Save the date
+      label_announcement: News from %{host}
+      label_update: An update
+      label_reminder: A reminder
+      label_cancellation: Event cancelled
+      label_rsvp_confirmation: Your RSVP link
+      hi: Hi %{name},
+      body_invitation: You're invited! Open your invitation to see the details and let %{host} know if you can make it.
+      body_save_the_date: '%{host} would love you to save the date. A formal invitation will follow.'
+      body_announcement: '%{host} has news to share with you.'
+      body_cancellation: Unfortunately this event has been cancelled.
+      button_invitation: View invitation & RSVP
+      button_save_the_date: View the save-the-date
+      button_open: Open the card
+      button_rsvp_confirmation: View or change your RSVP
+      button_view: View invitation
+      personal: This link is personal to you — please don't forward it.
+      change_later: You can use it to change your RSVP later.
+      sent_on_behalf: Sent with Cordially on behalf of %{host}. Reply to reach the host.
+      stop: Stop messages about this event
+      subject_invitation: 'You''re invited: %{title}'
+      subject_save_the_date: 'Save the date: %{title}'
+      subject_announcement: '%{title} — news from %{host}'
+      subject_cancellation: 'Cancelled: %{title}'
+      subject_reminder: 'Reminder: %{title}'
+      subject_rsvp_confirmation: 'Your RSVP link: %{title}'
+      subject_update: 'Update: %{title}'
+      when: 'When:'
+      where: 'Where:'
+      your_invitation: 'Your invitation:'
+      manage: Manage your RSVP
+      stop_hint: Don't want messages about this event? Open your invitation and choose “Stop emails”.
+      link_existing: Here's your personal link to view the invitation and update your RSVP.
+      link_created: Thanks for your RSVP! Use this link any time to view the invitation or change your response.
+    sms:
+      invitation: '%{host} invited you to %{title}.'
+      save_the_date: 'Save the date! %{host}: %{title}.'
+      announcement: 'News from %{host}: %{title}.'
+      cancellation: '%{title} has been cancelled.'
+      reminder: 'Reminder: %{title}'
+      update: Update about %{title}
+      details_rsvp: Details & RSVP
+      open_card: Open the card
+      stop: Reply STOP to opt out.
+  time:
+    formats:
+      guest_day: '%A, %B %-d, %Y'
+      guest_weekday: '%A, %B %-d'
+      guest_day_short: '%a %b %-d'
+      guest_clock: '%-l:%M %p'
+      guest_clock_hour: '%-l %p'

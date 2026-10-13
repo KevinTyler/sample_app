@@ -3,6 +3,9 @@
 # Guests submit through their personal link (limits enforced). Hosts may also record a
 # response on a guest's behalf (e.g. a phoned-in RSVP); `by_host: true` skips the deadline
 # and capacity checks so the host can make exceptions deliberately.
+#
+# Error messages are whole sentences in the guest's language (guest.errors.*); show them with
+# `form_errors(rsvp, full: false)` so Rails doesn't prefix the English attribute name.
 class RsvpSubmission
   include ActiveModel::Model
   include ActiveModel::Attributes
@@ -17,8 +20,8 @@ class RsvpSubmission
   attr_accessor :guest, :answers, :by_host, :user
   attr_writer :plus_one_names, :schedule
 
-  validates :status, inclusion: { in: STATUSES, message: "Please choose a response" }
-  validates :guest_note, length: { maximum: 1000 }
+  validates :status, inclusion: { in: STATUSES, message: ->(*) { I18n.t("guest.errors.choose_response") } }
+  validates :guest_note, length: { maximum: 1000, message: ->(*) { I18n.t("guest.errors.note_too_long") } }
   validate :maybe_allowed
   validate :party_size_within_limits
   validate :rsvps_open, unless: :by_host
@@ -93,7 +96,7 @@ class RsvpSubmission
       event.lock! unless ActiveRecord::Base.connection.adapter_name.match?(/sqlite/i)
 
       if !by_host && status == "yes" && (remaining = event.spots_remaining(excluding: guest)) && effective_party_size > remaining
-        errors.add(:party_size, remaining.zero? ? "Sorry — this event is full." : "Only #{remaining} #{'spot'.pluralize(remaining)} left. Please reduce your party size.")
+        errors.add(:party_size, remaining.zero? ? t("full") : t("spots_left", count: remaining))
         raise ActiveRecord::Rollback
       end
 
@@ -114,44 +117,46 @@ class RsvpSubmission
   end
 
   private
+    def t(key, **options)
+      I18n.t("guest.errors.#{key}", **options)
+    end
+
     def event_tracks_kids?
       guest&.event&.track_kids?
     end
 
     def maybe_allowed
-      errors.add(:status, "Maybe isn't an option for this event") if status == "maybe" && !event.allow_maybe
+      errors.add(:status, t("no_maybe")) if status == "maybe" && !event.allow_maybe
     end
 
     def party_size_within_limits
       return if status == "no" || status.blank?
 
       if event_tracks_kids? && adults.to_i < 1
-        errors.add(:adults, "must include at least one adult")
-      elsif event_tracks_kids? && kids.to_i.negative?
-        errors.add(:kids, "can't be negative")
-      elsif party_size.to_i < 1
-        errors.add(:party_size, "must be at least 1")
+        errors.add(:adults, t("need_adult"))
+      elsif (event_tracks_kids? && kids.to_i.negative?) || party_size.to_i < 1
+        errors.add(:party_size, t("party_min"))
       elsif party_size.to_i > guest.max_party_size
-        errors.add(:party_size, guest.max_party_size == 1 ? "must be 1 (this invitation is for one)" : "can be at most #{guest.max_party_size}")
+        errors.add(:party_size, t("party_max", count: guest.max_party_size))
       end
     end
 
     def rsvps_open
       if event.cancelled?
-        errors.add(:base, "This event has been cancelled.")
+        errors.add(:base, t("cancelled"))
       elsif !event.collects_replies?
-        errors.add(:base, "This card doesn't take replies.")
+        errors.add(:base, t("no_replies"))
       elsif !event.published?
-        errors.add(:base, "This event isn't accepting responses yet.")
+        errors.add(:base, t("not_open"))
       elsif !event.accepting_rsvps?
-        errors.add(:base, "The RSVP deadline has passed. Please contact the host to change your response.")
+        errors.add(:base, t("deadline_passed"))
       end
     end
 
     def picks_a_schedule_item
       return unless status.in?(%w[yes maybe]) && replyable_items.any?
 
-      errors.add(:base, "Choose at least one of the events, or answer No") if replyable_items.none? { |item| attending_item?(item) }
+      errors.add(:base, t("pick_a_part")) if replyable_items.none? { |item| attending_item?(item) }
     end
 
     def save_schedule_replies!
@@ -162,7 +167,7 @@ class RsvpSubmission
     end
 
     def plus_one_names_valid
-      errors.add(:base, "Please keep each name under 80 characters") if plus_one_names.any? { |n| n.length > 80 }
+      errors.add(:base, t("names_too_long")) if plus_one_names.any? { |n| n.length > 80 }
     end
 
     def answers_valid
@@ -171,11 +176,11 @@ class RsvpSubmission
       questions_for_status.each do |question|
         value = answer_for(question).to_s.strip
         if value.blank?
-          errors.add(:base, "Please answer: #{question.prompt}") if question.required? && !by_host
+          errors.add(:base, t("answer_required", question: question.prompt)) if question.required? && !by_host
         elsif value.length > question.max_answer_length
-          errors.add(:base, "Your answer to “#{question.prompt}” is too long")
+          errors.add(:base, t("answer_too_long", question: question.prompt))
         elsif question.choice? && !question.options.include?(value)
-          errors.add(:base, "Please pick one of the listed answers for: #{question.prompt}")
+          errors.add(:base, t("answer_choice", question: question.prompt))
         end
       end
     end

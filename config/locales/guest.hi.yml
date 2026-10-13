@@ -1,0 +1,235 @@
+# Guest-facing text (invitation pages, RSVP form, emails, SMS). Generated from one table so every
+# language has every key; hi/fr/es/pt-BR were drafted for Cordially — have a native speaker review before launch.
+hi:
+  guest:
+    layout:
+      default_title: आपको आमंत्रित किया गया है
+      host_cta_title: कुछ आयोजित कर रहे हैं?
+      host_cta_body: Cordially के साथ ऐसा ही कार्ड बनाएं — इसी डिज़ाइन से शुरू करें।
+      language: भाषा
+      stopped_emails: आपने इस आयोजन के ईमेल बंद कर दिए हैं।
+      stop_emails: इस आयोजन के ईमेल बंद करें
+      stop_emails_confirm: इस आयोजन के सभी ईमेल बंद करें? आपका जवाब वैसा ही रहेगा।
+    show:
+      preview_banner: पूर्वावलोकन — %{name} को यही दिखेगा। यहाँ किया गया कुछ भी सेव नहीं होता।
+      a_guest: एक मेहमान
+      cancelled: यह आयोजन रद्द कर दिया गया है।
+      status_yes: आप आ रहे हैं!
+      status_no: आप नहीं आ पाएंगे
+      status_maybe: आप शायद आएं
+      party_of: '%{count} लोग'
+      replied_ago: '%{time} पहले जवाब दिया'
+      your_note: 'आपका संदेश:'
+      change_response: अपना जवाब बदलें
+      closed_contact_host: जवाब देने का समय समाप्त हो गया है। जवाब बदलने के लिए निमंत्रण ईमेल का जवाब देकर मेज़बान से संपर्क करें।
+      will_you_be_there: क्या आप आएंगे, %{name}?
+      full: यह आयोजन अभी भरा हुआ है — फिर भी आप मेज़बान को बता सकते हैं।
+      spots_left:
+        one: बस 1 जगह बची है।
+        other: बस %{count} जगहें बची हैं।
+      closed: जवाब बंद हैं
+      closed_deadline: जवाब देने की अंतिम तिथि निकल चुकी है। मेज़बान से संपर्क करने के लिए निमंत्रण ईमेल का जवाब दें।
+      save_the_date: तारीख़ याद रखें
+      date_tba: तारीख़ जल्द बताई जाएगी
+      formal_to_follow: '%{host} जल्द ही औपचारिक निमंत्रण भेजेंगे। दिन सुरक्षित रखने के लिए इसे अपने कैलेंडर में जोड़ें।'
+      tickets: टिकट
+      tickets_count:
+        one: 1 टिकट
+        other: '%{count} टिकट'
+      already_paid: '%{amount} पहले ही चुका दिए'
+      paid_refresh: धन्यवाद! अगर आपने अभी भुगतान किया है, तो पुष्टि में कुछ सेकंड लग सकते हैं — पेज रिफ़्रेश करें।
+      pay: '%{amount} चुकाएं'
+      secure_checkout: सुरक्षित भुगतान। भुगतान के दौरान आपकी जगह सुरक्षित रहती है।
+      paid: भुगतान हो गया
+      paid_for: '%{tickets} के लिए %{amount}। वहीं मिलते हैं!'
+      pass_title: आपका प्रवेश पास
+      pass_alt: '%{name} का प्रवेश QR कोड'
+      pass_hint: जल्दी प्रवेश के लिए इसे दरवाज़े पर दिखाएं।
+      checked_in: प्रवेश हो गया
+      schedule: कार्यक्रम
+      schedule_yes: आप आ रहे हैं
+      schedule_no: नहीं आ रहे
+      updates: मेज़बान की ओर से अपडेट
+      guestbook_title: '%{host} के लिए संदेश'
+      guestbook_preview: आमंत्रित मेहमान यहाँ आपके और एक-दूसरे के लिए संदेश छोड़ सकते हैं।
+      guestbook_label: संदेश छोड़ें
+      guestbook_placeholder: जश्न का बेसब्री से इंतज़ार है!
+      guestbook_submit: अतिथि पुस्तिका पर लिखें
+      ago: '%{time} पहले'
+    form:
+      update: मेरा जवाब अपडेट करें
+      send: मेरा जवाब भेजें
+      saving: सेव हो रहा है…
+      will_you_attend: क्या आप आएंगे?
+      choice_yes: सहर्ष स्वीकार
+      choice_maybe: शायद
+      choice_no: खेद सहित अस्वीकार
+      tickets_note: टिकट %{price} प्रति व्यक्ति है, जवाब देने के बाद भुगतान करें।
+      adults: वयस्क
+      kids: बच्चे
+      fewer: '%{what} कम करें'
+      more: '%{what} बढ़ाएं'
+      party_size: आपके साथ कुल कितने लोग (आपको मिलाकर)?
+      up_to:
+        one: यह निमंत्रण 1 व्यक्ति के लिए है।
+        other: यह निमंत्रण अधिकतम %{count} लोगों के लिए है।
+      whos_coming: आपके साथ कौन आ रहा है?
+      names_help: (नाम बैठने की व्यवस्था में मदद करते हैं)
+      guest_name_placeholder: मेहमान %{n} का नाम
+      which_parts: आप किनमें शामिल होंगे?
+      optional: (वैकल्पिक)
+      choose_one: एक चुनें…
+      only_if_coming: सिर्फ़ तब, जब आप आ रहे हों।
+      note_for_host: मेज़बान के लिए संदेश
+    details:
+      title: विवरण
+      when: कब
+      where: कहाँ
+      map: नक्शा
+      join_online: ऑनलाइन जुड़ें
+      video_private: वीडियो लिंक मेहमानों को उनके निजी निमंत्रण में भेजा जाता है।
+      host: मेज़बान
+      whos_coming: कौन आ रहा है
+      guests_so_far:
+        one: अब तक 1 मेहमान
+        other: अब तक %{count} मेहमान
+      from_host: मेज़बान की ओर से
+      add_to_calendar: अपने कैलेंडर में जोड़ें
+      local_time: आपके यहाँ यह %{time} है।
+      deadline: कृपया %{date} को %{time} तक जवाब दें
+      online: ऑनलाइन
+    card:
+      hosted_by: 'मेज़बान: %{host}'
+      cancelled: रद्द
+      aria: '%{title} का निमंत्रण'
+      the_details: विवरण
+      video_call: वीडियो कॉल लिंक
+      with_love: स्नेह सहित, %{host}
+      flip: विवरण के लिए पलटें
+      flip_back: सामने की ओर लौटें
+      photos: तस्वीरें
+      photo_alt: '%{count} में से तस्वीर %{n}'
+    public:
+      will_you_be_there: क्या आप आएंगे?
+      use_personal_link: पहले से निजी निमंत्रण लिंक है? जवाब बदलने के लिए उसी का उपयोग करें।
+      your_name: आपका नाम
+      email: ईमेल
+      email_hint: जवाब बदलने के लिए हम आपको एक निजी लिंक ईमेल करेंगे।
+      deadline_passed: जवाब देने की अंतिम तिथि निकल चुकी है।
+      personal_title: अपने निजी लिंक से जवाब दें
+      personal_body: यह आयोजन केवल आमंत्रित लोगों के लिए है। जवाब देने के लिए निमंत्रण ईमेल के निजी लिंक का उपयोग करें, या %{host} से संपर्क करें।
+    thank_you:
+      for: '%{name} के लिए'
+      thank: बहुत-बहुत
+      you: धन्यवाद!
+      video_label: धन्यवाद वीडियो
+      photo_alt: धन्यवाद फ़ोटो
+      photo_alt_gift: '%{gift} के साथ धन्यवाद फ़ोटो'
+      for_gift_html: '%{gift} के लिए'
+      hearted: आपने दिल भेजा
+      heart: बदले में दिल भेजें
+      save_video: वीडियो सेव करें
+      save_photo: फ़ोटो सेव करें
+      from: '%{host} की ओर से, %{title} के बाद'
+      sent_love: स्नेह के साथ भेजा गया।
+    flash:
+      'yes': बहुत बढ़िया — आप सूची में हैं! आपका जवाब सेव हो गया है।
+      maybe: मेज़बान को बताने के लिए धन्यवाद। आप अंतिम तिथि से पहले कभी भी जवाब बदल सकते हैं।
+      'no': मेज़बान को बताने के लिए धन्यवाद। आपका जवाब सेव हो गया है।
+      pay_next: 'आप सूची में हैं! एक कदम और: टिकट पक्के करने के लिए नीचे भुगतान पूरा करें।'
+      guestbook_thanks: धन्यवाद — आपका संदेश अतिथि पुस्तिका में है।
+      unsubscribed: आपको इस आयोजन के और संदेश नहीं मिलेंगे। आपका जवाब नहीं बदला है।
+      too_many: बहुत ज़्यादा प्रयास। कुछ मिनट रुककर फिर कोशिश करें।
+      too_many_rsvps: इस कनेक्शन से बहुत ज़्यादा जवाब आए हैं। कृपया बाद में कोशिश करें।
+      too_many_notes: बहुत सारे संदेश! कृपया बाद में कोशिश करें।
+      invitation_only: इस आयोजन के जवाब केवल आमंत्रित लोगों के लिए हैं।
+      nothing_to_pay: कुछ भी भुगतान नहीं करना है — सब तैयार है।
+      payment_failed: अभी भुगतान शुरू नहीं हो सका। कृपया थोड़ी देर में फिर कोशिश करें।
+      link_sent: आपका जवाब सेव हो गया! बाद में बदलने के लिए हमने यह निजी लिंक आपको ईमेल कर दिया है।
+      check_email: आप पहले से मेहमानों की सूची में हैं — हमने आपका निजी जवाब लिंक उस पते पर ईमेल कर दिया है।
+    errors:
+      choose_response: कृपया एक जवाब चुनें
+      no_maybe: इस आयोजन के लिए 'शायद' का विकल्प नहीं है
+      need_adult: कम से कम एक वयस्क शामिल करें
+      party_min: आपके समूह में कम से कम 1 व्यक्ति होना चाहिए
+      party_max:
+        one: यह निमंत्रण एक व्यक्ति के लिए है
+        other: यह निमंत्रण अधिकतम %{count} लोगों के लिए है
+      cancelled: यह आयोजन रद्द कर दिया गया है।
+      no_replies: इस कार्ड पर जवाब नहीं दिया जा सकता।
+      not_open: यह आयोजन अभी जवाब स्वीकार नहीं कर रहा है।
+      deadline_passed: अंतिम तिथि निकल चुकी है। जवाब बदलने के लिए मेज़बान से संपर्क करें।
+      full: माफ़ कीजिए — यह आयोजन भर चुका है।
+      spots_left:
+        one: बस 1 जगह बची है। कृपया लोगों की संख्या कम करें।
+        other: बस %{count} जगहें बची हैं। कृपया लोगों की संख्या कम करें।
+      answer_required: 'कृपया जवाब दें: %{question}'
+      answer_too_long: “%{question}” का आपका जवाब बहुत लंबा है
+      answer_choice: 'कृपया इनमें से एक विकल्प चुनें: %{question}'
+      names_too_long: हर नाम 80 अक्षरों से कम रखें
+      pick_a_part: कम से कम एक कार्यक्रम चुनें, या 'नहीं' चुनें
+      note_too_long: आपका संदेश बहुत लंबा है (अधिकतम 1,000 अक्षर)
+      form_title: 'कृपया इन्हें ठीक करें:'
+      guestbook_blank: आपका संदेश खाली नहीं हो सकता।
+      guestbook_long: आपका संदेश बहुत लंबा है (अधिकतम 500 अक्षर)।
+      name_required: कृपया अपना नाम लिखें
+      email_invalid: कृपया सही ईमेल पता लिखें
+    invalid:
+      title: हमें वह निमंत्रण नहीं मिला
+      body: यह लिंक अधूरा या पुराना हो सकता है। निमंत्रण ईमेल से इसे फिर खोलें, या मेज़बान से नया लिंक मांगें।
+    unavailable:
+      title: यह निमंत्रण अभी उपलब्ध नहीं है
+      body: मेज़बान अभी इसे अंतिम रूप दे रहे हैं। कृपया जल्द दोबारा देखें।
+    mail:
+      invited_you: '%{host} ने आपको आमंत्रित किया है'
+      label_save_the_date: तारीख़ याद रखें
+      label_announcement: '%{host} की ओर से ख़बर'
+      label_update: एक अपडेट
+      label_reminder: एक याद दिलाना
+      label_cancellation: आयोजन रद्द
+      label_rsvp_confirmation: आपका जवाब लिंक
+      hi: नमस्ते %{name},
+      body_invitation: आपको आमंत्रित किया गया है! विवरण देखने और %{host} को बताने के लिए कि आप आ पाएंगे या नहीं, अपना निमंत्रण खोलें।
+      body_save_the_date: '%{host} चाहते हैं कि आप यह तारीख़ याद रखें। औपचारिक निमंत्रण जल्द आएगा।'
+      body_announcement: '%{host} आपके साथ एक ख़बर साझा करना चाहते हैं।'
+      body_cancellation: दुर्भाग्य से यह आयोजन रद्द कर दिया गया है।
+      button_invitation: निमंत्रण देखें और जवाब दें
+      button_save_the_date: कार्ड देखें
+      button_open: कार्ड खोलें
+      button_rsvp_confirmation: अपना जवाब देखें या बदलें
+      button_view: निमंत्रण देखें
+      personal: यह लिंक सिर्फ़ आपके लिए है — कृपया इसे आगे न भेजें।
+      change_later: बाद में जवाब बदलने के लिए आप इसका उपयोग कर सकते हैं।
+      sent_on_behalf: Cordially द्वारा %{host} की ओर से भेजा गया। मेज़बान से संपर्क के लिए जवाब दें।
+      stop: इस आयोजन के संदेश बंद करें
+      subject_invitation: 'आपको आमंत्रित किया गया है: %{title}'
+      subject_save_the_date: 'तारीख़ याद रखें: %{title}'
+      subject_announcement: '%{title} — %{host} की ओर से ख़बर'
+      subject_cancellation: 'रद्द: %{title}'
+      subject_reminder: 'याद दिलाना: %{title}'
+      subject_rsvp_confirmation: 'आपका जवाब लिंक: %{title}'
+      subject_update: 'अपडेट: %{title}'
+      when: 'कब:'
+      where: 'कहाँ:'
+      your_invitation: 'आपका निमंत्रण:'
+      manage: अपना जवाब प्रबंधित करें
+      stop_hint: इस आयोजन के संदेश नहीं चाहिए? अपना निमंत्रण खोलें और “ईमेल बंद करें” चुनें।
+      link_existing: निमंत्रण देखने और अपना जवाब अपडेट करने के लिए यह रहा आपका निजी लिंक।
+      link_created: जवाब देने के लिए धन्यवाद! निमंत्रण देखने या जवाब बदलने के लिए कभी भी इस लिंक का उपयोग करें।
+    sms:
+      invitation: '%{host} ने आपको %{title} में आमंत्रित किया है।'
+      save_the_date: 'तारीख़ याद रखें! %{host}: %{title}।'
+      announcement: '%{host} की ओर से ख़बर: %{title}।'
+      cancellation: '%{title} रद्द कर दिया गया है।'
+      reminder: 'याद दिलाना: %{title}'
+      update: '%{title} के बारे में अपडेट'
+      details_rsvp: विवरण और जवाब
+      open_card: कार्ड खोलें
+      stop: बंद करने के लिए STOP लिखकर भेजें।
+  time:
+    formats:
+      guest_day: '%A, %-d %B %Y'
+      guest_weekday: '%A, %-d %B'
+      guest_day_short: '%a, %-d %b'
+      guest_clock: '%-l:%M %p'
+      guest_clock_hour: '%-l %p'

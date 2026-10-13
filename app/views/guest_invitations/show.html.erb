@@ -1,13 +1,14 @@
 <% content_for :start_from, @event.share_token unless @preview || !@event.published? %>
 <% content_for :title, @event.title %>
+<% content_for :language_switch, "1" unless @preview %>
 <% design = InvitationDesign.for(@event) %>
 
 <% if @preview %>
-  <div class="guest-banner guest-banner--preview">Preview — this is what <%= @guest.name.downcase == "guest name" ? "a guest" : @guest.name %> sees. Nothing you do here is saved.</div>
+  <div class="guest-banner guest-banner--preview"><%= gt("show.preview_banner", name: @guest.name.downcase == "guest name" ? gt("show.a_guest") : @guest.name) %></div>
 <% end %>
 <% if @event.cancelled? %>
   <div class="guest-banner guest-banner--cancelled" role="status">
-    <strong>This event has been cancelled.</strong>
+    <strong><%= gt("show.cancelled") %></strong>
     <% if @event.cancellation_note.present? %><p class="mt-xs m-0"><%= @event.cancellation_note %></p><% end %>
   </div>
 <% end %>
@@ -22,10 +23,10 @@
     <div class="rsvp-summary">
       <div class="rsvp-summary__icon rsvp-summary__icon--<%= @guest.rsvp_status %>" aria-hidden="true"><%= icon %></div>
       <div>
-        <h2 id="rsvp-heading"><%= { "yes" => "You're going!", "no" => "You can't make it", "maybe" => "You might come" }[@guest.rsvp_status] %></h2>
+        <h2 id="rsvp-heading"><%= gt("show.status_#{@guest.rsvp_status}") %></h2>
         <p>
-          <%= @guest.name %><% if @guest.rsvp_yes? || @guest.rsvp_maybe? %> · party of <%= @guest.party_size %><% end %>
-          <% if @guest.responded_at %>· replied <%= time_ago_in_words(@guest.responded_at) %> ago<% end %>
+          <%= @guest.name %><% if @guest.rsvp_yes? || @guest.rsvp_maybe? %> · <%= gt("show.party_of", count: @guest.party_size) %><% end %>
+          <% if @guest.responded_at %>· <%= gt("show.replied_ago", time: time_ago_in_words(@guest.responded_at)) %><% end %>
         </p>
       </div>
     </div>
@@ -33,62 +34,62 @@
     <% if answers.any? || @guest.guest_note.present? %>
       <ul class="answers mt-s">
         <% answers.each do |a| %><li><strong><%= a.event_question.prompt %>:</strong> <%= a.value %></li><% end %>
-        <% if @guest.guest_note.present? %><li><strong>Your note:</strong> <%= @guest.guest_note %></li><% end %>
+        <% if @guest.guest_note.present? %><li><strong><%= gt("show.your_note") %></strong> <%= @guest.guest_note %></li><% end %>
       </ul>
     <% end %>
     <% if @event.accepting_rsvps? %>
       <details class="disclosure mt-m">
-        <summary>Change your response</summary>
+        <summary><%= gt("show.change_response") %></summary>
         <div class="mt-s"><%= render "guest_invitations/rsvp_form", guest: @guest, event: @event, rsvp: @rsvp %></div>
       </details>
     <% elsif !@event.cancelled? %>
-      <p class="small muted mt-s m-0">RSVPs are closed. To change your response, reply to your invitation email to reach the host.</p>
+      <p class="small muted mt-s m-0"><%= gt("show.closed_contact_host") %></p>
     <% end %>
   <% elsif @event.accepting_rsvps? || @preview %>
-    <h2 id="rsvp-heading">Will you be there, <%= @guest.first_name %>?</h2>
+    <h2 id="rsvp-heading"><%= gt("show.will_you_be_there", name: @guest.first_name) %></h2>
     <% if (deadline = deadline_text(@event)) %><p class="small muted"><%= deadline %>.</p><% end %>
     <% if @event.capacity && (left = @event.spots_remaining).to_i <= 10 %>
-      <p class="small muted"><%= left.zero? ? "This event is currently full — you can still let the host know." : "Only #{pluralize(left, 'spot')} left." %></p>
+      <p class="small muted"><%= left.zero? ? gt("show.full") : gt("show.spots_left", count: left) %></p>
     <% end %>
     <%= render "guest_invitations/rsvp_form", guest: @guest, event: @event, rsvp: @rsvp %>
   <% elsif @event.cancelled? %>
-    <h2 id="rsvp-heading">RSVPs are closed</h2>
-    <p class="muted m-0">This event has been cancelled.</p>
+    <h2 id="rsvp-heading"><%= gt("show.closed") %></h2>
+    <p class="muted m-0"><%= gt("show.cancelled") %></p>
   <% else %>
-    <h2 id="rsvp-heading">RSVPs are closed</h2>
-    <p class="muted m-0">The RSVP deadline has passed. Reply to your invitation email to reach the host.</p>
+    <h2 id="rsvp-heading"><%= gt("show.closed") %></h2>
+    <p class="muted m-0"><%= gt("show.closed_deadline") %></p>
   <% end %>
 </section>
 <% elsif @event.save_the_date? && !@event.cancelled? %>
   <section class="guest-panel save-date" aria-labelledby="save-heading">
-    <span class="eyebrow">Save the date</span>
-    <h2 id="save-heading"><%= @event.starts_at ? @event.local(@event.starts_at).strftime("%A, %B %-d, %Y") : "Date to be announced" %></h2>
-    <p class="muted m-0">A formal invitation will follow<%= " from #{@event.display_host_name}" %>. Add it to your calendar so you don't double-book.</p>
+    <span class="eyebrow"><%= gt("show.save_the_date") %></span>
+    <h2 id="save-heading"><%= @event.starts_at ? l(@event.local(@event.starts_at), format: :guest_day) : gt("show.date_tba") %></h2>
+    <p class="muted m-0"><%= gt("show.formal_to_follow", host: @event.display_host_name) %></p>
   </section>
 <% end %>
 
 <% if !@preview && @event.ticketed? && @guest.rsvp_yes? %>
   <section class="guest-panel" aria-labelledby="payment-heading">
-    <h2 id="payment-heading">Tickets</h2>
+    <h2 id="payment-heading"><%= gt("show.tickets") %></h2>
     <% due = @guest.amount_due_cents %>
     <% if due.positive? %>
-      <p><%= pluralize(@guest.party_size, "ticket") %> × <%= Money.format(@event.ticket_price_cents, @event.currency) %><% if @guest.amount_paid_cents.positive? %>, <%= Money.format(@guest.amount_paid_cents, @event.currency) %> already paid<% end %>.</p>
-      <% if params[:paid] %><p class="small muted">Thanks! If you just paid, confirmation can take a few seconds — refresh this page.</p><% end %>
-      <%= button_to "Pay #{Money.format(due, @event.currency)}", guest_pay_path(params[:token]), class: "btn btn--primary btn--block", data: { turbo: false } %>
-      <p class="small muted mt-s m-0">Secure checkout. Your spot is held while you pay.</p>
+      <p><%= gt("show.tickets_count", count: @guest.party_size) %> × <%= Money.format(@event.ticket_price_cents, @event.currency) %><% if @guest.amount_paid_cents.positive? %>, <%= gt("show.already_paid", amount: Money.format(@guest.amount_paid_cents, @event.currency)) %><% end %>.</p>
+      <% if params[:paid] %><p class="small muted"><%= gt("show.paid_refresh") %></p><% end %>
+      <%= button_to gt("show.pay", amount: Money.format(due, @event.currency)), guest_pay_path(params[:token]), class: "btn btn--primary btn--block", data: { turbo: false } %>
+      <p class="small muted mt-s m-0"><%= gt("show.secure_checkout") %></p>
     <% else %>
-      <p class="m-0"><span class="badge badge--rsvp-yes">Paid</span> <%= Money.format(@guest.amount_paid_cents, @event.currency) %> for <%= pluralize(@guest.party_size, "ticket") %>. See you there!</p>
+      <p class="m-0"><span class="badge badge--rsvp-yes"><%= gt("show.paid") %></span> <%= gt("show.paid_for", amount: Money.format(@guest.amount_paid_cents, @event.currency), tickets: gt("show.tickets_count", count: @guest.party_size)) %></p>
     <% end %>
   </section>
 <% end %>
 
 <% if !@preview && @event.published? && (@guest.rsvp_yes? || @guest.rsvp_maybe?) && (@event.starts_at.nil? || @event.effective_ends_at > Time.current) %>
   <section class="guest-panel" aria-labelledby="pass-heading">
-    <h2 id="pass-heading">Your check-in pass</h2>
+    <h2 id="pass-heading"><%= gt("show.pass_title") %></h2>
     <div class="pass">
-      <img src="<%= check_in_qr_data_uri(@guest) %>" alt="Check-in QR code for <%= @guest.name %>">
-      <p class="small muted m-0">Show this at the door for quick check-in<%= " (party of #{@guest.party_size})" if @guest.party_size > 1 %>.</p>
-      <% if @guest.checked_in? %><p class="badge badge--rsvp-yes m-0">Checked in</p><% end %>
+      <img src="<%= check_in_qr_data_uri(@guest) %>" alt="<%= gt("show.pass_alt", name: @guest.name) %>">
+      <p class="small muted m-0"><%= gt("show.pass_hint") %><% if @guest.party_size > 1 %> (<%= gt("show.party_of", count: @guest.party_size) %>)<% end %></p>
+      <% if @guest.checked_in? %><p class="badge badge--rsvp-yes m-0"><%= gt("show.checked_in") %></p><% end %>
     </div>
   </section>
 <% end %>
@@ -96,17 +97,17 @@
 <% if (items = @event.schedule_for(@guest)).any? %>
   <% replies = @guest.schedule_replies.index_by(&:schedule_item_id) %>
   <section class="guest-panel" aria-labelledby="schedule-heading">
-    <h2 id="schedule-heading">The schedule</h2>
+    <h2 id="schedule-heading"><%= gt("show.schedule") %></h2>
     <ol class="schedule-list">
       <% items.each do |item| %>
         <li>
-          <% if item.starts_at %><% at = @event.local(item.starts_at) %><span class="date-chip"><%= at.strftime("%b") %><strong><%= at.day %></strong></span><% end %>
+          <% if item.starts_at %><% at = @event.local(item.starts_at) %><span class="date-chip"><%= l(at, format: "%b") %><strong><%= at.day %></strong></span><% end %>
           <div class="schedule-list__text">
             <strong><%= item.name %></strong>
             <span class="small muted"><%= [ (short_time(@event.local(item.starts_at)) if item.starts_at), item.where_text ].compact.join(" · ") %></span>
             <% if item.description.present? %><p class="small"><%= item.description %></p><% end %>
             <% if (reply = replies[item.id]) && @guest.responded? %>
-              <span class="badge <%= reply.attending ? 'badge--rsvp-yes' : 'badge--muted' %>"><%= reply.attending ? "You're coming" : "Not coming" %></span>
+              <span class="badge <%= reply.attending ? 'badge--rsvp-yes' : 'badge--muted' %>"><%= reply.attending ? gt("show.schedule_yes") : gt("show.schedule_no") %></span>
             <% end %>
           </div>
         </li>
@@ -123,12 +124,12 @@
 
 <% if @updates.any? %>
   <section class="guest-panel" aria-labelledby="updates-heading">
-    <h2 id="updates-heading">Updates from the host</h2>
+    <h2 id="updates-heading"><%= gt("show.updates") %></h2>
     <ul class="update-list">
       <% @updates.each do |update| %>
         <% sent = @event.local(update.dispatched_at) %>
         <li>
-          <time class="date-chip" datetime="<%= update.dispatched_at.iso8601 %>"><%= sent.strftime("%b") %><strong><%= sent.day %></strong></time>
+          <time class="date-chip" datetime="<%= update.dispatched_at.iso8601 %>"><%= l(sent, format: "%b") %><strong><%= sent.day %></strong></time>
           <div class="update-list__text">
             <h4><%= update.subject_line %></h4>
             <% if update.body.present? %><p><%= update.body %></p><% end %>
@@ -142,14 +143,14 @@
 <% if @event.guestbook_enabled? && !@event.draft? %>
   <% entries = @event.guestbook_entries.visible.recent.limit(50) %>
   <section class="guest-panel" id="guestbook" aria-labelledby="guestbook-heading">
-    <h2 id="guestbook-heading">Notes for <%= @event.display_host_name %></h2>
+    <h2 id="guestbook-heading"><%= gt("show.guestbook_title", host: @event.display_host_name) %></h2>
     <% if @preview %>
-      <p class="small muted">Invited guests can leave a note here for you and each other.</p>
+      <p class="small muted"><%= gt("show.guestbook_preview") %></p>
     <% elsif !@event.cancelled? %>
       <%= form_with url: guest_guestbook_path(params[:token]), scope: :guestbook_entry, class: "form guestbook-form" do |f| %>
-        <%= f.label :body, "Leave a note", class: "visually-hidden" %>
-        <%= f.text_area :body, rows: 2, maxlength: 500, required: true, placeholder: "Can't wait to celebrate!" %>
-        <div><%= f.submit "Sign the guestbook", class: "btn btn--small btn--primary" %></div>
+        <%= f.label :body, gt("show.guestbook_label"), class: "visually-hidden" %>
+        <%= f.text_area :body, rows: 2, maxlength: 500, required: true, placeholder: gt("show.guestbook_placeholder") %>
+        <div><%= f.submit gt("show.guestbook_submit"), class: "btn btn--small btn--primary" %></div>
       <% end %>
     <% end %>
     <% if entries.any? %>
@@ -157,7 +158,7 @@
         <% entries.each do |entry| %>
           <li>
             <span class="monogram monogram--small" aria-hidden="true"><%= initials(entry.author_name) %></span>
-            <div><strong><%= entry.author_name %></strong> <time class="faint small" datetime="<%= entry.created_at.iso8601 %>"><%= time_ago_in_words(entry.created_at) %> ago</time>
+            <div><strong><%= entry.author_name %></strong> <time class="faint small" datetime="<%= entry.created_at.iso8601 %>"><%= gt("show.ago", time: time_ago_in_words(entry.created_at)) %></time>
               <p class="pre-line"><%= entry.body %></p></div>
           </li>
         <% end %>
@@ -169,9 +170,9 @@
 <% content_for :guest_footer do %>
   <% if !@preview && @guest.email.present? %>
     <% if @guest.unsubscribed? %>
-      <p>You've stopped emails about this event.</p>
+      <p><%= gt("layout.stopped_emails") %></p>
     <% else %>
-      <%= button_to "Stop emails about this event", guest_unsubscribe_path(params[:token]), class: "button_to", form: { data: { turbo_confirm: "Stop all emails about this event? Your RSVP stays as it is." } } %>
+      <%= button_to gt("layout.stop_emails"), guest_unsubscribe_path(params[:token]), class: "button_to", form: { data: { turbo_confirm: gt("layout.stop_emails_confirm") } } %>
     <% end %>
   <% end %>
 <% end %>

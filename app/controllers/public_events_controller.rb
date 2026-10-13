@@ -5,8 +5,10 @@ class PublicEventsController < ApplicationController
   layout "guest"
 
   before_action :set_event
+  include GuestLocale
+  around_action :with_guest_locale
   rate_limit to: 8, within: 1.hour, only: :rsvp, by: -> { request.remote_ip },
-    with: -> { redirect_to public_event_path(params[:share_token]), alert: "Too many RSVPs from this connection. Please try again later." }
+    with: -> { redirect_to public_event_path(params[:share_token]), alert: helpers.gt("flash.too_many_rsvps") }
   rate_limit to: 120, within: 1.minute, by: -> { request.remote_ip }, name: "public-pages", with: -> { head :too_many_requests }
 
   def show
@@ -14,16 +16,16 @@ class PublicEventsController < ApplicationController
   end
 
   def rsvp
-    return redirect_to(public_event_path(params[:share_token]), alert: "RSVPs for this event are by invitation.") unless open_rsvp?
+    return redirect_to(public_event_path(params[:share_token]), alert: helpers.gt("flash.invitation_only")) unless open_rsvp?
 
     @rsvp = LinkRsvp.new(rsvp_params.merge(event: @event))
     if @rsvp.save
       if @rsvp.outcome == :created
         redirect_to guest_invitation_path(@rsvp.guest.access_token),
-          notice: "Your RSVP is saved! We've emailed you this personal link so you can change it later."
+          notice: helpers.gt("flash.link_sent")
       else
         redirect_to public_event_path(params[:share_token]),
-          notice: "You're already on the guest list — we've emailed your personal RSVP link to that address."
+          notice: helpers.gt("flash.check_email")
       end
     else
       render :show, status: :unprocessable_content

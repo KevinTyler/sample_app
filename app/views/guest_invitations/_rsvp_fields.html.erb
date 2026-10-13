@@ -1,17 +1,17 @@
 <%# Shared by the guest RSVP form and the host's "record an RSVP" form. %>
 <% choices = event.allow_maybe ? %w[yes maybe no] : %w[yes no] %>
 <fieldset class="rsvp-choices" data-rsvp-form-target="choices">
-  <legend class="visually-hidden">Will you attend?</legend>
+  <legend class="visually-hidden"><%= gt("form.will_you_attend") %></legend>
   <% choices.each do |status| %>
     <label class="rsvp-choice rsvp-choice--<%= status %>">
       <%= f.radio_button :status, status, required: true, data: { action: "rsvp-form#update" } %>
-      <span><%= RsvpHelper::GUEST_CHOICE_LABELS[status] %></span>
+      <span><%= gt("form.choice_#{status}") %></span>
     </label>
   <% end %>
 </fieldset>
 
 <% if event.ticketed? %>
-  <p class="small muted m-0" data-rsvp-form-target="attendingOnly">Tickets are <%= Money.format(event.ticket_price_cents, event.currency) %> per person, paid after you RSVP.</p>
+  <p class="small muted m-0" data-rsvp-form-target="attendingOnly"><%= gt("form.tickets_note", price: Money.format(event.ticket_price_cents, event.currency)) %></p>
 <% end %>
 
 <% max = guest.max_party_size %>
@@ -19,31 +19,31 @@
   <div class="stack-s" data-rsvp-form-target="attendingOnly" data-controller="party" data-party-max-value="<%= max %>">
     <% if event.track_kids? %>
       <div class="party-steppers">
-        <% [ [ :adults, "Adults", 1, (rsvp.adults || 1) ], [ :kids, "Kids", 0, (rsvp.kids || 0) ] ].each do |field, label, min, value| %>
+        <% [ [ :adults, gt("form.adults"), 1, (rsvp.adults || 1) ], [ :kids, gt("form.kids"), 0, (rsvp.kids || 0) ] ].each do |field, label, min, value| %>
           <div class="field">
             <%= f.label field, label %>
             <div class="stepper">
-              <button type="button" class="stepper__button" aria-label="Fewer <%= label.downcase %>" data-action="party#step" data-party-field-param="<%= field %>" data-party-delta-param="-1">−</button>
+              <button type="button" class="stepper__button" aria-label="<%= gt("form.fewer", what: label.downcase) %>" data-action="party#step" data-party-field-param="<%= field %>" data-party-delta-param="-1">−</button>
               <%= f.number_field field, value: value, min: min, max: max, class: "stepper__input", data: { party_target: field, action: "input->party#update" } %>
-              <button type="button" class="stepper__button" aria-label="More <%= label.downcase %>" data-action="party#step" data-party-field-param="<%= field %>" data-party-delta-param="1">+</button>
+              <button type="button" class="stepper__button" aria-label="<%= gt("form.more", what: label.downcase) %>" data-action="party#step" data-party-field-param="<%= field %>" data-party-delta-param="1">+</button>
             </div>
           </div>
         <% end %>
       </div>
     <% else %>
       <div class="field">
-        <%= f.label :party_size, "How many in your party (including you)?" %>
+        <%= f.label :party_size, gt("form.party_size") %>
         <%= f.select :party_size, (1..max).to_a, {}, class: "party-select", data: { party_target: "size", action: "party#update" } %>
       </div>
     <% end %>
-    <% if max > 1 %><p class="field__hint">This invitation is for up to <%= pluralize(max, "person") %>.</p><% end %>
+    <% if max > 1 %><p class="field__hint"><%= gt("form.up_to", count: max) %></p><% end %>
     <% if event.ask_plus_one_names? && max > 1 %>
       <% names = rsvp.respond_to?(:plus_one_names) ? rsvp.plus_one_names : [] %>
       <div class="field" data-party-target="namesField">
-        <span class="field__label">Who's coming with you? <span class="field__optional">(names help with place cards)</span></span>
+        <span class="field__label"><%= gt("form.whos_coming") %> <span class="field__optional"><%= gt("form.names_help") %></span></span>
         <% (max - 1).times do |i| %>
           <%= text_field_tag "rsvp[plus_one_names][]", names[i], id: "rsvp_plus_one_name_#{i}", maxlength: 80,
-                placeholder: "Guest #{i + 2}'s name", aria: { label: "Name of guest #{i + 2}" }, data: { party_target: "name" } %>
+                placeholder: gt("form.guest_name_placeholder", n: i + 2), aria: { label: gt("form.guest_name_placeholder", n: i + 2) }, data: { party_target: "name" } %>
         <% end %>
       </div>
     <% end %>
@@ -55,7 +55,7 @@
 <% items = event.schedule_for(guest).select(&:collects_replies) %>
 <% if items.any? %>
   <fieldset class="schedule-picks" data-rsvp-form-target="attendingOnly">
-    <legend class="field__label">Which will you join?</legend>
+    <legend class="field__label"><%= gt("form.which_parts") %></legend>
     <% items.each do |item| %>
       <label class="schedule-pick">
         <%= hidden_field_tag "rsvp[schedule][#{item.id}]", "0", id: nil %>
@@ -69,21 +69,21 @@
 <% event.questions.each do |question| %>
   <% field_id = "rsvp_answer_#{question.id}" %>
   <div class="field" <%= 'data-rsvp-form-target=attendingOnly' if question.applies_to == "attending" %>>
-    <label for="<%= field_id %>"><%= question.prompt %><% if question.required %> <span aria-hidden="true">*</span><% else %> <span class="field__optional">(optional)</span><% end %></label>
+    <label for="<%= field_id %>"><%= question.prompt %><% if question.required %> <span aria-hidden="true">*</span><% else %> <span class="field__optional"><%= gt("form.optional") %></span><% end %></label>
     <% value = rsvp.answer_for(question) %>
     <% case question.kind %>
     <% when "long_text" %>
       <%= text_area_tag "rsvp[answers][#{question.id}]", value, id: field_id, rows: 3, maxlength: question.max_answer_length %>
     <% when "choice" %>
-      <%= select_tag "rsvp[answers][#{question.id}]", options_for_select(question.options, value), include_blank: "Choose one…", id: field_id %>
+      <%= select_tag "rsvp[answers][#{question.id}]", options_for_select(question.options, value), include_blank: gt("form.choose_one"), id: field_id %>
     <% else %>
       <%= text_field_tag "rsvp[answers][#{question.id}]", value, id: field_id, maxlength: question.max_answer_length %>
     <% end %>
-    <% if question.applies_to == "attending" %><p class="field__hint">Only needed if you're coming.</p><% end %>
+    <% if question.applies_to == "attending" %><p class="field__hint"><%= gt("form.only_if_coming") %></p><% end %>
   </div>
 <% end %>
 
 <div class="field">
-  <%= f.label :guest_note do %>A note for the host <span class="field__optional">(optional)</span><% end %>
+  <%= f.label :guest_note do %><%= gt("form.note_for_host") %> <span class="field__optional"><%= gt("form.optional") %></span><% end %>
   <%= f.text_area :guest_note, rows: 3, maxlength: 1000 %>
 </div>

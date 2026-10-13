@@ -5,6 +5,8 @@ class ThankYouPagesController < ApplicationController
 
   before_action :set_private_headers
   before_action :set_thank_you
+  include GuestLocale
+  around_action :with_guest_locale
   rate_limit to: 10, within: 10.minutes, only: :heart, by: -> { params[:token].to_s.first(16) },
     with: -> { redirect_to thank_you_page_path(params[:token]) }
 
@@ -21,7 +23,7 @@ class ThankYouPagesController < ApplicationController
       @thank_you.update_column(:hearted_at, Time.current)
       Activity.record(event: @event, guest: @thank_you.guest, action: "thank_you_hearted", data: { name: @thank_you.recipient_name })
     end
-    redirect_to thank_you_page_path(params[:token]), notice: "Sent with love."
+    redirect_to thank_you_page_path(params[:token]), notice: helpers.gt("thank_you.sent_love")
   end
 
   private

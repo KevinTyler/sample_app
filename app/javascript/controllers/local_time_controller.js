@@ -2,17 +2,17 @@ import { Controller } from "@hotwired/stimulus"
 
 // Shows the event start time in the guest's own time zone when it differs from the event's.
 export default class extends Controller {
-  static values = { iso: String, zone: String }
+  static values = { iso: String, zone: String, template: { type: String, default: "That's %{time} where you are." }, locale: String }
 
   connect() {
     const viewerZone = Intl.DateTimeFormat().resolvedOptions().timeZone
     if (!this.isoValue || !viewerZone || viewerZone === this.zoneValue) return
 
     const date = new Date(this.isoValue)
-    const formatted = new Intl.DateTimeFormat(undefined, {
+    const formatted = new Intl.DateTimeFormat(this.localeValue || undefined, {
       weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short"
     }).format(date)
-    this.element.textContent = `That's ${formatted} where you are.`
+    this.element.textContent = this.templateValue.replace("%{time}", formatted)
     this.element.hidden = false
   }
 }

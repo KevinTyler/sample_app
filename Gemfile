@@ -26,6 +26,9 @@ gem "rqrcode", "~> 3.0"
 # Claude, for the texting assistant (set ANTHROPIC_API_KEY; without it a guided step-by-step assistant runs).
 gem "anthropic", "~> 1.78"
 
+# Month and day names, number formats, etc. for the guest-facing languages.
+gem "rails-i18n", "~> 8.0"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 

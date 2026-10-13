@@ -1,10 +1,11 @@
 <% content_for :start_from, @event.share_token unless @preview || !@event.published? %>
 <% content_for :title, @event.title %>
+<% content_for :language_switch, "1" %>
 <% design = @event.design_settings %>
 
 <% if @event.cancelled? %>
   <div class="guest-banner guest-banner--cancelled" role="status">
-    <strong>This event has been cancelled.</strong>
+    <strong><%= gt("show.cancelled") %></strong>
     <% if @event.cancellation_note.present? %><p class="mt-xs m-0"><%= @event.cancellation_note %></p><% end %>
   </div>
 <% end %>
@@ -13,36 +14,36 @@
 
 <section class="guest-panel" id="rsvp" aria-labelledby="rsvp-heading" data-controller="rsvp-form">
   <% if open_rsvp? %>
-    <h2 id="rsvp-heading">Will you be there?</h2>
+    <h2 id="rsvp-heading"><%= gt("public.will_you_be_there") %></h2>
     <% if (deadline = deadline_text(@event)) %><p class="small muted"><%= deadline %>.</p><% end %>
-    <p class="small muted">Already have a personal invitation link? Use that instead to update your RSVP.</p>
+    <p class="small muted"><%= gt("public.use_personal_link") %></p>
     <%= form_with model: @rsvp, scope: :rsvp, url: public_event_rsvp_path(params[:share_token]), method: :post, class: "form" do |f| %>
-      <%= form_errors(@rsvp) %>
+      <%= form_errors(@rsvp, title: gt("errors.form_title"), full: false) %>
       <div class="form-row form-row--2">
         <div class="field">
-          <%= f.label :name, "Your name" %>
+          <%= f.label :name, gt("public.your_name") %>
           <%= f.text_field :name, required: true, maxlength: 100, autocomplete: "name" %>
         </div>
         <div class="field">
-          <%= f.label :email, "Email" %>
+          <%= f.label :email, gt("public.email") %>
           <%= f.email_field :email, required: true, maxlength: 254, autocomplete: "email" %>
-          <p class="field__hint">We'll email you a personal link to change your RSVP.</p>
+          <p class="field__hint"><%= gt("public.email_hint") %></p>
         </div>
       </div>
       <%= render "guest_invitations/rsvp_fields", f: f, rsvp: @rsvp, event: @event,
             guest: Guest.new(event: @event, plus_ones_allowed: @event.default_plus_ones) %>
       <div class="form-actions">
-        <%= f.submit "Send my RSVP", class: "btn btn--primary btn--block", data: { turbo_submits_with: "Saving…" } %>
+        <%= f.submit gt("form.send"), class: "btn btn--primary btn--block", data: { turbo_submits_with: gt("form.saving") } %>
       </div>
     <% end %>
   <% elsif @event.cancelled? %>
-    <h2 id="rsvp-heading">RSVPs are closed</h2>
+    <h2 id="rsvp-heading"><%= gt("show.closed") %></h2>
   <% elsif @event.allow_link_rsvp %>
-    <h2 id="rsvp-heading">RSVPs are closed</h2>
-    <p class="muted m-0">The RSVP deadline has passed.</p>
+    <h2 id="rsvp-heading"><%= gt("show.closed") %></h2>
+    <p class="muted m-0"><%= gt("public.deadline_passed") %></p>
   <% else %>
-    <h2 id="rsvp-heading">RSVP with your personal link</h2>
-    <p class="muted m-0">This event is invitation-only. Use the personal link from your invitation email to RSVP, or contact <%= @event.display_host_name %>.</p>
+    <h2 id="rsvp-heading"><%= gt("public.personal_title") %></h2>
+    <p class="muted m-0"><%= gt("public.personal_body", host: @event.display_host_name) %></p>
   <% end %>
 </section>
 

@@ -35,6 +35,7 @@ class Event < ApplicationRecord
     "announcement" => { name: "Announcement", summary: "Share news — no replies needed" }
   }.freeze
   MAX_PHOTOS = 12
+  LOCALES = { "en" => "English", "es" => "Español", "pt-BR" => "Português (Brasil)", "fr" => "Français", "hi" => "हिन्दी" }.freeze
   CURRENCIES = {
     "usd" => { symbol: "$", name: "US dollar" }, "cad" => { symbol: "$", name: "Canadian dollar" },
     "eur" => { symbol: "€", name: "Euro" }, "gbp" => { symbol: "£", name: "British pound" },
@@ -61,6 +62,7 @@ class Event < ApplicationRecord
     allow_nil: true
   validates :starts_at, presence: { message: "is required before publishing" }, unless: -> { draft? || announcement? }
   validates :card_type, inclusion: { in: CARD_TYPES.keys }
+  validates :locale, inclusion: { in: LOCALES.keys }
   validate :photos_are_acceptable
   validate :time_zone_must_exist
   validate :local_times_must_parse

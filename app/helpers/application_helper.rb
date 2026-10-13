@@ -13,13 +13,20 @@ module ApplicationHelper
     end)
   end
 
-  def form_errors(record)
+  # `full: false` lists bare messages, for models whose messages are already whole sentences.
+  def form_errors(record, title: "Please fix the following:", full: true)
     return if record.errors.empty?
 
+    messages = full ? record.errors.full_messages : record.errors.map(&:message)
     tag.div(class: "form-errors", role: "alert") do
-      tag.p("Please fix the following:", class: "form-errors__title") +
-        tag.ul(safe_join(record.errors.full_messages.uniq.map { |m| tag.li(m) }))
+      tag.p(title, class: "form-errors__title") +
+        tag.ul(safe_join(messages.uniq.map { |m| tag.li(m) }))
     end
+  end
+
+  # Guest-facing text, in the event's language (see config/locales/guest.*.yml).
+  def gt(key, **options)
+    t("guest.#{key}", **options)
   end
 
   def nav_link(label, path, active: current_page?(path), **options)

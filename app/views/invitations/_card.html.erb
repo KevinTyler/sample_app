@@ -3,7 +3,7 @@
 <% photo = event.artwork if event.artwork.attached? && event.artwork.blob&.persisted? %>
 <% target = ->(name) { editor ? { design_editor_target: name } : {} } %>
 <%= tag.article id: card_id, class: [ "invite-card", "invite-card--#{design.layout}" ],
-      data: { heading_font: design.heading_font, **target.("card") }, aria: { label: "Invitation for #{event.title}" } do %>
+      data: { heading_font: design.heading_font, **target.("card") }, aria: { label: gt("card.aria", title: event.title) } do %>
   <% if design.artwork && lookup_context.exists?(design.artwork, [ "invitation_artworks" ], true) %>
     <%= tag.div class: [ "invite-art", "invite-art--#{design.artwork}" ], aria: { hidden: true }, data: { artwork: design.artwork } do %>
       <%= render "invitation_artworks/#{design.artwork}" %>
@@ -12,7 +12,7 @@
   <% if photo && design.photo_style == "background" %>
     <figure class="invite-card__photo invite-card__photo--background"><%= image_tag url_for(photo), alt: "" %></figure>
   <% end %>
-  <% if event.cancelled? %><div class="invite-card__stamp">CANCELLED</div><% end %>
+  <% if event.cancelled? %><div class="invite-card__stamp"><%= gt("card.cancelled") %></div><% end %>
   <div class="invite-card__inner">
     <% if photo && design.photo_style != "background" %>
       <figure class="invite-card__photo invite-card__photo--<%= design.layout == "split" ? "banner" : design.photo_style %>"><%= image_tag url_for(photo), alt: "Invitation artwork" %></figure>
@@ -26,6 +26,6 @@
       <% if (place = event_where(event)).present? %><p class="invite-card__where"><%= place %></p><% end %>
     <% end %>
     <%= tag.p design.message, class: "invite-card__message", hidden: design.message.blank?, data: target.("message") %>
-    <p class="invite-card__host">Hosted by <%= event.display_host_name %></p>
+    <p class="invite-card__host"><%= gt("card.hosted_by", host: event.display_host_name) %></p>
   </div>
 <% end %>

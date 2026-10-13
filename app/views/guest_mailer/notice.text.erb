@@ -1,35 +1,31 @@
+<% host = @event.display_host_name -%>
 <% if @message.kind == "invitation" -%>
-<%= @event.display_host_name %> invited you: <%= @event.title %>
+<%= t("guest.sms.invitation", host: host, title: @event.title) %>
 <% elsif @message.kind == "save_the_date" -%>
-Save the date! <%= @event.display_host_name %>: <%= @event.title %>
+<%= t("guest.sms.save_the_date", host: host, title: @event.title) %>
 <% else -%>
 <%= @message.subject_line %>
 <% end -%>
 
 <% if @event.starts_at -%>
-When:  <%= event_when(@event) %>
+<%= t("guest.mail.when") %> <%= event_when(@event) %>
 <% end -%>
 <% if (place = event_where(@event)).present? -%>
-Where: <%= place %>
+<%= t("guest.mail.where") %> <%= place %>
 <% end -%>
 
-Hi <%= @guest.first_name %>,
+<%= t("guest.mail.hi", name: @guest.first_name) %>
 
 <% if @message.body.present? -%>
 <%= @message.body %>
-<% elsif @message.kind == "invitation" -%>
-You're invited! Open your invitation to see the details and RSVP.
-<% elsif @message.kind == "save_the_date" -%>
-Please save the date — a formal invitation will follow.
-<% elsif @message.kind == "announcement" -%>
-<%= @event.display_host_name %> has news to share with you.
-<% elsif @message.kind == "cancellation" -%>
-Unfortunately this event has been cancelled.
+<% elsif @message.kind.in?(%w[invitation save_the_date announcement cancellation]) -%>
+<%= t("guest.mail.body_#{@message.kind}", host: host) %>
 <% end -%>
 
-Your invitation: <%= @url %>
-(This link is personal to you.<% if @event.collects_replies? %> You can use it to change your RSVP later.<% end %>)
+<%= t("guest.mail.your_invitation") %> <%= @url %>
+(<%= t("guest.mail.personal") %><% if @event.collects_replies? %> <%= t("guest.mail.change_later") %><% end %>)
 
 --
-Sent with Cordially on behalf of <%= @event.display_host_name %>. Reply to reach the host.
-Stop messages about this event: <%= @url %> (choose "Stop emails")
+<%= t("guest.mail.sent_on_behalf", host: host) %>
+<%= t("guest.mail.stop") %>
+<%= @url %>

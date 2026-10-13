@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= I18n.locale %>">
   <head>
-    <title><%= content_for(:title) || "You're invited" %></title>
+    <title><%= content_for(:title) || gt("layout.default_title") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="theme-color" content="#15132b">
     <meta name="robots" content="noindex, nofollow">
@@ -21,7 +21,14 @@
         <%= yield :guest_footer %>
         <%= link_to (content_for?(:start_from) ? start_path(from: content_for(:start_from).strip) : root_path), class: "host-cta" do %>
           <%= render "shared/brand_mark" %>
-          <span><strong>Hosting something?</strong><span class="small muted">Make one like this with Cordially — start from this design.</span></span>
+          <span><strong><%= gt("layout.host_cta_title") %></strong><span class="small muted"><%= gt("layout.host_cta_body") %></span></span>
+        <% end %>
+        <% if content_for?(:language_switch) %>
+          <nav class="lang-switch" aria-label="<%= gt("layout.language") %>">
+            <% Event::LOCALES.each do |code, name| %>
+              <%= link_to name, url_for(lang: code), lang: code, hreflang: code, class: ("is-active" if I18n.locale.to_s == code), aria: { current: (I18n.locale.to_s == code ? "true" : nil) } %>
+            <% end %>
+          </nav>
         <% end %>
       </footer>
     </main>

@@ -127,16 +127,10 @@ class Message < ApplicationRecord
     subject.presence || default_subject
   end
 
+  # In the current locale: guest emails are composed inside the event's language.
   def default_subject
-    case kind
-    when "invitation" then "You're invited: #{event.title}"
-    when "save_the_date" then "Save the date: #{event.title}"
-    when "announcement" then "#{event.title} — news from #{event.display_host_name}"
-    when "cancellation" then "Cancelled: #{event.title}"
-    when "reminder" then "Reminder: #{event.title}"
-    when "rsvp_confirmation" then "Your RSVP link: #{event.title}"
-    else "Update: #{event.title}"
-    end
+    key = kind.presence_in(%w[invitation save_the_date announcement cancellation reminder rsvp_confirmation]) || "update"
+    I18n.t("guest.mail.subject_#{key}", title: event.title, host: event.display_host_name)
   end
 
   def delivery_counts

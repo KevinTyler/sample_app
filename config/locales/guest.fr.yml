@@ -1,0 +1,235 @@
+# Guest-facing text (invitation pages, RSVP form, emails, SMS). Generated from one table so every
+# language has every key; hi/fr/es/pt-BR were drafted for Cordially — have a native speaker review before launch.
+fr:
+  guest:
+    layout:
+      default_title: Vous êtes invité
+      host_cta_title: Vous organisez quelque chose ?
+      host_cta_body: Créez la vôtre avec Cordially, à partir de ce modèle.
+      language: Langue
+      stopped_emails: Vous ne recevrez plus d'e-mails pour cet événement.
+      stop_emails: Ne plus recevoir d'e-mails pour cet événement
+      stop_emails_confirm: Ne plus recevoir d'e-mails pour cet événement ? Votre réponse reste inchangée.
+    show:
+      preview_banner: 'Aperçu : voici ce que voit %{name}. Rien de ce que vous faites ici n''est enregistré.'
+      a_guest: un invité
+      cancelled: Cet événement a été annulé.
+      status_yes: Vous venez !
+      status_no: Vous ne pouvez pas venir
+      status_maybe: Vous viendrez peut-être
+      party_of: groupe de %{count}
+      replied_ago: réponse il y a %{time}
+      your_note: 'Votre mot :'
+      change_response: Modifier votre réponse
+      closed_contact_host: Les réponses sont closes. Pour changer la vôtre, répondez à l'e-mail d'invitation pour contacter l'hôte.
+      will_you_be_there: Serez-vous là, %{name} ?
+      full: Cet événement est complet pour l'instant — vous pouvez quand même prévenir l'hôte.
+      spots_left:
+        one: Il ne reste qu'une place.
+        other: Il ne reste que %{count} places.
+      closed: Les réponses sont closes
+      closed_deadline: La date limite de réponse est passée. Répondez à l'e-mail d'invitation pour contacter l'hôte.
+      save_the_date: Réservez la date
+      date_tba: Date à venir
+      formal_to_follow: '%{host} enverra bientôt l''invitation officielle. Ajoutez-la à votre agenda pour réserver la date.'
+      tickets: Billets
+      tickets_count:
+        one: 1 billet
+        other: '%{count} billets'
+      already_paid: '%{amount} déjà payé'
+      paid_refresh: Merci ! Si vous venez de payer, la confirmation peut prendre quelques secondes — actualisez la page.
+      pay: Payer %{amount}
+      secure_checkout: Paiement sécurisé. Votre place est réservée pendant le paiement.
+      paid: Payé
+      paid_for: '%{amount} pour %{tickets}. À bientôt !'
+      pass_title: Votre pass d'entrée
+      pass_alt: QR code d'entrée de %{name}
+      pass_hint: Présentez-le à l'entrée pour un accueil rapide.
+      checked_in: Arrivé
+      schedule: Le programme
+      schedule_yes: Vous venez
+      schedule_no: Vous ne venez pas
+      updates: Nouvelles de l'hôte
+      guestbook_title: Petits mots pour %{host}
+      guestbook_preview: Les invités peuvent laisser un mot ici pour vous et pour les autres.
+      guestbook_label: Laissez un mot
+      guestbook_placeholder: Hâte de faire la fête !
+      guestbook_submit: Signer le livre d'or
+      ago: il y a %{time}
+    form:
+      update: Mettre à jour ma réponse
+      send: Envoyer ma réponse
+      saving: Enregistrement…
+      will_you_attend: Serez-vous présent ?
+      choice_yes: Accepte avec joie
+      choice_maybe: Peut-être
+      choice_no: Décline avec regret
+      tickets_note: Les billets coûtent %{price} par personne, à régler après votre réponse.
+      adults: Adultes
+      kids: Enfants
+      fewer: Moins de %{what}
+      more: Plus de %{what}
+      party_size: Combien serez-vous (vous compris) ?
+      up_to:
+        one: Cette invitation est pour 1 personne.
+        other: Cette invitation est valable pour %{count} personnes maximum.
+      whos_coming: Qui vient avec vous ?
+      names_help: (les noms aident pour le plan de table)
+      guest_name_placeholder: Nom de l'invité %{n}
+      which_parts: Auxquels participerez-vous ?
+      optional: (facultatif)
+      choose_one: Choisissez…
+      only_if_coming: Seulement si vous venez.
+      note_for_host: Un mot pour l'hôte
+    details:
+      title: Détails
+      when: Quand
+      where: Où
+      map: Plan
+      join_online: Rejoindre en ligne
+      video_private: Le lien vidéo est communiqué aux invités dans leur invitation personnelle.
+      host: Hôte
+      whos_coming: Qui vient
+      guests_so_far:
+        one: 1 invité pour l'instant
+        other: '%{count} invités pour l''instant'
+      from_host: De la part de l'hôte
+      add_to_calendar: Ajouter à votre agenda
+      local_time: Soit %{time} chez vous.
+      deadline: Merci de répondre avant le %{date} à %{time}
+      online: En ligne
+    card:
+      hosted_by: Organisé par %{host}
+      cancelled: ANNULÉ
+      aria: Invitation pour %{title}
+      the_details: Les détails
+      video_call: Lien de la visio
+      with_love: Avec affection, %{host}
+      flip: Retournez pour les détails
+      flip_back: Revenir au recto
+      photos: Photos
+      photo_alt: Photo %{n} sur %{count}
+    public:
+      will_you_be_there: Serez-vous là ?
+      use_personal_link: Vous avez déjà un lien d'invitation personnel ? Utilisez-le pour modifier votre réponse.
+      your_name: Votre nom
+      email: E-mail
+      email_hint: Nous vous enverrons un lien personnel pour modifier votre réponse.
+      deadline_passed: La date limite de réponse est passée.
+      personal_title: Répondez avec votre lien personnel
+      personal_body: Cet événement est sur invitation. Utilisez le lien personnel de votre e-mail d'invitation pour répondre, ou contactez %{host}.
+    thank_you:
+      for: Pour %{name}
+      thank: Merci
+      you: beaucoup !
+      video_label: Vidéo de remerciement
+      photo_alt: Photo de remerciement
+      photo_alt_gift: Photo de remerciement avec %{gift}
+      for_gift_html: 'pour : %{gift}'
+      hearted: Vous avez envoyé un cœur
+      heart: Envoyer un cœur
+      save_video: Enregistrer la vidéo
+      save_photo: Enregistrer la photo
+      from: De la part de %{host}, après %{title}
+      sent_love: Envoyé avec affection.
+    flash:
+      'yes': Super — vous êtes sur la liste ! Votre réponse est enregistrée.
+      maybe: Merci d'avoir prévenu l'hôte. Vous pouvez modifier votre réponse avant la date limite.
+      'no': Merci d'avoir prévenu l'hôte. Votre réponse est enregistrée.
+      pay_next: 'Vous êtes sur la liste ! Dernière étape : réglez ci-dessous pour confirmer vos billets.'
+      guestbook_thanks: Merci — votre mot est dans le livre d'or.
+      unsubscribed: Vous ne recevrez plus de messages pour cet événement. Votre réponse reste inchangée.
+      too_many: Trop de tentatives. Patientez quelques minutes et réessayez.
+      too_many_rsvps: Trop de réponses depuis cette connexion. Réessayez plus tard.
+      too_many_notes: Que de petits mots ! Réessayez plus tard.
+      invitation_only: Les réponses à cet événement se font sur invitation.
+      nothing_to_pay: Rien à payer — tout est en ordre.
+      payment_failed: Impossible de lancer le paiement pour l'instant. Réessayez dans un moment.
+      link_sent: Votre réponse est enregistrée ! Nous vous avons envoyé ce lien personnel par e-mail pour la modifier plus tard.
+      check_email: Vous êtes déjà sur la liste des invités — nous avons envoyé votre lien de réponse personnel à cette adresse.
+    errors:
+      choose_response: Veuillez choisir une réponse
+      no_maybe: « Peut-être » n'est pas possible pour cet événement
+      need_adult: Indiquez au moins un adulte
+      party_min: Votre groupe doit compter au moins 1 personne
+      party_max:
+        one: Cette invitation est pour une personne
+        other: Cette invitation est valable pour %{count} personnes maximum
+      cancelled: Cet événement a été annulé.
+      no_replies: Cette carte n'attend pas de réponse.
+      not_open: Cet événement n'accepte pas encore de réponses.
+      deadline_passed: La date limite est passée. Contactez l'hôte pour modifier votre réponse.
+      full: Désolé — cet événement est complet.
+      spots_left:
+        one: Il ne reste qu'une place. Réduisez votre groupe.
+        other: Il ne reste que %{count} places. Réduisez votre groupe.
+      answer_required: 'Veuillez répondre : %{question}'
+      answer_too_long: Votre réponse à « %{question} » est trop longue
+      answer_choice: 'Choisissez une des réponses proposées pour : %{question}'
+      names_too_long: Chaque nom doit faire moins de 80 caractères
+      pick_a_part: Choisissez au moins un des moments, ou répondez Non
+      note_too_long: Votre mot est trop long (1 000 caractères max.)
+      form_title: 'Veuillez corriger :'
+      guestbook_blank: Votre mot ne peut pas être vide.
+      guestbook_long: Votre mot est trop long (500 caractères maximum).
+      name_required: Indiquez votre nom
+      email_invalid: Indiquez une adresse e-mail valide
+    invalid:
+      title: Invitation introuvable
+      body: Ce lien est peut-être incomplet ou périmé. Rouvrez-le depuis l'e-mail d'invitation ou demandez un nouveau lien à l'hôte.
+    unavailable:
+      title: Cette invitation n'est pas encore disponible
+      body: L'hôte y apporte encore les dernières touches. Revenez bientôt.
+    mail:
+      invited_you: '%{host} vous invite'
+      label_save_the_date: Réservez la date
+      label_announcement: Des nouvelles de %{host}
+      label_update: Une nouvelle
+      label_reminder: Un rappel
+      label_cancellation: Événement annulé
+      label_rsvp_confirmation: Votre lien de réponse
+      hi: Bonjour %{name},
+      body_invitation: Vous êtes invité ! Ouvrez votre invitation pour voir les détails et dire à %{host} si vous venez.
+      body_save_the_date: '%{host} serait ravi que vous réserviez la date. L''invitation officielle suivra.'
+      body_announcement: '%{host} a une nouvelle à partager avec vous.'
+      body_cancellation: Malheureusement, cet événement a été annulé.
+      button_invitation: Voir l'invitation et répondre
+      button_save_the_date: Voir le faire-part
+      button_open: Ouvrir la carte
+      button_rsvp_confirmation: Voir ou modifier votre réponse
+      button_view: Voir l'invitation
+      personal: Ce lien vous est personnel — merci de ne pas le transférer.
+      change_later: Il vous permet de modifier votre réponse plus tard.
+      sent_on_behalf: Envoyé avec Cordially de la part de %{host}. Répondez pour joindre l'hôte.
+      stop: Ne plus recevoir de messages pour cet événement
+      subject_invitation: 'Vous êtes invité : %{title}'
+      subject_save_the_date: 'Réservez la date : %{title}'
+      subject_announcement: '%{title} — des nouvelles de %{host}'
+      subject_cancellation: 'Annulé : %{title}'
+      subject_reminder: 'Rappel : %{title}'
+      subject_rsvp_confirmation: 'Votre lien de réponse : %{title}'
+      subject_update: 'Nouvelle : %{title}'
+      when: 'Quand :'
+      where: 'Où :'
+      your_invitation: 'Votre invitation :'
+      manage: Gérer votre réponse
+      stop_hint: Vous ne souhaitez plus recevoir de messages pour cet événement ? Ouvrez votre invitation et choisissez « Ne plus recevoir d'e-mails ».
+      link_existing: Voici votre lien personnel pour voir l'invitation et modifier votre réponse.
+      link_created: Merci pour votre réponse ! Utilisez ce lien à tout moment pour voir l'invitation ou modifier votre réponse.
+    sms:
+      invitation: '%{host} vous invite à %{title}.'
+      save_the_date: 'Réservez la date ! %{host} : %{title}.'
+      announcement: 'Des nouvelles de %{host} : %{title}.'
+      cancellation: '%{title} a été annulé.'
+      reminder: 'Rappel : %{title}'
+      update: Du nouveau pour %{title}
+      details_rsvp: Détails et réponse
+      open_card: Ouvrir la carte
+      stop: Répondez STOP pour vous désabonner.
+  time:
+    formats:
+      guest_day: '%A %-d %B %Y'
+      guest_weekday: '%A %-d %B'
+      guest_day_short: '%a %-d %b'
+      guest_clock: '%H h %M'
+      guest_clock_hour: '%H h'

@@ -332,6 +332,24 @@ back as they arrive, and thank-yous afterwards.
   `ANTHROPIC_API_KEY` is set). The landing page and dashboard show "make one by text" when
   `ASSISTANT_PHONE_NUMBER` / `ASSISTANT_WHATSAPP_NUMBER` are set (or the dev simulator in development).
 
+### ✅ Stage 13 — languages, wedding weekends, "make one like this"
+
+- **Guest pages in five languages**: English, Spanish, Brazilian Portuguese, French and Hindi. The host
+  picks the language guests see (*Settings → Language guests see*); the invitation, reply form, error
+  messages, public RSVP page, thank-you page, emails, subjects and SMS/WhatsApp texts all follow it,
+  with dates and times in that language's style. Guests can switch with the language links at the foot of
+  the page (`?lang=xx`, remembered in a cookie). The card's own words stay as the host wrote them; the
+  host's workspace stays in English. Strings live in `config/locales/guest.*.yml`, one key set per
+  language (a spec checks they match). The non-English text was drafted for Cordially — **have native
+  speakers review it before launch.**
+- **Multi-part events** (event sidebar → *Schedule*): a wedding weekend's mehndi, sangeet, ceremony and
+  reception, each with its own time and place. Limit a part to guest groups (e.g. family only); guests see
+  just their parts and tick which they'll attend, and the host sees counts per part.
+- **Make one like this**: every guest page ends with "Hosting something?". It starts a new event from the
+  same design — template, colors, fonts, envelope — never the host's words, photos or guests. Visitors
+  without an account sign up first and land in the design studio with their copy (`inspired_by_event` is
+  recorded, so you can measure how many cards come from other cards).
+
 ## Architecture
 
 | Area | Where |
@@ -470,7 +488,9 @@ Queue either in Puma (`SOLID_QUEUE_IN_PUMA=1`) or as a separate `bin/jobs` proce
 - **SMS**: only Twilio is implemented; numbers must be stored in E.164 form. Consent is the host's
   responsibility.
 - **Accessibility & i18n**: pages use semantic HTML, labels, focus styles and reduced-motion handling,
-  but haven't had a formal audit; all copy is English.
+  but haven't had a formal audit. Guest-facing copy is translated (Stage 13, pending native review); the
+  host workspace and the texting assistant's guided mode are English only. Right-to-left languages
+  aren't supported yet.
 - **Not built**: guest-to-guest features (public guest lists, comments), seating charts, refunds,
   recurring events, and a native app.
 - Rate limits use Rails' built-in limiter backed by the cache store (Solid Cache in production);

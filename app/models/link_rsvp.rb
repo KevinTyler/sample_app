@@ -20,8 +20,7 @@ class LinkRsvp
   attr_accessor :event, :answers, :plus_one_names, :schedule
   attr_reader :guest, :outcome
 
-  validates :name, presence: true, length: { maximum: 100 }
-  validates :email, presence: true, length: { maximum: 254 }, format: { with: EmailFormat::REGEXP }
+  validate :name_and_email_present
 
   def plus_one_names
     Array(@plus_one_names)
@@ -37,7 +36,7 @@ class LinkRsvp
     if (existing = event.guests.find_by(email: email.strip.downcase))
       @guest = existing
       @outcome = :existing
-      email_personal_link(existing, "Here's your personal link to view the invitation and update your RSVP.")
+      email_personal_link(existing, I18n.t("guest.mail.link_existing"))
       return true
     end
 
@@ -54,13 +53,19 @@ class LinkRsvp
     return copy_errors(rsvp) if rsvp.errors.any?
 
     @outcome = :created
-    email_personal_link(@guest, "Thanks for your RSVP! Use this link any time to view the invitation or change your response.")
+    email_personal_link(@guest, I18n.t("guest.mail.link_created"))
     true
   end
 
   private
+    def name_and_email_present
+      errors.add(:base, I18n.t("guest.errors.name_required")) if name.blank? || name.length > 100
+      errors.add(:base, I18n.t("guest.errors.email_invalid")) unless email.to_s.length <= 254 && email.to_s.match?(EmailFormat::REGEXP)
+    end
+
+    # RSVP messages are whole sentences already; the guest's own are standard Rails ones, so keep their field name.
     def copy_errors(record)
-      record.errors.each { |error| errors.add(error.attribute == :base ? :base : error.attribute, error.message) }
+      record.errors.each { |error| errors.add(error.attribute, record.is_a?(Guest) ? error.full_message : error.message) }
       false
     end
 
