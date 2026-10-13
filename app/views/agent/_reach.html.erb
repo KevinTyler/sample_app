@@ -1,0 +1,11 @@
+<%# locals: (user:) %>
+<div class="phone-link">
+  <% if (phone = user.texting_conversation) %>
+    <p class="small m-0">Your phone (<%= masked_phone(phone.address) %>) is connected. <%= user.agent_reach == "text" ? "I'll text you when something needs you" : "I'll #{user.agent_reach == 'email' ? 'email you' : 'keep things here'} when something needs you" %> — and you can text me any time. <%= link_to "Change", edit_account_path %></p>
+  <% elsif Assistant.texting_number %>
+    <p class="small mt-0">I'll email <%= user.email_address %> when something needs you. Rather get a text — and be able to text me back?</p>
+    <%= button_to agent_phone_link_path, class: "btn btn--small" do %><%= icon(:phone, size: 16) %>Connect my phone<% end %>
+  <% else %>
+    <p class="small m-0">I'll <%= user.agent_reach == "off" ? "keep things here" : "email #{user.email_address}" %> when something needs you. <%= link_to "Change", edit_account_path %></p>
+  <% end %>
+</div>

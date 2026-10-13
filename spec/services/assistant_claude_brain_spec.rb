@@ -75,6 +75,40 @@ RSpec.describe Assistant::ClaudeBrain do
     expect(event.messages).to be_empty
   end
 
+  it "reads a guest list dropped into the web chat, and knows what's waiting on the host" do
+    web = AssistantConversation.for_web(user)
+    event = create(:event, :published, owner: user, title: "Book club")
+    proposal = user.agent_proposals.create!(event: event, kind: "nudge_pending", dedupe_key: "n1", title: "2 guests haven't replied to Book club",
+      action_label: "Send the nudge")
+    blob = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("Name,Email,RSVP\nAna Lima,ana@example.com,Yes\n"), filename: "list.csv", content_type: "text/csv")
+    inbound = web.messages.create!(direction: "in", body: "from paperless post",
+      media: [ { "url" => "blob:#{blob.signed_id}", "content_type" => "text/csv", "filename" => "list.csv" } ])
+    requests = []
+    stub_request(:post, api).to_return(
+      lambda { |request|
+        requests << JSON.parse(request.body)
+        { status: 200, headers: { "Content-Type" => "application/json" },
+          body: api_message([ { type: "tool_use", id: "toolu_2", name: "read_guest_list", input: {} } ], "tool_use") }
+      },
+      lambda { |request|
+        requests << JSON.parse(request.body)
+        { status: 200, headers: { "Content-Type" => "application/json" },
+          body: api_message([ { type: "text", text: "One person, and Ana already said yes. Recreate the event?" } ], "end_turn") }
+      }
+    )
+
+    brain = described_class.new(web, inbound, client: client)
+    expect(brain.reply).to include("Recreate the event?")
+    import = user.contact_imports.sole
+    expect(brain.cards).to eq([ { "type" => "import", "import_id" => import.id } ])
+
+    context = requests.first["messages"].last["content"].first["text"]
+    expect(context).to include("Channel: web chat", "proposal #{proposal.id}: 2 guests haven't replied", "Usual settings: New events: hosted by Maria Lopez")
+    expect(requests.first["messages"].last["content"].last["text"]).to include("[attached list.csv — a guest list or contacts file]")
+    expect(requests.first["tools"].map { |t| t["name"] }).to include("read_guest_list", "apply_guest_list", "invite_contacts", "approve_proposal", "update_preferences")
+    expect(requests.last["messages"].last["content"].first["content"].to_s).to include("Import #{import.id} is ready", "1 yes")
+  end
+
   it "answers a refusal politely" do
     stub_request(:post, api).to_return(status: 200, headers: { "Content-Type" => "application/json" },
       body: api_message([], "refusal"))

@@ -1,0 +1,5 @@
+<% content_for :title, "Connect your phone" %>
+<div class="container--form container--flush">
+  <%= link_to "Today", agent_path, class: "back-link" %>
+  <div class="panel mt-s phone-link"><%= render "phone_links/code", code: @code, number: @number %></div>
+</div>

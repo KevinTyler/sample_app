@@ -4,7 +4,7 @@ RSpec.describe "Registrations", type: :request do
   it "creates an account and signs the user in" do
     post registration_path, params: { user: { name: "Sam", email_address: "SAM@example.com",
       password: "long-enough-pw", password_confirmation: "long-enough-pw" } }
-    expect(response).to redirect_to(events_path)
+    expect(response).to redirect_to(agent_path)
     expect(User.last.email_address).to eq("sam@example.com")
   end
 

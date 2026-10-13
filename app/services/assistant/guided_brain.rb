@@ -1,11 +1,21 @@
 module Assistant
-  # A step-by-step texting assistant that needs no AI provider: it walks a host through name →
-  # email → what's the occasion → when → where → design → guests → SEND, plus STATUS, EDIT, NEW,
-  # and thank-yous (text a photo or video, say who it's for, reply SEND). Used when
+  # A step-by-step agent that needs no AI provider: it walks a host through name → email → what's
+  # the occasion → when → where → design → guests → SEND, plus STATUS, EDIT, NEW, thank-yous (send a
+  # photo or video, say who it's for, reply SEND), guest-list files (send a spreadsheet or contacts
+  # file, reply RECREATE / ADD / CONTACTS), and YES/NO to things the agent proposed. Used when
   # ANTHROPIC_API_KEY isn't set — in development, in tests, or as a fallback.
   class GuidedBrain
     PICKS = %w[confetti-burst balloon-bunch garden-arch deco-fan starlit festival-lights meadow seaside].freeze
-    COMMANDS = "Text NEW for a new card, STATUS for replies, EDIT to fine-tune the design on the web, GUESTS to add people, SEND to send it, or a photo/video for a thank-you."
+    COMMANDS = "Say NEW for a new card, STATUS for replies, EDIT to fine-tune the design, GUESTS to add people, SEND to send it, " \
+               "TODO for anything that needs you, or send a guest-list spreadsheet, a contacts file, or a photo/video for a thank-you."
+    NEGATIVE = /\A\s*(no|nope|nah|not now|later|skip|don'?t|dismiss)\b/i
+    INTENTS = {
+      /\b(paperless|import|bring (over|my|in)|switch(ing)?|spreadsheet|address book|contacts? file)\b/i => :import_help,
+      /\b(plan|new (card|event|invitation)|make (a|an|another) (card|invitation)|something new)\b/i => :new,
+      /\b(who.*(replied|coming)|status|replies|headcount)\b/i => :status,
+      /\b(needs? me|to ?do|anything (for|to do))\b/i => :proposals,
+      /\bthank/i => :thanks_help
+    }.freeze
 
     def initialize(conversation, inbound)
       @conversation = conversation
@@ -13,22 +23,32 @@ module Assistant
       @actions = Actions.new(conversation, inbound: inbound)
     end
 
+    def cards = @actions.cards
+
     def reply
       text = @inbound.body.to_s.strip
       command = text.upcase.gsub(/[^A-Z ]/, "").strip
 
-      return start_thank_you if @inbound.media.any? && @conversation.user && @actions.event
+      return read_file if @inbound.import_files.any? && @conversation.user
+      return start_thank_you if @inbound.photos_and_videos.any? && @conversation.user && @actions.event
       return COMMANDS if command.in?(%w[HELP MENU COMMANDS])
       return account_step(text) unless @conversation.user
+      return answer_proposal(@proposal, text) if (@proposal = proposal_in_question) && (text.match?(Actions::AFFIRMATIVE) || text.match?(NEGATIVE))
 
       case command
+      when "RECREATE", "RECREATE IT" then apply_import("new_event")
+      when "ADD", "ADD THEM" then apply_import("current_event")
+      when "CONTACTS", "IMPORT", "SAVE", "JUST CONTACTS" then apply_import("contacts")
+      when "TODO", "TO DO" then actions.list_proposals
+      when "SETTINGS" then "Your usual settings: #{actions.preferences_summary} Change them under Settings, or on the Switching page if you're coming from Paperless Post."
+      when "CONNECT", "TEXT ME" then actions.connect_phone
       when "NEW", "NEW CARD", "START" then step!("ask_title", "What are we celebrating? (e.g. \"Jonah's 5th birthday\")")
       when "STATUS" then @actions.status
       when "EDIT", "DESIGN" then "Fine-tune it here: #{@actions.web_link(page: 'design')}"
       when "GUESTS" then step!("ask_guests", guests_prompt)
       when "SEND", "SEND IT", "YES"
         @conversation.stage == "thanks_send" ? send_thank_you : send_cards
-      else stage_step(text)
+      else intent_step(text) || stage_step(text)
       end
     rescue Error => e
       e.message
@@ -36,6 +56,52 @@ module Assistant
 
     private
       attr_reader :actions
+
+      # Plain-language requests when we're not in the middle of a step.
+      def intent_step(text)
+        return unless @conversation.stage.in?([ nil, "ready", "sent" ])
+
+        case INTENTS.find { |pattern, _| text.match?(pattern) }&.last
+        when :new then step!("ask_title", "What are we celebrating? (e.g. \"Jonah's 5th birthday\")")
+        when :import_help
+          "Send me the file and I'll bring everyone over — a Paperless Post guest-list export (Excel or CSV), a contacts file from your phone, Google or Outlook, " \
+            "or just paste a list. You'll see what's in it before anything is saved, and replies people already gave come along."
+        when :status then actions.event ? actions.status : actions.list_events
+        when :proposals then actions.list_proposals
+        when :thanks_help then "After the party: send me a photo or video (a kid holding their gift is perfect) and tell me who it's for. I'll make it a thank-you and send it when you say SEND."
+        end
+      end
+
+      def read_file
+        result = actions.read_guest_list
+        import = @conversation.user.contact_imports.pending.order(:created_at).last
+        @conversation.store!(import_id: import&.id)
+        options = [ ("RECREATE to set up “#{import.suggested_title}” with these guests#{' and their replies' if import&.people&.has_replies?}" if import),
+                    ("ADD to put them on #{actions.event.title}" if actions.event&.draft? || actions.event&.published?),
+                    "CONTACTS to just save them to your contacts" ].compact
+        step!("ready", "#{result.sub(/\AImport \d+ is ready to review \(nothing saved yet\)\. /, '')}\nReply #{options.to_sentence(two_words_connector: ' or ', last_word_connector: ', or ')}.")
+      end
+
+      def apply_import(mode)
+        import_id = @conversation.data_value(:import_id) || @conversation.user.contact_imports.pending.order(:created_at).last&.id
+        return "Send me a guest-list spreadsheet or contacts file first." unless import_id
+
+        result = actions.apply_guest_list(import_id: import_id, mode: mode)
+        @conversation.store!(import_id: nil)
+        follow_up = mode == "new_event" ? " When is it, and where? (e.g. Sat Nov 14 2pm)" : ""
+        step!(mode == "new_event" ? "ask_when" : "ready", "#{result}#{follow_up}")
+      end
+
+      # The proposal the agent most recently brought up on this thread, if it's still open.
+      def proposal_in_question
+        last_out = @conversation.messages.where(direction: "out").reorder(created_at: :desc, id: :desc).first
+        id = last_out&.cards&.find { |card| card["type"] == "proposal" }&.dig("proposal_id")
+        id && @conversation.user.agent_proposals.pending.find_by(id: id)
+      end
+
+      def answer_proposal(proposal, text)
+        text.match?(NEGATIVE) ? actions.dismiss_proposal(proposal_id: proposal.id) : actions.approve_proposal(proposal_id: proposal.id)
+      end
 
       def step!(stage, reply)
         @conversation.update!(stage: stage)

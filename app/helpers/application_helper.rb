@@ -40,4 +40,13 @@ module ApplicationHelper
 
     (parts.size == 1 ? parts.first.first(2) : parts.first.first + parts.last.first).upcase
   end
+
+  PHONE_COUNTRIES = [ [ "United States & Canada (+1)", "1" ], [ "United Kingdom (+44)", "44" ], [ "India (+91)", "91" ], [ "Brazil (+55)", "55" ],
+                      [ "Mexico (+52)", "52" ], [ "Spain (+34)", "34" ], [ "France (+33)", "33" ], [ "Germany (+49)", "49" ], [ "Italy (+39)", "39" ],
+                      [ "Ireland (+353)", "353" ], [ "Australia (+61)", "61" ], [ "New Zealand (+64)", "64" ], [ "South Africa (+27)", "27" ],
+                      [ "Japan (+81)", "81" ], [ "South Korea (+82)", "82" ], [ "Portugal (+351)", "351" ] ].freeze
+
+  def phone_country_options
+    PHONE_COUNTRIES
+  end
 end

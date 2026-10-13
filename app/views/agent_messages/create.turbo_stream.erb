@@ -1,0 +1,3 @@
+<%= turbo_stream.remove "agent-thinking" %>
+<%= turbo_stream.append "thread", partial: "agent/message", locals: { message: @message, conversation: @message.conversation } %>
+<%= turbo_stream.append "thread", partial: "agent/thinking" %>

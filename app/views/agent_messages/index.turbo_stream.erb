@@ -1,0 +1,6 @@
+<% @messages.each do |message| %>
+  <%= turbo_stream.remove "message-#{message.id}" %>
+  <%= turbo_stream.append "thread", partial: "agent/message", locals: { message: message, conversation: @conversation } %>
+<% end %>
+<%= turbo_stream.remove "agent-thinking" %>
+<%= turbo_stream.append("thread", partial: "agent/thinking") if @waiting %>

@@ -23,8 +23,8 @@ class StartsController < ApplicationController
   # Used after sign-up too (RegistrationsController).
   def self.start_from!(user, source)
     design = InvitationDesign.for(source).to_storage.except("message", "headline", "photo_style")
-    event = user.owned_events.create!(title: "My #{source.card_type_name.downcase}", host_name: user.name,
-      time_zone: source.time_zone, card_type: source.card_type, design: design, inspired_by_event: source)
+    event = user.owned_events.create!(user.event_defaults.merge(title: "My #{source.card_type_name.downcase}",
+      time_zone: user.time_zone.presence || source.time_zone, card_type: source.card_type, design: design, inspired_by_event: source))
     Activity.record(event: event, user: user, action: "event_created")
     event
   end

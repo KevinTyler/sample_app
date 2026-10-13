@@ -10,4 +10,17 @@ class AssistantMessage < ApplicationRecord
   def media
     Array(super)
   end
+
+  def cards
+    Array(super)
+  end
+
+  # Spreadsheets and contact cards (as opposed to photos and videos for thank-yous).
+  def import_files
+    media.select { |item| Assistant::Media.importable?(item) }
+  end
+
+  def photos_and_videos
+    media.reject { |item| Assistant::Media.importable?(item) }
+  end
 end

@@ -21,7 +21,9 @@ class EventsController < ApplicationController
   end
 
   def new
-    @event = current_user.owned_events.new(time_zone: params[:time_zone].presence || "America/New_York", host_name: current_user.name)
+    defaults = current_user.event_defaults
+    defaults[:time_zone] = params[:time_zone] if current_user.time_zone.blank? && params[:time_zone].present?
+    @event = current_user.owned_events.new(defaults)
   end
 
   def create

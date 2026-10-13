@@ -70,3 +70,7 @@ group :test do
   gem "cuprite"
   gem "webmock"
 end
+
+# Reading Excel exports (.xlsx and legacy .xls) for guest-list and contact imports
+gem "roo", "~> 2.10"
+gem "roo-xls", "~> 1.2"

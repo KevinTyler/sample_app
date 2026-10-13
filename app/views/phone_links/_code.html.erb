@@ -1,0 +1,7 @@
+<%# locals: (code:, number:) %>
+<p class="small mt-0">Text this to <strong><%= number %></strong> from your phone within 15 minutes:</p>
+<p class="m-0"><span class="link-code">LINK <%= code %></span></p>
+<% if number.to_s.match?(/\A\+?[\d\s().-]+\z/) %>
+  <p class="mt-s mb-0"><%= link_to "Open Messages with it ready", "sms:#{number.delete('^0-9+')}?&body=#{ERB::Util.url_encode("LINK #{code}")}", class: "btn btn--small" %></p>
+<% end %>
+<p class="small muted mb-0">From then on I'll text you when something needs you, and you can text me anything.</p>

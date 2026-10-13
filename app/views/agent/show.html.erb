@@ -1,0 +1,73 @@
+<% content_for :title, "Today" %>
+<div class="agent-layout" data-controller="agent" data-agent-poll-url-value="<%= agent_messages_path %>" data-agent-waiting-value="<%= @waiting %>"
+     data-action="dragenter@window->agent#dragEnter dragover@window->agent#dragOver dragleave@window->agent#dragLeave drop@window->agent#drop">
+  <section aria-labelledby="agent-heading" class="stack">
+    <header class="agent-greeting">
+      <span class="eyebrow"><%= agent_greeting(current_user) %></span>
+      <h1 id="agent-heading">What can I take off <em>your plate?</em></h1>
+    </header>
+    <div class="thread" id="thread" data-agent-target="thread" aria-live="polite" aria-relevant="additions">
+      <% if @messages.empty? %><%= render "agent/welcome" %><% end %>
+      <%= render partial: "agent/message", collection: @messages, as: :message, locals: { conversation: @conversation } %>
+      <%= render "agent/thinking" if @waiting %>
+    </div>
+    <%= render "agent/composer", prompt: @prompt %>
+  </section>
+
+  <aside class="rail" aria-label="At a glance">
+    <% if @proposals.any? %>
+      <section class="rail-needs" aria-labelledby="needs-you">
+        <h2 id="needs-you" class="eyebrow m-0">Needs you · <%= @proposals.size %></h2>
+        <ul>
+          <% @proposals.each do |proposal| %>
+            <li>
+              <%= proposal.title %>
+              <div class="cluster mt-xs">
+                <% if proposal.actionable? %>
+                  <%= button_to proposal.action_label, approve_agent_proposal_path(proposal), class: "btn btn--small btn--foil" %>
+                  <%= button_to "Not now", dismiss_agent_proposal_path(proposal), class: "btn btn--small btn--ghost-light" %>
+                <% else %>
+                  <%= button_to "Got it", dismiss_agent_proposal_path(proposal), class: "btn btn--small btn--ghost-light" %>
+                <% end %>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+
+    <section class="panel" aria-labelledby="your-events">
+      <div class="panel__header mb-0"><h2 id="your-events" class="panel__title">Your events</h2><%= link_to "All", events_path, class: "small" %></div>
+      <% if @events.any? %>
+        <div class="mt-s">
+          <% @events.each do |event| %>
+            <% summary = event.rsvp_summary %>
+            <%= link_to event_path(event), class: "rail-event" do %>
+              <span class="rail-event__thumb" data-swatch="<%= event_swatch(event) %>"></span>
+              <span class="rail-event__body">
+                <strong><%= event.title %></strong>
+                <span class="small muted"><%= event.draft? ? "Draft · #{pluralize(summary[:invited], 'guest')}" : event_date_short(event) %></span>
+                <% if summary[:invited].positive? %>
+                  <span class="reply-bar" aria-hidden="true"><span class="reply-bar__yes" data-width="<%= percent(summary[:yes], summary[:invited]) %>"></span><span class="reply-bar__maybe" data-width="<%= percent(summary[:maybe], summary[:invited]) %>"></span><span class="reply-bar__no" data-width="<%= percent(summary[:no], summary[:invited]) %>"></span></span>
+                <% end %>
+              </span>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="small muted mt-s mb-0">Nothing planned yet — tell me what you're celebrating.</p>
+      <% end %>
+    </section>
+
+    <section class="panel" aria-labelledby="reach-you">
+      <h2 id="reach-you" class="panel__title mb-s">How I reach you</h2>
+      <%= render "agent/reach", user: current_user %>
+    </section>
+
+    <section class="panel panel--accent">
+      <h2 class="panel__title mb-s">Coming from Paperless Post?</h2>
+      <p class="small m-0">Drop your guest-list exports right into this chat — or <%= link_to "use the switching page", switch_path %> to bring people, replies and your usual settings over.</p>
+    </section>
+  </aside>
+</div>
+<div class="agent-drop" data-agent-target="drop" aria-hidden="true">Drop it here — I'll take a look</div>

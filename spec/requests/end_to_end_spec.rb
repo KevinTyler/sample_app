@@ -7,7 +7,7 @@ RSpec.describe "Invitation and RSVP flow", type: :request do
     # Host signs up
     post registration_path, params: { user: { name: "Jordan Host", email_address: "jordan@example.com",
       password: "correct-horse-battery", password_confirmation: "correct-horse-battery" } }
-    expect(response).to redirect_to(events_path)
+    expect(response).to redirect_to(agent_path)
 
     # Creates an event (times are entered in the event's time zone)
     post events_path, params: { event: {

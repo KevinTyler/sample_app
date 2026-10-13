@@ -1,0 +1,7 @@
+<%= @proposals.one? ? "This needs you" : "#{@proposals.size} things need you" %>, <%= @user.first_name %>:
+<% @proposals.each do |proposal| %>
+- <%= proposal.title %>. <%= proposal.body %>
+<% end %>
+Review in Cordially: <%= @url %>
+
+Nothing happens until you say so. Change how Cordially reaches you: <%= edit_account_url(**Messaging.url_options) %>

@@ -19,9 +19,10 @@
         <% end %>
         <nav class="app-nav" aria-label="Main">
           <% if authenticated? %>
+            <%= nav_link "Today", agent_path, active: controller_name.in?(%w[agent phone_links]) %>
             <%= nav_link "Events", events_path, active: controller_name == "events" && action_name == "index" %>
-            <%= nav_link "Contacts", contacts_path, active: controller_name.in?(%w[contacts contact_imports]) %>
-            <%= link_to new_event_path, class: "btn btn--wax btn--small" do %><%= icon(:plus, size: 16) %>New event<% end %>
+            <%= nav_link "Contacts", contacts_path, active: controller_name.in?(%w[contacts contact_imports switches]) %>
+            <%= link_to new_event_path, class: "btn btn--wax btn--small app-nav__new" do %><%= icon(:plus, size: 16) %><span class="app-nav__label">New event</span><% end %>
             <details class="menu">
               <summary class="icon-button" aria-label="Account menu"><span class="avatar"><%= initials(current_user.name) %></span></summary>
               <div class="menu__panel">
@@ -30,6 +31,7 @@
                   <div class="small faint"><%= current_user.email_address %></div>
                 </div>
                 <%= link_to "Settings", edit_account_path, class: "btn btn--small btn--block" %>
+                <%= link_to "Switch from Paperless Post", switch_path, class: "btn btn--small btn--block btn--ghost" %>
                 <%= button_to "Sign out", session_path, method: :delete, class: "btn btn--small btn--block btn--ghost" %>
               </div>
             </details>

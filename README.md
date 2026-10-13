@@ -350,6 +350,50 @@ back as they arrive, and thank-yous afterwards.
   without an account sign up first and land in the design studio with their copy (`inspired_by_event` is
   recorded, so you can measure how many cards come from other cards).
 
+### ✅ Stage 14 — switching from Paperless Post (or anywhere)
+
+Designed on the canvas (row "The agent & switching over"), then built. People bring their own exports —
+Cordially never logs in to, scrapes, or asks for the password of another service.
+
+- **One importer for everything**: Excel (`.xlsx`, legacy `.xls`, and the HTML tables some sites save as
+  `.xls`), CSV/TSV, vCards from iPhone/Google/Outlook, or a list pasted from anywhere (`Imports::Reader`).
+  Zip-bomb and size limits; nothing is stored in plain files.
+- **Knows what the columns mean** (`Imports::People`): headings in the usual spellings (guest-list exports,
+  Google and Outlook contacts, hand-made sheets), a title row above the headings, and columns guessed from
+  their contents. Reads names, emails, mobiles (local numbers get the host's country code), groups/households,
+  mailing addresses, **replies** ("Attending", "Not attending", "No reply"…), party sizes and kids, notes.
+  Duplicate rows for the same person are merged.
+- **Preview before anything is saved** (`ContactImport`): what's in the file, each column with a picker to
+  correct it, who's in it, and where they should go — **recreate the event as a draft with everyone's
+  replies**, add them to an event you have, or contacts only. Contacts are filled in, never overwritten.
+  The file's contents are erased once applied or discarded (and after a day if neither). Nobody is contacted.
+- **Your usual settings** (`/switch`, and Settings): name on your cards, time zone, phone country, Maybe,
+  adults/kids, plus-ones, automatic nudges and day-before reminders — every new event starts that way,
+  whether made on the web, by text, or from "make one like this".
+- **`/switch`** puts it together: drop each Paperless Post export, set your usual settings, then hand the
+  rest to Cordially (paste your old invitation's wording and it fills in the details).
+
+### ✅ Stage 15 — Cordially works like an agent
+
+- **Today (`/today`) is the signed-in home**: a conversation with the same agent hosts can text, with what
+  needs you and your events alongside. Say what you need, drop a guest list or a photo into the chat, or
+  tap a suggestion. Replies show cards — the event it touched, an import preview with *Recreate the event*
+  / *Just save to contacts* buttons, a proposal to approve. Messages are answered in the background and the
+  page picks the reply up as soon as it's ready.
+- **One agent, every channel**: web, SMS and WhatsApp share `Assistant::Actions` and the same brains
+  (Claude when `ANTHROPIC_API_KEY` is set, the guided fallback otherwise). New tools: read and apply guest
+  lists (including files sent by WhatsApp or MMS vCards), find and invite contacts ("invite my book club"),
+  save usual settings, approve or dismiss proposals.
+- **It looks after things** (`Assistant::CheckIn`, hourly): nudging people who haven't replied as the
+  deadline nears, a last call after it, sending a draft that's coming up, a day-before reminder, texting
+  guests whose email bounced (or asking for a better address), and starting thank-yous after the party.
+  Each is an `AgentProposal` raised once per situation that **never acts on its own**: the host taps the
+  button or replies YES (or NO) to the agent's text, and it runs as them through the normal messages and
+  permissions. Proposals expire when they stop making sense.
+- **It reaches you how you like** (Settings → *When something needs you*): a text on your connected phone,
+  an email (`AgentMailer`), or only in Cordially. Connect a phone from Today: it shows a one-time code to
+  text ("LINK 4F7KQ2") — 15 minutes, single use, stored as an HMAC, limited tries.
+
 ## Architecture
 
 | Area | Where |
@@ -453,7 +497,9 @@ SMS is a channel adapter with the same interface as email (`deliver(delivery) �
    it at the same URL.
 2. Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `ASSISTANT_PHONE_NUMBER` (shown to hosts), and for
    WhatsApp `WHATSAPP_PROVIDER=twilio`, `WHATSAPP_FROM_NUMBER`, `ASSISTANT_WHATSAPP_NUMBER`.
-3. Set `ANTHROPIC_API_KEY` for the plain-language assistant (otherwise the guided assistant answers).
+3. Set `ANTHROPIC_API_KEY` for the plain-language agent (otherwise the guided agent answers). The same
+   agent answers on the web at `/today`; hosts connect their phone there so it can text them.
+   In development, `/dev/assistant` stands in for a phone (text it `LINK <code>` to try connecting).
 4. For WhatsApp *guest* messages (invitations you start), create a Content Template in Twilio with two
    variables ({{1}} message, {{2}} link), get it approved by Meta, and set `WHATSAPP_TEMPLATE_SID`.
    Replies to the assistant need no template (they're inside the 24-hour window).

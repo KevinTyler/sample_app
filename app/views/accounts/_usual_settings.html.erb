@@ -1,0 +1,35 @@
+<%# locals: (f:, user:) %>
+<div class="field">
+  <%= f.label :default_host_name, "Name on your cards" %>
+  <%= f.text_field :default_host_name, maxlength: 120, placeholder: user.name %>
+  <p class="field__hint">How “Hosted by” reads on new invitations, e.g. “The Reyes Family”.</p>
+</div>
+<div class="grid grid--2">
+  <div class="field">
+    <%= f.label :time_zone, "Your time zone" %>
+    <%= f.select :time_zone, time_zone_options(user.time_zone.presence || "America/New_York"), {}, data: { controller: ("timezone" if user.time_zone.blank?), timezone_target: "select", new_record: user.time_zone.blank? } %>
+  </div>
+  <div class="field">
+    <%= f.label :phone_country_code, "Phone numbers without a country code are in" %>
+    <%= f.select :phone_country_code, options_for_select(phone_country_options, user.phone_country_code.presence || "1") %>
+  </div>
+</div>
+<div class="stack-s">
+  <label class="toggle"><span class="toggle__text">Ask adults and kids separately<span class="toggle__hint">For kids' parties and family events</span></span><%= f.check_box :default_track_kids %></label>
+  <label class="toggle"><span class="toggle__text">Offer “Maybe” as a reply</span><%= f.check_box :default_allow_maybe %></label>
+  <label class="toggle"><span class="toggle__text">Nudge people who haven't replied<span class="toggle__hint">A few days before the RSVP deadline</span></span><%= f.check_box :default_auto_nudge %></label>
+  <label class="toggle"><span class="toggle__text">Day-before reminder to everyone coming</span><%= f.check_box :default_auto_day_before %></label>
+</div>
+<div class="field">
+  <%= f.label :default_plus_ones, "Extra guests each invitation allows" %>
+  <%= f.number_field :default_plus_ones, min: 0, max: Guest::MAX_PLUS_ONES, class: "w-auto" %>
+</div>
+<fieldset>
+  <legend>When something needs you</legend>
+  <div class="form">
+    <% User::AGENT_REACH_OPTIONS.each do |value, label| %>
+      <label class="checkbox"><%= f.radio_button :agent_reach, value, disabled: value == "text" && !user.texting_conversation %> <span><%= label %><% if value == "text" && !user.texting_conversation %> <span class="small muted">— connect your phone on Today first</span><% end %></span></label>
+    <% end %>
+    <p class="field__hint m-0">Cordially keeps an eye on your events and asks before doing anything, like nudging people who haven't replied.</p>
+  </div>
+</fieldset>

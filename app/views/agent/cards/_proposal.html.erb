@@ -1,0 +1,22 @@
+<%# locals: (record:, card:, conversation:) %>
+<% proposal = record %>
+<% if proposal.pending? %>
+  <div class="agent-card agent-card--proposal">
+    <span class="agent-card__kicker">Needs you<% if proposal.event %> · <%= proposal.event.title %><% end %></span>
+    <p class="m-0"><strong><%= proposal.title_sentence %></strong> <%= proposal.body %></p>
+    <div class="agent-card__actions">
+      <% if proposal.actionable? %>
+        <%= button_to proposal.action_label, approve_agent_proposal_path(proposal), class: "btn btn--small btn--primary" %>
+        <%= button_to "Not now", dismiss_agent_proposal_path(proposal), class: "btn btn--small btn--ghost" %>
+      <% else %>
+        <% if proposal.event %><%= link_to "Open the guest list", event_guests_path(proposal.event), class: "btn btn--small" %><% end %>
+        <%= button_to "Got it", dismiss_agent_proposal_path(proposal), class: "btn btn--small btn--ghost" %>
+      <% end %>
+    </div>
+  </div>
+<% else %>
+  <div class="agent-card <%= proposal.status == 'done' ? 'agent-card--done' : 'agent-card--muted' %>">
+    <span class="agent-card__kicker"><%= { "done" => "Done", "dismissed" => "Skipped", "expired" => "No longer needed", "failed" => "Didn't go through" }.fetch(proposal.status, proposal.status.humanize) %><% if proposal.event %> · <%= proposal.event.title %><% end %></span>
+    <p class="m-0 small"><%= proposal.title %></p>
+  </div>
+<% end %>

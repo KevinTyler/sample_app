@@ -1,0 +1,21 @@
+<%# locals: (message:, conversation:) %>
+<% if message.inbound? %>
+  <div class="turn turn--me" id="message-<%= message.id %>" data-message-id="<%= message.id %>">
+    <div class="bubble">
+      <span class="visually-hidden">You:</span>
+      <% message.media.each do |item| %>
+        <span class="file-chip"><%= icon(:clip, size: 16) %> <%= item["filename"].presence || (item["content_type"].to_s.start_with?("video") ? "Video" : "Photo") %></span>
+      <% end %>
+      <%= agent_text(message.body) if message.body.present? %>
+    </div>
+  </div>
+<% else %>
+  <div class="turn" id="message-<%= message.id %>" data-message-id="<%= message.id %>">
+    <span class="turn__seal" aria-hidden="true">C</span>
+    <div class="turn__body">
+      <span class="visually-hidden">Cordially:</span>
+      <% if message.body.present? %><div class="turn__text"><%= agent_text(message.body) %></div><% end %>
+      <% message.cards.each do |card| %><%= render_agent_card(card, conversation) %><% end %>
+    </div>
+  </div>
+<% end %>

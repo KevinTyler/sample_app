@@ -1,0 +1,27 @@
+<%# locals: (record:, card:, conversation:) %>
+<% event = record; summary = event.rsvp_summary %>
+<div class="agent-card">
+  <%= link_to event_path(event), class: "agent-card__event" do %>
+    <span class="agent-card__thumb" data-swatch="<%= event_swatch(event) %>"></span>
+    <span class="stack-s">
+      <span class="cluster"><%= event_status_badge(event) %><span class="small muted"><%= event.card_type_name %></span></span>
+      <strong class="agent-card__title"><%= event.title %></strong>
+      <span class="small muted"><%= event.starts_at ? event_date_short(event) : "Date to be set" %><% if (place = event_where(event)) %> · <%= place %><% end %></span>
+    </span>
+  <% end %>
+  <% if summary[:invited].positive? %>
+    <p class="replies-line m-0">
+      <span><%= pluralize(summary[:invited], "guest") %></span>
+      <span class="replies-line__yes"><%= summary[:yes] %> yes</span>
+      <% if summary[:maybe].positive? %><span class="replies-line__maybe"><%= summary[:maybe] %> maybe</span><% end %>
+      <span class="replies-line__no"><%= summary[:no] %> no</span>
+      <span class="replies-line__pending"><%= summary[:pending] %> to hear from</span>
+    </p>
+  <% end %>
+  <div class="agent-card__actions">
+    <%= link_to "Open", event_path(event), class: "btn btn--small" %>
+    <%= link_to "Design", edit_event_design_path(event), class: "btn btn--small btn--ghost" %>
+    <%= link_to "Guests", event_guests_path(event), class: "btn btn--small btn--ghost" %>
+    <%= link_to "Preview", preview_event_path(event), class: "btn btn--small btn--ghost" %>
+  </div>
+</div>

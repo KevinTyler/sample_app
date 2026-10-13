@@ -1,0 +1,19 @@
+<%# locals: (prompt: nil) %>
+<%= form_with url: agent_messages_path, multipart: true, class: "composer", data: { agent_target: "form", action: "turbo:submit-start->agent#sending turbo:submit-end->agent#sent" } do |f| %>
+  <div class="composer__chips">
+    <% [ "Plan something new", "Bring my Paperless Post guests", "Who hasn't replied?", "What needs me?", "Thank-you time" ].each do |chip| %>
+      <button type="button" class="chip" data-action="agent#chip" data-text="<%= chip %>"><%= chip %></button>
+    <% end %>
+  </div>
+  <div class="composer__file" data-agent-target="fileLabel" aria-live="polite"></div>
+  <div class="composer__box">
+    <label class="composer__attach" title="Attach a guest list, contacts file, photo or video">
+      <%= icon(:clip, size: 18) %><span class="visually-hidden">Attach a guest list, contacts file, photo or video</span>
+      <%= f.file_field :file, accept: ".xlsx,.xls,.csv,.tsv,.txt,.vcf,.vcard,image/*,video/*", data: { agent_target: "file", action: "change->agent#filePicked" } %>
+    </label>
+    <%= f.label :body, "Message Cordially", class: "visually-hidden" %>
+    <%= f.text_area :body, rows: 1, value: prompt, placeholder: "Tell me what you're planning, or drop a guest list here…", maxlength: 8000,
+      data: { agent_target: "input", action: "keydown->agent#keydown input->agent#grow" } %>
+    <button type="submit" class="composer__send" aria-label="Send" data-agent-target="send"><%= icon(:send, size: 18) %></button>
+  </div>
+<% end %>

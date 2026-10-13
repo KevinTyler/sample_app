@@ -1,12 +1,17 @@
 module Assistant
-  # Natural-language texting assistant, powered by Claude through the Anthropic SDK's tool runner.
-  # Each inbound text is one turn: recent thread history (plain text) + a context note about the
-  # host's account and current event, then Claude works the tools until it has a reply to text back.
-  # The thread itself is the memory: nothing but the plain-text conversation is replayed next turn.
+  # The Cordially agent's natural-language brain, powered by Claude through the Anthropic SDK's tool
+  # runner. Each host message (a text, or a message on the web) is one turn: recent thread history
+  # (plain text) + a context note about the host's account, events, imports and anything waiting on
+  # them, then Claude works the tools until it has a reply. The thread is the memory: nothing but the
+  # plain-text conversation is replayed next turn; everything else lives in the database.
   class ClaudeBrain
     MODEL = :"claude-opus-5-5"
     MAX_TOOL_ROUNDS = 10
     REFUSAL_REPLY = "Sorry, I can't help with that one. I'm here for your invitations, guests and thank-yous.".freeze
+
+    attr_reader :actions
+
+    delegate :cards, to: :actions
 
     def self.available?
       ENV["ANTHROPIC_API_KEY"].present? || ENV["ANTHROPIC_AUTH_TOKEN"].present?
@@ -19,7 +24,7 @@ module Assistant
     end
 
     def reply
-      actions = Actions.new(@conversation, inbound: @inbound)
+      @actions = Actions.new(@conversation, inbound: @inbound)
       runner = @client.beta.messages.tool_runner(
         model: MODEL,
         max_tokens: 16_000,
@@ -47,7 +52,11 @@ module Assistant
         @conversation.recent_messages.each do |message|
           role = message.inbound? ? :user : :assistant
           text = message.body.to_s
-          text += " [attached #{message.media.size} photo/video]" if message.inbound? && message.media.any?
+          if message.inbound?
+            files = message.import_files.map { |f| f["filename"].presence || "a contacts/spreadsheet file" }
+            text += " [attached #{files.join(', ')} — a guest list or contacts file]" if files.any?
+            text += " [attached #{message.photos_and_videos.size} photo/video]" if message.photos_and_videos.any?
+          end
           next if text.strip.empty?
 
           if turns.last && turns.last[:role] == role
@@ -66,18 +75,35 @@ module Assistant
 
       def context_note(actions)
         user = @conversation.user
+        zone = @conversation.data_value(:time_zone).presence || user&.time_zone.presence || "America/New_York"
         lines = [ "Context from Cordially (not written by the host):",
-                  "Today is #{Time.current.in_time_zone(@conversation.data_value(:time_zone).presence || 'America/New_York').strftime('%A, %B %-d, %Y')}.",
-                  "Channel: #{@conversation.channel == 'whatsapp' ? 'WhatsApp' : 'SMS'} from #{@conversation.address}." ]
+                  "Today is #{Time.current.in_time_zone(zone).strftime('%A, %B %-d, %Y')}.",
+                  "Channel: #{channel_description}" ]
         if user
-          lines << "Account: #{user.name} <#{user.email_address}>."
+          lines << "Account: #{user.name} <#{user.email_address}>.#{" Switched from #{user.switched_from.humanize}." if user.switched_from}"
+          lines << "Usual settings: #{actions.preferences_summary}"
           lines << (actions.event ? "Current event: #{actions.summary}" : "No current event.")
+          upcoming = user.accessible_events.where.not(status: "cancelled").where("starts_at IS NULL OR starts_at > ?", 1.day.ago).order(:starts_at).limit(6)
+          lines << "Their events: #{upcoming.map { |e| "#{e.id} #{e.title} (#{e.status})" }.join('; ')}." if upcoming.any?
+          lines << "Contacts: #{user.contacts.count}."
+          imports = user.contact_imports.pending.order(created_at: :desc).limit(2)
+          imports.each { |i| lines << "Import #{i.id} waiting for the host's decision: #{i.description}" }
+          waiting = user.agent_proposals.pending.recent_first.limit(5)
+          lines << "Waiting on the host: #{waiting.map { |p| "proposal #{p.id}: #{p.pitch}" }.join(' | ')}" if waiting.any?
         elsif @conversation.data_value(:pending_email)
           lines << "Not connected yet: waiting for them to tap the link emailed to #{@conversation.data_value(:pending_email)}."
         else
           lines << "No account yet."
         end
         lines.join("\n")
+      end
+
+      def channel_description
+        case @conversation.channel
+        when "web" then "web chat in the Cordially app (it shows cards with buttons for events, imports and proposals under your reply; links are clickable)."
+        when "whatsapp" then "WhatsApp from #{@conversation.address}."
+        else "SMS from #{@conversation.address}."
+        end
       end
   end
 end

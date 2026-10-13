@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_070000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_080000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -52,6 +52,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_070000) do
     t.index ["user_id"], name: "index_activities_on_user_id"
   end
 
+  create_table "agent_proposals", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "event_id"
+    t.string "kind", null: false
+    t.string "status", default: "pending", null: false
+    t.string "dedupe_key", null: false
+    t.string "title", null: false
+    t.text "body"
+    t.string "action_label"
+    t.json "payload", default: {}, null: false
+    t.text "result"
+    t.datetime "notified_at"
+    t.datetime "decided_at"
+    t.datetime "expires_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_agent_proposals_on_event_id"
+    t.index ["user_id", "dedupe_key"], name: "index_agent_proposals_on_user_id_and_dedupe_key", unique: true
+    t.index ["user_id", "status"], name: "index_agent_proposals_on_user_id_and_status"
+    t.index ["user_id"], name: "index_agent_proposals_on_user_id"
+  end
+
   create_table "assistant_conversations", force: :cascade do |t|
     t.string "channel", default: "sms", null: false
     t.string "address", null: false
@@ -75,6 +97,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_070000) do
     t.json "media", default: [], null: false
     t.string "provider_message_id"
     t.datetime "created_at", null: false
+    t.json "cards", default: [], null: false
     t.index ["assistant_conversation_id"], name: "index_assistant_messages_on_assistant_conversation_id"
     t.index ["provider_message_id"], name: "index_assistant_messages_on_provider_message_id", unique: true, where: "provider_message_id IS NOT NULL"
   end
@@ -95,6 +118,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_070000) do
     t.index ["token_digest"], name: "index_cohost_invitations_on_token_digest", unique: true
   end
 
+  create_table "contact_imports", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "status", default: "pending", null: false
+    t.string "filename"
+    t.string "file_format"
+    t.json "sheet"
+    t.json "mapping", default: {}, null: false
+    t.json "summary", default: {}, null: false
+    t.integer "event_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_contact_imports_on_event_id"
+    t.index ["user_id"], name: "index_contact_imports_on_user_id"
+  end
+
   create_table "contacts", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "name", null: false
@@ -105,6 +143,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_070000) do
     t.datetime "last_invited_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "mailing_address"
     t.index ["user_id", "email"], name: "index_contacts_on_user_id_and_email", unique: true, where: "email IS NOT NULL"
     t.index ["user_id", "name"], name: "index_contacts_on_user_id_and_name"
     t.index ["user_id"], name: "index_contacts_on_user_id"
@@ -424,6 +463,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_070000) do
     t.datetime "updated_at", null: false
     t.string "rsvp_notifications", default: "instant", null: false
     t.datetime "last_digest_at"
+    t.string "default_host_name"
+    t.string "time_zone"
+    t.string "phone_country_code"
+    t.boolean "default_allow_maybe", default: true, null: false
+    t.boolean "default_track_kids", default: false, null: false
+    t.integer "default_plus_ones", default: 0, null: false
+    t.boolean "default_auto_nudge", default: false, null: false
+    t.boolean "default_auto_day_before", default: false, null: false
+    t.string "switched_from"
+    t.string "agent_reach", default: "email", null: false
+    t.string "phone_link_code_digest"
+    t.datetime "phone_link_expires_at"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
@@ -432,11 +483,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_070000) do
   add_foreign_key "activities", "events"
   add_foreign_key "activities", "guests", on_delete: :nullify
   add_foreign_key "activities", "users", on_delete: :nullify
+  add_foreign_key "agent_proposals", "events", on_delete: :cascade
+  add_foreign_key "agent_proposals", "users", on_delete: :cascade
   add_foreign_key "assistant_conversations", "events", on_delete: :nullify
   add_foreign_key "assistant_conversations", "users", on_delete: :nullify
   add_foreign_key "assistant_messages", "assistant_conversations", on_delete: :cascade
   add_foreign_key "cohost_invitations", "events"
   add_foreign_key "cohost_invitations", "users", column: "invited_by_id", on_delete: :nullify
+  add_foreign_key "contact_imports", "events", on_delete: :nullify
+  add_foreign_key "contact_imports", "users", on_delete: :cascade
   add_foreign_key "contacts", "users"
   add_foreign_key "deliveries", "guests"
   add_foreign_key "deliveries", "messages"

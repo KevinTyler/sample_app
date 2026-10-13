@@ -7,7 +7,7 @@
       <p class="mk-hero__lede">Design a card your guests will want to keep, send it by email, text or WhatsApp, and watch the replies arrive. Nobody you invite needs an app or an account.</p>
       <div class="mk-hero__actions">
         <% if authenticated? %>
-          <%= link_to "Go to your events", events_path, class: "btn btn--foil btn--large" %>
+          <%= link_to "Open Cordially", agent_path, class: "btn btn--foil btn--large" %>
           <%= link_to "Start a new event", new_event_path, class: "btn btn--on-dark btn--large" %>
         <% else %>
           <%= link_to "Create your invitation", new_registration_path, class: "btn btn--foil btn--large" %>

@@ -15,12 +15,28 @@ Rails.application.routes.draw do
   get "assistant/connect/:token" => "assistant_links#show", as: :assistant_link, constraints: { token: %r{[^/]+} }
   post "assistant/connect/:token" => "assistant_links#create", constraints: { token: %r{[^/]+} }
 
+  # The agent ("Today"): the signed-in home — a conversation with Cordially, plus what needs you
+  get "today" => "agent#show", as: :agent
+  scope "today", as: "agent" do
+    resources :messages, only: %i[index create], controller: "agent_messages"
+    resources :proposals, only: [], controller: "agent_proposals" do
+      member do
+        post :approve
+        post :dismiss
+      end
+    end
+    resource :phone_link, only: :create, controller: "phone_links"
+  end
+
   # Host account settings and address book
   resource :account, only: %i[edit update]
   resources :contacts, except: :show do
     collection { get :export }
   end
-  resource :contact_import, only: %i[new create]
+  resources :contact_imports, only: %i[new create show update destroy] do
+    post :apply, on: :member
+  end
+  resource :switch, only: :show # "Bring everything from Paperless Post (or anywhere)"
 
   # Host dashboard
   resources :events do

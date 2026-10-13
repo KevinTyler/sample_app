@@ -1,0 +1,51 @@
+<% content_for :title, "Switching from Paperless Post" %>
+<div class="container--wide">
+  <header class="page-header mb-s">
+    <div>
+      <span class="eyebrow">Switching from Paperless Post</span>
+      <h1>Bring <em>everything</em> with you</h1>
+      <p class="page-header__meta">Your people, the replies you've already collected, and the way you like things set up. About two minutes — and nobody hears from us until you say so.</p>
+    </div>
+  </header>
+
+  <div class="switch-steps mt-m">
+    <div class="stack">
+      <section class="panel" aria-labelledby="step-people">
+        <h2 id="step-people" class="step-title"><span class="step-title__n">1</span>Your people and replies</h2>
+        <p class="muted mt-0">Drop each guest-list spreadsheet you exported. For an event that's still coming up, choose “Recreate the event” on the next screen — everyone comes across with their reply.</p>
+        <%= render "contact_imports/dropzone", from: "switch", title: "Drop a Paperless Post export here" %>
+        <% if @recent.present? %>
+          <h3 class="eyebrow mt-m">Brought over so far</h3>
+          <ul class="dash-list">
+            <% @recent.each do |import| %>
+              <li>
+                <strong><%= import.filename || "Pasted list" %></strong> —
+                <%= pluralize(import.summary["people"].to_i, "person") %><% if import.event %>, now <%= link_to import.event.title, event_path(import.event) %><% end %>
+                <span class="small muted"><%= time_ago_in_words(import.updated_at) %> ago</span>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+      </section>
+
+      <section class="panel" aria-labelledby="step-agent">
+        <h2 id="step-agent" class="step-title"><span class="step-title__n">3</span>Hand the rest to Cordially</h2>
+        <p class="muted mt-0">Paste the wording from a Paperless Post invitation into the chat and Cordially fills in the date, place and details — or just say “Maya's party is Saturday the 14th at 7, at the Greenhouse.” It can also nudge people, add guests from your contacts and send thank-yous, and it'll check in when something needs you.</p>
+        <%= link_to agent_path(prompt: "I'm moving over from Paperless Post. Here's the invitation wording: "), class: "btn btn--wax" do %><%= icon(:chat, size: 18) %>Open Cordially<% end %>
+      </section>
+      <%= render "contact_imports/where_to_find" %>
+    </div>
+
+    <div class="stack">
+      <section class="panel" aria-labelledby="step-settings">
+        <h2 id="step-settings" class="step-title"><span class="step-title__n">2</span>Your usual settings</h2>
+        <p class="muted mt-0">Every new card starts this way.</p>
+        <%= form_with model: @user, url: account_path(return_to: "switch"), method: :patch, class: "form" do |f| %>
+          <%= form_errors(@user) %>
+          <%= render "accounts/usual_settings", f: f, user: @user %>
+          <div class="form-actions"><%= f.submit "Save my settings", class: "btn btn--primary" %></div>
+        <% end %>
+      </section>
+    </div>
+  </div>
+</div>

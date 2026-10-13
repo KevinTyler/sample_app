@@ -1,0 +1,37 @@
+<%# locals: (record:, card:, conversation:) %>
+<% import = record %>
+<div class="agent-card">
+  <% if import.pending? %>
+    <% people = import.people; counts = people.counts %>
+    <div class="import-head">
+      <div><span class="agent-card__kicker"><%= people.source_label %></span><h3 class="agent-card__title"><%= import.suggested_title %></h3></div>
+      <% if import.filename %><span class="small muted"><%= import.filename %></span><% end %>
+    </div>
+    <div class="import-stats">
+      <div class="stat"><span class="stat__value"><%= counts["people"] %></span><span class="stat__label"><%= "person".pluralize(counts["people"]) %></span></div>
+      <div class="stat"><span class="stat__value"><%= counts["emails"] %></span><span class="stat__label">with email</span></div>
+      <div class="stat"><span class="stat__value"><%= counts["phones"] %></span><span class="stat__label">with a mobile</span></div>
+      <% if counts["addresses"].positive? %><div class="stat"><span class="stat__value"><%= counts["addresses"] %></span><span class="stat__label">mailing addresses</span></div><% end %>
+    </div>
+    <% if people.has_replies? %>
+      <p class="replies-line m-0"><strong>Replies come too:</strong>
+        <span class="replies-line__yes"><%= counts["yes"] %> yes</span><span class="replies-line__no"><%= counts["no"] %> no</span>
+        <% if counts["maybe"].positive? %><span class="replies-line__maybe"><%= counts["maybe"] %> maybe</span><% end %>
+        <span class="replies-line__pending"><%= counts["pending"] %> not yet</span></p>
+    <% end %>
+    <% if people.groups.any? %><div class="cluster"><% people.groups.first(6).each do |group| %><span class="tag"><%= group %></span><% end %></div><% end %>
+    <div class="agent-card__actions">
+      <%= button_to (people.has_replies? ? "Recreate the event with replies" : "Start an event with them"), apply_contact_import_path(import), params: { mode: "new_event", from: "agent" }, class: "btn btn--small btn--wax" %>
+      <% if (current = conversation&.event) && current.collects_replies? && !current.cancelled? && EventPolicy.new(current_user, current).can?(:manage_guests) %>
+        <%= button_to "Add to #{current.title.truncate(28)}", apply_contact_import_path(import), params: { mode: "event", event_id: current.id, from: "agent" }, class: "btn btn--small" %>
+      <% end %>
+      <%= button_to "Just save to contacts", apply_contact_import_path(import), params: { mode: "contacts", from: "agent" }, class: "btn btn--small" %>
+      <%= link_to "Check the columns", contact_import_path(import), class: "small" %>
+    </div>
+  <% elsif import.status == "completed" %>
+    <span class="agent-card__kicker">Brought in</span>
+    <p class="m-0"><%= pluralize(import.summary["people"].to_i, "person") %> from <%= import.filename || "your list" %><% if import.event %> — now on <%= link_to import.event.title, event_path(import.event) %><% end %>.</p>
+  <% else %>
+    <p class="small muted m-0">That import was discarded — nothing was saved.</p>
+  <% end %>
+</div>

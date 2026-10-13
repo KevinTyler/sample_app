@@ -7,6 +7,7 @@
   </div>
   <div class="page-header__actions">
     <% if @total > 0 %><%= link_to export_contacts_path(format: :csv), class: "btn", data: { turbo: false } do %><%= icon(:download, size: 18) %>Export<% end %><% end %>
+    <%= link_to "From Paperless Post", switch_path, class: "btn btn--ghost" %>
     <%= link_to new_contact_import_path, class: "btn" do %><%= icon(:upload, size: 18) %>Import<% end %>
     <%= link_to new_contact_path, class: "btn btn--primary" do %><%= icon(:plus, size: 18) %>Add contact<% end %>
   </div>

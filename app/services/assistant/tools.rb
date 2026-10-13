@@ -1,5 +1,5 @@
 module Assistant
-  # The texting assistant's tools for Claude: thin, typed wrappers around Assistant::Actions.
+  # The Cordially agent's tools for Claude: thin, typed wrappers around Assistant::Actions.
   # Input schemas are declared with the Anthropic SDK's input-schema models; the SDK's tool runner
   # validates each call against them. Errors raised here go back to Claude as tool errors.
   module Tools
@@ -184,7 +184,7 @@ module Assistant
     end
 
     class WebLink < Base
-      doc "A one-time link that signs the host into the web app on that page (to fine-tune the design, see the guest list, preview...)."
+      doc "A link to that page of the web app (to fine-tune the design, see the guest list, preview...). By text it's a one-time sign-in link; on the web it shows as a button."
       input_schema WebLinkInput
       def call(input) = actions.web_link(page: input.page.to_s)
     end
@@ -223,8 +223,104 @@ module Assistant
       def call(input) = actions.send_thank_you!(recipient: input.recipient)
     end
 
+    class ReadGuestListInput < Anthropic::BaseModel
+      optional :text, String, doc: "A pasted list or spreadsheet cells, when there's no attached file"
+    end
+
+    class ReadGuestList < Base
+      doc "Read the guest list or contacts file attached to the host's latest message (a Paperless Post export spreadsheet, " \
+          "Excel/CSV, vCard from a phone, Google or Outlook) — or a pasted list — into a preview: who's in it, which columns " \
+          "mean what, groups, mailing addresses and any replies already given. Saves nothing."
+      input_schema ReadGuestListInput
+      def call(input) = actions.read_guest_list(text: input.text)
+    end
+
+    class ApplyGuestListInput < Anthropic::BaseModel
+      required :import_id, Integer
+      required :mode, Anthropic::EnumOf[:contacts, :new_event, :current_event],
+        doc: "contacts: address book only; new_event: recreate the event as a draft with everyone and their replies; current_event: add them to the current event"
+      optional :title, String, doc: "Event name, for new_event"
+    end
+
+    class ApplyGuestList < Base
+      doc "Bring in a previewed import once the host has said where people should go. Everyone is also saved to contacts. Contacts nobody."
+      input_schema ApplyGuestListInput
+      def call(input) = actions.apply_guest_list(import_id: input.import_id, mode: input.mode.to_s, title: input.title)
+    end
+
+    class FindContactsInput < Anthropic::BaseModel
+      optional :query, String, doc: "Name, email or phone to search for"
+      optional :group, String, doc: "Exact group / household name, e.g. Book club"
+    end
+
+    class FindContacts < Base
+      doc "Search the host's contacts (by name/email/phone or group). Also lists their groups."
+      input_schema FindContactsInput
+      def call(input) = actions.find_contacts(query: input.query, group: input.group)
+    end
+
+    class InviteContactsInput < Anthropic::BaseModel
+      optional :contact_ids, Anthropic::ArrayOf[Integer], doc: "From find_contacts"
+      optional :group, String, doc: "Add everyone in this contacts group"
+    end
+
+    class InviteContacts < Base
+      doc "Put people from the host's contacts on the current event's guest list (doesn't send anything)."
+      input_schema InviteContactsInput
+      def call(input) = actions.invite_contacts(contact_ids: Array(input.contact_ids), group: input.group)
+    end
+
+    class PreferencesInput < Anthropic::BaseModel
+      optional :default_host_name, String, doc: "How \"Hosted by\" reads on new cards, e.g. The Reyes Family"
+      optional :time_zone, String, doc: "IANA time zone, e.g. America/Chicago"
+      optional :phone_country_code, String, doc: "Calling code for numbers given without one, e.g. 1 or 44"
+      optional :default_allow_maybe, Anthropic::Boolean
+      optional :default_track_kids, Anthropic::Boolean, doc: "Ask adults and kids separately"
+      optional :default_plus_ones, Integer
+      optional :default_auto_nudge, Anthropic::Boolean, doc: "Automatically nudge non-responders before the deadline"
+      optional :default_auto_day_before, Anthropic::Boolean, doc: "Automatic day-before reminder to everyone coming"
+      optional :agent_reach, Anthropic::EnumOf[:text, :email, :off], doc: "How you reach the host when something needs them"
+      optional :rsvp_notifications, Anthropic::EnumOf[:instant, :daily, :off], doc: "Emails about each reply, a daily summary, or none"
+    end
+
+    class UpdatePreferences < Base
+      doc "Save the host's usual settings — what every new event starts with, and how to reach them. Use when they tell you how they like things (or what they used on Paperless Post)."
+      input_schema PreferencesInput
+      def call(input) = actions.update_preferences(**args(input).symbolize_keys)
+    end
+
+    class ListProposals < Base
+      doc "Things you've noticed that are waiting on the host's go-ahead (nudges, reminders, bounced invitations, thank-yous)."
+      input_schema EmptyInput
+      def call(_input) = actions.list_proposals
+    end
+
+    class ProposalInput < Anthropic::BaseModel
+      required :proposal_id, Integer
+    end
+
+    class ApproveProposal < Base
+      doc "Carry out a proposal. Only when the host's latest message clearly says yes to it; otherwise it fails."
+      input_schema ProposalInput
+      def call(input) = actions.approve_proposal(proposal_id: input.proposal_id)
+    end
+
+    class DismissProposal < Base
+      doc "Drop a proposal the host said no to."
+      input_schema ProposalInput
+      def call(input) = actions.dismiss_proposal(proposal_id: input.proposal_id)
+    end
+
+    class ConnectPhone < Base
+      doc "On the web: let the host connect their phone so you can text them (and they can text you)."
+      input_schema EmptyInput
+      def call(_input) = actions.connect_phone
+    end
+
     ALL = [ CreateAccount, ListEvents, SwitchEvent, CreateEvent, UpdateEvent, SetDesign, AddGuests, RemoveGuest,
-            AddQuestion, AddLink, Status, Publish, SendInvitations, WebLink, LogGift, SaveThankYou, SendThankYou ].freeze
+            AddQuestion, AddLink, Status, Publish, SendInvitations, WebLink, LogGift, SaveThankYou, SendThankYou,
+            ReadGuestList, ApplyGuestList, FindContacts, InviteContacts, UpdatePreferences, ListProposals,
+            ApproveProposal, DismissProposal, ConnectPhone ].freeze
 
     def self.build(actions)
       ALL.map { |tool| tool.new(actions) }

@@ -1,7 +1,9 @@
 module Assistant
-  # Everything the texting assistant can do, on behalf of the host whose phone this is. Both the
-  # Claude-powered assistant (as tools) and the guided step-by-step assistant call these, and they go
-  # through the same models and validations as the web app. Each returns a short plain-text result.
+  # Everything the Cordially agent can do for a host — over text (on behalf of the host whose phone
+  # this is) or on the web. Both the Claude-powered agent (as tools) and the guided step-by-step one
+  # call these, and they go through the same models and validations as the web app. Each returns a
+  # short plain-text result; some also add a card (an event, an import preview, a proposal) that the
+  # web shows alongside the reply.
   class Actions
     include Rails.application.routes.url_helpers
 
@@ -9,11 +11,20 @@ module Assistant
     MAX_GUESTS_PER_CALL = 200
     LOCAL_PREFIXES = %w[44 61 91 55 52 33 49 34 39 353 64 27 81 82].freeze # country codes where local numbers start with 0
 
-    attr_reader :conversation, :inbound
+    PREFERENCE_FIELDS = %i[default_host_name time_zone phone_country_code default_allow_maybe default_track_kids default_plus_ones
+                           default_auto_nudge default_auto_day_before agent_reach rsvp_notifications].freeze
+
+    attr_reader :conversation, :inbound, :cards
 
     def initialize(conversation, inbound: nil)
       @conversation = conversation
       @inbound = inbound
+      @cards = []
+    end
+
+    def card!(type, **data)
+      card = { "type" => type }.merge(data.stringify_keys)
+      @cards << card unless @cards.include?(card)
     end
 
     def user = conversation.user
@@ -69,7 +80,7 @@ module Assistant
 
     def create_event(title:, **attrs)
       require_user!
-      new_event = user.owned_events.new(title: title, host_name: user.name, time_zone: attrs[:time_zone].presence || default_time_zone)
+      new_event = user.owned_events.new(user.event_defaults.merge(title: title, time_zone: attrs[:time_zone].presence || default_time_zone))
       assign_event(new_event, attrs.except(:time_zone))
       new_event.design = { "tagline" => "Save the date" } if new_event.save_the_date?
       raise Error, new_event.errors.full_messages.to_sentence unless new_event.save
@@ -77,6 +88,7 @@ module Assistant
       Activity.record(event: new_event, user: user, action: "event_created")
       conversation.update!(event: new_event)
       conversation.store!(time_zone: new_event.time_zone)
+      card!("event", event_id: new_event.id)
       "Created a draft: #{summary(new_event)}"
     end
 
@@ -86,6 +98,7 @@ module Assistant
       raise Error, current.errors.full_messages.to_sentence unless current.save
 
       current.touch_calendar! if current.published? && current.calendar_details_changed?
+      card!("event", event_id: current.id)
       "Updated: #{summary(current)}"
     end
 
@@ -100,6 +113,7 @@ module Assistant
       raise Error, design.errors.full_messages.to_sentence unless design.valid?
 
       current.update!(design: design.to_storage)
+      card!("event", event_id: current.id)
       template = design.template_record
       "Design set: #{template.name}#{" with #{design.accent_color} accent" if params.key?('accent_color')}#{", envelope #{design.envelope}" if params.key?('envelope')}."
     end
@@ -155,6 +169,7 @@ module Assistant
 
     def status
       current = require_event!(:view)
+      card!("event", event_id: current.id)
       s = current.rsvp_summary
       [ summary(current),
         "Guests: #{s[:invited]} (#{s[:sent]} sent, #{s[:viewed]} opened). Replies: #{s[:yes]} yes, #{s[:maybe]} maybe, #{s[:no]} no, #{s[:pending]} waiting. Headcount: #{s[:attending]}.",
@@ -191,7 +206,146 @@ module Assistant
         total += message.recipients_count
       end
       skipped = current.guests.where(phone: nil, email: nil).count
+      card!("event", event_id: current.id)
       "Sending #{total} #{current.card_type_name.downcase.pluralize(total)}.#{" #{skipped} guest(s) have no phone or email — share their link from the guest list." if skipped.positive?}"
+    end
+
+    # --- Bringing people over (Paperless Post exports, contacts files, pasted lists) -------------
+
+    # Reads the spreadsheet or contacts file attached to the host's latest message — or a pasted
+    # list — into a preview. Nothing is saved until apply_guest_list.
+    def read_guest_list(text: nil)
+      require_user!
+      file = inbound&.import_files&.first
+      import = if file
+        data, = Media.fetch(file["url"], content_type: file["content_type"], max_bytes: Imports::Reader::MAX_BYTES)
+        ContactImport.read!(user, data, filename: file["filename"])
+      elsif text.present?
+        ContactImport.read!(user, text)
+      else
+        raise Error, "There's no file on the latest message. Ask them to attach the spreadsheet or contacts file, or paste the list."
+      end
+      card!("import", import_id: import.id)
+      skipped = import.people.skipped_columns
+      [ "Import #{import.id} is ready to review (nothing saved yet). #{import.description}",
+        "Suggested event name: #{import.suggested_title}.",
+        ("Columns not used: #{skipped.first(8).join(', ')}." if skipped.any?) ].compact.join(" ")
+    rescue Imports::Reader::Unreadable => e
+      raise Error, e.message
+    end
+
+    # mode: contacts (address book only), new_event (recreate the event as a draft, replies and
+    # all), or current_event (add them to the event this conversation is working on).
+    def apply_guest_list(import_id:, mode: "contacts", title: nil)
+      require_user!
+      import = user.contact_imports.pending.find_by(id: import_id) || raise(Error, "Import #{import_id} isn't waiting any more — read the file again.")
+      target = mode.to_s == "current_event" ? require_event!(:manage_guests) : nil
+      summary = import.apply!(mode: target ? "event" : mode.to_s.presence_in(%w[contacts new_event]) || "contacts", event: target, title: title)
+      if import.event
+        conversation.update!(event: import.event)
+        card!("event", event_id: import.event.id)
+      end
+      parts = [ "#{summary['contacts_added'].to_i} new in contacts", ("#{summary['contacts_updated']} updated" if summary["contacts_updated"].to_i.positive?),
+                ("#{summary['guests_added']} on the guest list of #{import.event.title}" if import.event),
+                ("#{summary['replies_kept']} replies kept" if summary["replies_kept"].to_i.positive?) ].compact
+      "Brought in #{summary['people']} #{'person'.pluralize(summary['people'].to_i)}: #{parts.join(', ')}. Nobody was contacted."
+    end
+
+    # --- Contacts --------------------------------------------------------------
+
+    def find_contacts(query: nil, group: nil)
+      require_user!
+      scope = user.contacts.alphabetical
+      scope = scope.where("LOWER(contacts.household) = ?", group.to_s.downcase.squish) if group.present?
+      scope = scope.search(query) if query.present?
+      found = scope.limit(25).to_a
+      groups = user.contacts.where.not(household: nil).group(:household).order(Arel.sql("COUNT(*) DESC")).limit(15).count
+      lines = found.map { |c| "#{c.id}: #{c.name}#{" (#{c.household})" if c.household}#{' · email' if c.email}#{' · mobile' if c.phone}" }
+      lines.unshift(found.empty? ? "No matching contacts." : "#{scope.count} matching#{' (first 25)' if scope.count > 25}:")
+      lines << "Groups: #{groups.map { |name, n| "#{name} (#{n})" }.join(', ')}" if groups.any?
+      lines << "Contacts in total: #{user.contacts.count}."
+      lines.join("\n")
+    end
+
+    # Puts people from the host's contacts on the current event's guest list.
+    def invite_contacts(contact_ids: [], group: nil)
+      current = require_event!(:manage_guests)
+      people = user.contacts.where(id: Array(contact_ids)).to_a
+      people |= user.contacts.where("LOWER(contacts.household) = ?", group.to_s.downcase.squish).to_a if group.present?
+      raise Error, "No matching contacts — use find_contacts." if people.empty?
+
+      added, already = [], []
+      emails = current.guests.where.not(email: nil).pluck(:email).to_set
+      phones = current.guests.where.not(phone: nil).pluck(:phone).to_set
+      people.each do |contact|
+        if (contact.email && emails.include?(contact.email)) || (contact.phone && phones.include?(contact.phone))
+          already << contact.name
+        elsif current.guests.create(contact.guest_attributes.merge(source: "manual", plus_ones_allowed: current.default_plus_ones)).persisted?
+          added << contact.name
+          emails << contact.email if contact.email
+          phones << contact.phone if contact.phone
+        end
+      end
+      Activity.record(event: current, user: user, action: "guests_imported", data: { created: added.size }) if added.any?
+      card!("event", event_id: current.id)
+      "Added #{added.size} to #{current.title}#{": #{added.first(8).to_sentence}" if added.any?}#{" (#{already.size} already on the list)" if already.any?}. Not sent yet."
+    end
+
+    # --- The host's usual settings -------------------------------------------------
+
+    def update_preferences(**prefs)
+      require_user!
+      raise Error, user.errors.full_messages.to_sentence unless user.update(prefs.slice(*PREFERENCE_FIELDS))
+
+      "Saved. #{preferences_summary}"
+    end
+
+    def preferences_summary
+      return "" unless user
+
+      d = user.event_defaults
+      [ "New events: hosted by #{d[:host_name]}", "time zone #{d[:time_zone]}", ("adults and kids counted separately" if d[:track_kids]),
+        (d[:allow_maybe] ? "Maybe allowed" : "no Maybe"), ("#{d[:default_plus_ones]} extra guests each" if d[:default_plus_ones].positive?),
+        ("auto-nudge non-responders" if d[:auto_nudge]), ("day-before reminder" if d[:auto_day_before]),
+        "reach the host by #{user.agent_reach}" ].compact.join(", ") + "."
+    end
+
+    # --- Things that need the host ---------------------------------------------------
+
+    def list_proposals
+      require_user!
+      pending = user.agent_proposals.pending.recent_first.limit(10).to_a
+      return "Nothing needs the host right now." if pending.empty?
+
+      pending.map { |p| "#{p.id}: #{p.pitch}#{p.actionable? ? " [approve to: #{p.action_label.downcase}]" : ''}" }.join("\n")
+    end
+
+    def approve_proposal(proposal_id:)
+      require_user!
+      proposal = user.agent_proposals.pending.find_by(id: proposal_id) || raise(Error, "That one isn't waiting any more.")
+      require_confirmation!(proposal.action_label.to_s.downcase.presence || "go ahead") if proposal.actionable?
+      outcome = proposal.approve!(by: user)
+      card!("proposal", proposal_id: proposal.id)
+      outcome
+    end
+
+    def dismiss_proposal(proposal_id:)
+      require_user!
+      proposal = user.agent_proposals.pending.find_by(id: proposal_id) || raise(Error, "That one isn't waiting any more.")
+      proposal.dismiss!
+      card!("proposal", proposal_id: proposal.id)
+      "Okay, I'll leave that."
+    end
+
+    # On the web: offer to connect the host's phone so the agent can text them (the code is shown
+    # by the page, never put in the conversation).
+    def connect_phone
+      require_user!
+      return "This phone is already connected to #{user.name}'s account." unless conversation.web?
+      raise Error, "Texting isn't set up on this Cordially yet." unless Assistant.texting_number
+
+      card!("connect_phone")
+      "Tap “Connect my phone” and text the code it shows to #{Assistant.texting_number}. From then on I'll text you when something needs you, and you can text me anything."
     end
 
     # A link that signs the host into the web app at the right page (single use, 30 minutes).
@@ -204,6 +358,11 @@ module Assistant
       when "preview" then current ? preview_event_path(current) : events_path
       when "thank_yous" then current ? event_thank_yous_path(current) : events_path
       else current ? event_path(current) : events_path
+      end
+      if conversation.web?
+        card!("link", url: path, label: { "design" => "Open the design studio", "guests" => "Open the guest list", "preview" => "Preview the card",
+          "thank_yous" => "Open thank-yous" }.fetch(page, current ? "Open #{current.title}" : "Open your events"))
+        return "Linked below: #{path}"
       end
       "#{sign_in_link_url(SignInLink.issue!(user, path), **link_options)} (works once, for 30 minutes)"
     end
@@ -284,20 +443,18 @@ module Assistant
       # Numbers texted without a country code are taken to be in the host's own country.
       def with_country_code(phone)
         return if phone.blank?
-        return phone if phone.to_s.strip.start_with?("+")
 
-        digits = phone.to_s.gsub(/\D/, "")
-        if conversation.address.start_with?("+1")
-          return "+1#{digits}" if digits.length == 10
-          return "+#{digits}" if digits.length == 11 && digits.start_with?("1")
-        elsif (code = LOCAL_PREFIXES.find { |c| conversation.address.start_with?("+#{c}") }) && digits.start_with?("0")
-          return "+#{code}#{digits[1..]}"
-        end
-        phone
+        PhoneNumber.with_country(phone, country_code) || phone
+      end
+
+      def country_code
+        return "1" if conversation.address.to_s.start_with?("+1")
+
+        LOCAL_PREFIXES.find { |c| conversation.address.to_s.start_with?("+#{c}") } || user&.effective_phone_country_code
       end
 
       def default_time_zone
-        conversation.data_value(:time_zone).presence || "America/New_York"
+        conversation.data_value(:time_zone).presence || user&.time_zone.presence || "America/New_York"
       end
 
       def assign_event(record, attrs)

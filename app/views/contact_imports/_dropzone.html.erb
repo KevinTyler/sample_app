@@ -1,0 +1,21 @@
+<%# locals: (from: nil, title: "Drop a file here") %>
+<%= form_with url: contact_imports_path, multipart: true, class: "form", data: { turbo: false } do |f| %>
+  <%= hidden_field_tag :from, from if from %>
+  <div class="dropzone" data-controller="dropzone" data-action="dragenter->dropzone#enter dragleave->dropzone#leave dragover->dropzone#over drop->dropzone#drop">
+    <span class="dropzone__icon"><%= icon(:upload, size: 24) %></span>
+    <p class="dropzone__title" data-dropzone-target="label"><%= title %></p>
+    <p class="dropzone__hint">or tap to choose one — Excel, CSV or vCard, up to 5 MB</p>
+    <div class="dropzone__formats" aria-hidden="true"><span class="tag">.xlsx</span><span class="tag">.xls</span><span class="tag">.csv</span><span class="tag">.vcf</span></div>
+    <%= f.label :file, "Choose a file to import", class: "visually-hidden" %>
+    <%= f.file_field :file, accept: ".xlsx,.xls,.csv,.tsv,.txt,.vcf,.vcard,text/csv,text/vcard,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      data: { dropzone_target: "input", action: "change->dropzone#submit" } %>
+  </div>
+  <details class="mt-s">
+    <summary class="small">…or paste a list instead</summary>
+    <div class="field mt-s">
+      <%= f.label :pasted, "Names with emails or mobile numbers, one per line — or cells copied from a spreadsheet" %>
+      <%= f.text_area :pasted, rows: 6, placeholder: "Dana Whitfield, dana@example.com, +1 555 0100\nThe Morenos  555 0144" %>
+    </div>
+    <div class="form-actions"><%= f.submit "Read this list", class: "btn btn--primary", data: { turbo_submits_with: "Reading…" } %></div>
+  </details>
+<% end %>

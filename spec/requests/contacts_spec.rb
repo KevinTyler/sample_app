@@ -45,15 +45,22 @@ RSpec.describe "Contacts", type: :request do
       END:VCARD
     VCF
     sign_in host
-    post contact_import_path, params: { file: Rack::Test::UploadedFile.new(StringIO.new(vcf), "text/vcard", original_filename: "contacts.vcf") }
-    expect(flash[:notice]).to include("1 added", "1 skipped")
+    post contact_imports_path, params: { file: Rack::Test::UploadedFile.new(StringIO.new(vcf), "text/vcard", original_filename: "contacts.vcf") }
+    import = host.contact_imports.last
+    expect(response).to redirect_to(contact_import_path(import))
+    follow_redirect!
+    expect(page_text).to include("Phone or iCloud contacts", "Dana Whitfield", "Lee Park")
+
+    post apply_contact_import_path(import), params: { mode: "contacts" }
+    expect(flash[:notice]).to include("Brought in 2 people", "1 added to contacts")
     expect(host.contacts.find_by!(email: "dana@example.com")).to have_attributes(name: "Dana Whitfield", phone: "+15550100100", notes: "Kids: Jonah, Mia")
     expect(host.contacts.find_by!(email: "lee@example.com").phone).to eq("+15550111")
   end
 
   it "imports a CSV with headers" do
     sign_in host
-    post contact_import_path, params: { pasted: "First name,Last name,E-mail,Mobile,Family\nPriya,Shah,priya@example.com,555 0102,Shahs\n" }
+    post contact_imports_path, params: { pasted: "First name,Last name,E-mail,Mobile,Family\nPriya,Shah,priya@example.com,555 0102,Shahs\n" }
+    post apply_contact_import_path(host.contact_imports.last), params: { mode: "contacts" }
     expect(host.contacts.sole).to have_attributes(name: "Priya Shah", email: "priya@example.com", household: "Shahs")
   end
 

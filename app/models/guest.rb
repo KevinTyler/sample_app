@@ -1,6 +1,6 @@
 class Guest < ApplicationRecord
   RSVP_STATUSES = %w[pending yes no maybe].freeze
-  SOURCES = %w[manual csv link].freeze
+  SOURCES = %w[manual csv link import].freeze
   MAX_PLUS_ONES = 20
   COPYABLE_ATTRIBUTES = %w[name email phone group_name plus_ones_allowed host_notes].freeze
 

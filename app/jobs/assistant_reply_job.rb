@@ -14,18 +14,11 @@ class AssistantReplyJob < ApplicationJob
     return if conversation.opted_out? || conversation.latest_inbound != message
     return conversation.reply!(OVER_LIMIT) if conversation.over_daily_limit?
 
-    conversation.reply!(brain_for(conversation, message).reply)
+    brain = Assistant.brain_for(conversation, message)
+    text = brain.reply
+    conversation.reply!(text, cards: brain.cards)
   rescue Anthropic::Errors::APIError => e
     Rails.logger.error("[assistant] Claude API error: #{e.class}: #{e.message}")
     conversation&.reply!(TROUBLE)
   end
-
-  private
-    def brain_for(conversation, message)
-      if Assistant::ClaudeBrain.available?
-        Assistant::ClaudeBrain.new(conversation, message)
-      else
-        Assistant::GuidedBrain.new(conversation, message)
-      end
-    end
 end

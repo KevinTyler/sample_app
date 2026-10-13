@@ -1,0 +1,128 @@
+<% content_for :title, "Check your import" %>
+<% people = @import.people; counts = people.counts; from = params[:from].presence_in(%w[switch]) %>
+<div class="container--flush">
+  <%= link_to (from ? "Switching over" : "Contacts"), (from ? switch_path : contacts_path), class: "back-link" %>
+
+  <section class="panel mt-s stack" aria-labelledby="import-title">
+    <div class="import-head">
+      <div>
+        <span class="eyebrow"><%= people.source_label %></span>
+        <h2 id="import-title"><%= @import.suggested_title %></h2>
+      </div>
+      <% if @import.filename %><span class="small muted"><%= @import.filename %></span><% end %>
+    </div>
+
+    <div class="import-stats">
+      <div class="stat"><span class="stat__value"><%= counts["people"] %></span><span class="stat__label"><%= "person".pluralize(counts["people"]) %></span></div>
+      <div class="stat"><span class="stat__value"><%= counts["emails"] %></span><span class="stat__label">with email</span></div>
+      <div class="stat"><span class="stat__value"><%= counts["phones"] %></span><span class="stat__label">with a mobile</span></div>
+      <% if counts["addresses"].positive? %><div class="stat"><span class="stat__value"><%= counts["addresses"] %></span><span class="stat__label">mailing addresses</span></div><% end %>
+      <% if counts["groups"].positive? %><div class="stat"><span class="stat__value"><%= counts["groups"] %></span><span class="stat__label"><%= "group".pluralize(counts["groups"]) %></span></div><% end %>
+    </div>
+
+    <% if people.has_replies? %>
+      <div class="stack-s">
+        <p class="replies-line m-0">
+          <strong>Replies come too:</strong>
+          <span class="replies-line__yes"><%= counts["yes"] %> yes</span>
+          <span class="replies-line__no"><%= counts["no"] %> no</span>
+          <% if counts["maybe"].positive? %><span class="replies-line__maybe"><%= counts["maybe"] %> maybe</span><% end %>
+          <span class="replies-line__pending"><%= counts["pending"] %> not yet</span>
+        </p>
+        <div class="reply-bar" role="img" aria-label="<%= counts['yes'] %> yes, <%= counts['maybe'] %> maybe, <%= counts['no'] %> no out of <%= counts['people'] %>">
+          <% %w[yes maybe no].each do |status| %><span class="reply-bar__<%= status %>" data-width="<%= (counts[status] * 100.0 / [ counts['people'], 1 ].max).round(1) %>"></span><% end %>
+        </div>
+      </div>
+    <% end %>
+    <% if people.groups.any? %>
+      <div class="cluster"><% people.groups.first(10).each do |group| %><span class="tag"><%= group %></span><% end %><% if people.groups.size > 10 %><span class="small muted">+<%= people.groups.size - 10 %> more</span><% end %></div>
+    <% end %>
+    <% if counts["merged"].positive? %><p class="small muted m-0"><%= pluralize(counts["merged"], "duplicate row") %> (same email or number) combined into one person each.</p><% end %>
+  </section>
+
+  <section class="panel mt-m" aria-labelledby="columns-title">
+    <div class="panel__header">
+      <h2 id="columns-title" class="panel__title">What each column means</h2>
+      <span class="small"><%= people.mapping.size %> of <%= people.headers.size %> columns brought in</span>
+    </div>
+    <%= form_with url: contact_import_path(@import), method: :patch, data: { controller: "autosubmit" } do |f| %>
+      <%= hidden_field_tag :from, from if from %>
+      <div class="table-wrap">
+        <table class="table mapping-table">
+          <thead><tr><th scope="col">In your file</th><th scope="col">Looks like</th><th scope="col">Bring in as</th></tr></thead>
+          <tbody>
+            <% people.headers.each_with_index do |header, index| %>
+              <% samples = people.data_rows.filter_map { |row| row[index].presence }.uniq.first(3) %>
+              <tr class="<%= 'is-skipped' unless people.mapping.key?(index) %>">
+                <th scope="row"><%= header.presence || "Column #{index + 1}" %></th>
+                <td title="<%= samples.join(' · ') %>"><%= samples.join(" · ").truncate(60) %></td>
+                <td>
+                  <label class="visually-hidden" for="mapping_<%= index %>">Bring “<%= header.presence || "Column #{index + 1}" %>” in as</label>
+                  <%= select_tag "mapping[#{index}]", options_for_select([ [ "Skip", "" ] ] + Imports::People::FIELDS.map { |key, label| [ label, key ] }, people.mapping[index]),
+                    id: "mapping_#{index}", data: { action: "change->autosubmit#submit" } %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <noscript><div class="form-actions mt-s"><%= f.submit "Update the preview", class: "btn" %></div></noscript>
+    <% end %>
+  </section>
+
+  <section class="panel mt-m" aria-labelledby="people-title">
+    <h2 id="people-title" class="panel__title mb-s">Who's in it <span class="muted">(first <%= [ people.people.size, 12 ].min %>)</span></h2>
+    <div class="table-wrap">
+      <table class="table people-preview">
+        <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Mobile</th><th scope="col">Group</th><th scope="col">Address</th><% if people.has_replies? %><th scope="col">Reply</th><% end %></tr></thead>
+        <tbody>
+          <% people.people.first(12).each do |person| %>
+            <tr>
+              <td><strong><%= person.name %></strong></td>
+              <td><%= person.email %></td>
+              <td><%= person.phone %></td>
+              <td><%= person.group %></td>
+              <td class="address"><%= person.address %></td>
+              <% if people.has_replies? %>
+                <td><span class="badge badge--rsvp-<%= person.rsvp %>"><%= { "yes" => "Yes#{" · #{person.party_size}" if person.party_size.to_i > 1}", "no" => "No", "maybe" => "Maybe", "pending" => "Not yet" }[person.rsvp] %></span></td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <% if people.skipped_columns.any? %><p class="small muted mt-s mb-0">Not brought in: <%= people.skipped_columns.to_sentence %>.</p><% end %>
+  </section>
+
+  <section class="panel mt-m" aria-labelledby="where-title">
+    <h2 id="where-title" class="panel__title mb-s">Where should they go?</h2>
+    <%= form_with url: apply_contact_import_path(@import), method: :post, class: "form" do |f| %>
+      <%= hidden_field_tag :from, from if from %>
+      <% default_mode = people.has_replies? ? "new_event" : "contacts" %>
+      <fieldset class="mode-choices">
+        <legend class="visually-hidden">Where should they go?</legend>
+        <label class="mode-choice"><%= radio_button_tag :mode, "new_event", default_mode == "new_event" %><strong><%= people.has_replies? ? "Recreate the event" : "Start an event with them" %></strong><span><%= people.has_replies? ? "A draft with all #{counts['people']} guests and the replies they've already given" : "A new draft with everyone on the guest list" %></span></label>
+        <% if @events.any? %>
+          <label class="mode-choice"><%= radio_button_tag :mode, "event", false %><strong>Add to an event</strong><span>Put them on a guest list you already have</span></label>
+        <% end %>
+        <label class="mode-choice"><%= radio_button_tag :mode, "contacts", default_mode == "contacts" %><strong>Contacts only</strong><span>Keep them in your contacts for next time</span></label>
+      </fieldset>
+      <div class="field mode-extra mode-extra--new_event">
+        <%= label_tag :title, "Event name" %>
+        <%= text_field_tag :title, @import.suggested_title, maxlength: 120 %>
+        <p class="field__hint">You'll add the date, place and design next — or just tell Cordially.</p>
+      </div>
+      <% if @events.any? %>
+        <div class="field mode-extra mode-extra--event">
+          <%= label_tag :event_id, "Which event?" %>
+          <%= select_tag :event_id, options_from_collection_for_select(@events, :id, :title) %>
+        </div>
+      <% end %>
+      <p class="small muted m-0">Everyone is also saved to your contacts (details you already have are never overwritten). Nobody is contacted.</p>
+      <div class="form-actions">
+        <%= f.submit "Bring in #{pluralize(counts['people'], 'person')}", class: "btn btn--wax", data: { turbo_submits_with: "Bringing them in…" } %>
+        <%= link_to "Start over", contact_import_path(@import, from: from), class: "btn btn--ghost", data: { turbo_method: :delete } %>
+      </div>
+    <% end %>
+  </section>
+</div>

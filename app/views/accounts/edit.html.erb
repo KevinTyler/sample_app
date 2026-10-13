@@ -23,6 +23,9 @@
           <p class="field__hint m-0">Applies to every event you host or co-host.</p>
         </div>
       </fieldset>
+      <h2 class="panel__title mt-m">Your usual settings</h2>
+      <p class="field__hint m-0">Every new event starts this way. Coming from Paperless Post? <%= link_to "Bring your people and replies too", switch_path %>.</p>
+      <%= render "accounts/usual_settings", f: f, user: @user %>
       <div class="form-actions"><%= f.submit "Save settings", class: "btn btn--primary" %></div>
     <% end %>
   </div>
