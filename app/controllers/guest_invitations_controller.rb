@@ -14,6 +14,8 @@ class GuestInvitationsController < ApplicationController
     with: -> { redirect_to guest_invitation_path(params[:token]), alert: "Too many attempts. Please wait a few minutes and try again." }
   rate_limit to: 10, within: 10.minutes, only: :pay, by: -> { "#{request.remote_ip}:#{params[:token].to_s.first(16)}" }, name: "guest-pay",
     with: -> { redirect_to guest_invitation_path(params[:token]), alert: "Too many attempts. Please wait a few minutes." }
+  rate_limit to: 6, within: 1.hour, only: :sign_guestbook, by: -> { params[:token].to_s.first(16) }, name: "guestbook",
+    with: -> { redirect_to guest_invitation_path(params[:token], anchor: "guestbook"), alert: "That's a lot of notes! Please try again later." }
   rate_limit to: 120, within: 1.minute, by: -> { request.remote_ip }, name: "guest-pages",
     with: -> { head :too_many_requests }
 
@@ -47,6 +49,18 @@ class GuestInvitationsController < ApplicationController
     redirect_to guest_invitation_path(params[:token]), alert: "We couldn't start the payment just now. Please try again in a moment."
   end
 
+  def sign_guestbook
+    return head(:not_found) unless @event.guestbook_enabled? && @event.published?
+
+    entry = @event.guestbook_entries.new(guest: @guest, author_name: @guest.name, body: params.dig(:guestbook_entry, :body))
+    if entry.save
+      Activity.record(event: @event, guest: @guest, action: "guestbook_signed")
+      redirect_to guest_invitation_path(params[:token], anchor: "guestbook"), notice: "Thanks — your note is in the guestbook."
+    else
+      redirect_to guest_invitation_path(params[:token], anchor: "guestbook"), alert: "Your note #{entry.errors[:body].first || 'could not be saved'}."
+    end
+  end
+
   def calendar
     invite = CalendarInvite.new(@event, url: guest_invitation_url(params[:token]))
     send_data invite.to_ics, filename: invite.filename, type: "text/calendar; charset=utf-8", disposition: "attachment"
@@ -76,7 +90,7 @@ class GuestInvitationsController < ApplicationController
     end
 
     def rsvp_params
-      permitted = params.fetch(:rsvp, {}).permit(:status, :party_size, :guest_note, answers: {})
+      permitted = params.fetch(:rsvp, {}).permit(:status, :party_size, :adults, :kids, :guest_note, answers: {}, plus_one_names: [])
       permitted.to_h.symbolize_keys
     end
 

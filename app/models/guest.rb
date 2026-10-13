@@ -25,6 +25,9 @@ class Guest < ApplicationRecord
   validates :plus_ones_allowed, numericality: { only_integer: true, in: 0..MAX_PLUS_ONES }
   validates :party_size, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :guest_note, length: { maximum: 1000 }
+  validates :kids_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validate :kids_within_party
+  validate :plus_one_names_valid
   validates :host_notes, length: { maximum: 2000 }
   validates :source, inclusion: { in: SOURCES }
   validates :token_key, presence: true, uniqueness: true
@@ -102,6 +105,26 @@ class Guest < ApplicationRecord
     1 + plus_ones_allowed
   end
 
+  def adults_count
+    [ party_size - kids_count, 0 ].max
+  end
+
+  def plus_one_names
+    Array(super).map(&:to_s)
+  end
+
+  def plus_one_names=(names)
+    super(Array(names).map { |n| n.to_s.squish }.compact_blank.first(MAX_PLUS_ONES))
+  end
+
+  # "2 adults, 1 kid" when the event tracks children; otherwise just the headcount.
+  def party_breakdown
+    return party_size.to_s unless event.track_kids? && (rsvp_yes? || rsvp_maybe?)
+
+    [ ("#{adults_count} #{'adult'.pluralize(adults_count)}" if adults_count.positive?),
+      ("#{kids_count} #{'kid'.pluralize(kids_count)}" if kids_count.positive?) ].compact.join(", ")
+  end
+
   def responded?
     !rsvp_pending?
   end
@@ -138,6 +161,14 @@ class Guest < ApplicationRecord
   end
 
   private
+    def kids_within_party
+      errors.add(:kids_count, "can't be more than the party size") if kids_count.to_i > party_size.to_i
+    end
+
+    def plus_one_names_valid
+      errors.add(:plus_one_names, "are too long (80 characters each)") if plus_one_names.any? { |n| n.length > 80 }
+    end
+
     def assign_token_key
       self.token_key ||= GuestAccessToken.generate_key
     end

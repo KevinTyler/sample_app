@@ -118,6 +118,33 @@
   </section>
 <% end %>
 
+<% if @event.guestbook_enabled? && !@event.draft? %>
+  <% entries = @event.guestbook_entries.visible.recent.limit(50) %>
+  <section class="guest-panel" id="guestbook" aria-labelledby="guestbook-heading">
+    <h2 id="guestbook-heading">Notes for <%= @event.display_host_name %></h2>
+    <% if @preview %>
+      <p class="small muted">Invited guests can leave a note here for you and each other.</p>
+    <% elsif !@event.cancelled? %>
+      <%= form_with url: guest_guestbook_path(params[:token]), scope: :guestbook_entry, class: "form guestbook-form" do |f| %>
+        <%= f.label :body, "Leave a note", class: "visually-hidden" %>
+        <%= f.text_area :body, rows: 2, maxlength: 500, required: true, placeholder: "Can't wait to celebrate!" %>
+        <div><%= f.submit "Sign the guestbook", class: "btn btn--small btn--primary" %></div>
+      <% end %>
+    <% end %>
+    <% if entries.any? %>
+      <ul class="guestbook">
+        <% entries.each do |entry| %>
+          <li>
+            <span class="monogram monogram--small" aria-hidden="true"><%= initials(entry.author_name) %></span>
+            <div><strong><%= entry.author_name %></strong> <time class="faint small" datetime="<%= entry.created_at.iso8601 %>"><%= time_ago_in_words(entry.created_at) %> ago</time>
+              <p class="pre-line"><%= entry.body %></p></div>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+<% end %>
+
 <% content_for :guest_footer do %>
   <% if !@preview && @guest.email.present? %>
     <% if @guest.unsubscribed? %>

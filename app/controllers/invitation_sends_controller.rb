@@ -8,8 +8,11 @@ class InvitationSendsController < ApplicationController
   def create
     return redirect_to(event_path(@event), alert: "Publish the event before sending invitations.") unless @event.published?
 
-    message = @event.messages.idempotent_create!(idempotency_key: idempotency_key, kind: "invitation",
-      author: current_user, channels: channels, audience: {}, body: params[:personal_note].to_s.strip.first(1000).presence)
+    attributes = { kind: "invitation", author: current_user, channels: channels, audience: {},
+                   body: params[:personal_note].to_s.strip.first(1000).presence }
+    return schedule(attributes) if params[:send_at] == "later"
+
+    message = @event.messages.idempotent_create!(idempotency_key: idempotency_key, **attributes)
 
     if message.status == "dispatched"
       redirect_to event_guests_path(@event), notice: "Those invitations were already sent."
@@ -20,6 +23,17 @@ class InvitationSendsController < ApplicationController
   end
 
   private
+    def schedule(attributes)
+      message = @event.messages.find_by(idempotency_key: idempotency_key) ||
+        @event.messages.new(idempotency_key: idempotency_key, status: "scheduled", scheduled_for_local: params[:scheduled_for_local], **attributes)
+      if message.persisted? || message.save
+        message.enqueue_scheduled_dispatch if message.previously_new_record?
+        redirect_to event_messages_path(@event), notice: "Invitations scheduled for #{helpers.message_status_text(message).delete_prefix('Scheduled for ')}."
+      else
+        redirect_to event_path(@event), alert: "Couldn't schedule: #{message.errors.full_messages.to_sentence}."
+      end
+    end
+
     def channels
       requested = Array(params[:channels]).map(&:to_s) & Message::CHANNELS
       requested -= [ "sms" ] unless Messaging.sms_enabled?

@@ -260,3 +260,20 @@
   padding-top: 15cqi;
   padding-bottom: 42cqi;
 }
+
+/* Party steppers on the reply form */
+.party-steppers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.stepper { display: flex; align-items: center; justify-content: space-between; min-height: 52px; border: 1px solid var(--line-strong); border-radius: 14px; padding: 0 6px; background: var(--paper); }
+.stepper__button { width: 44px; height: 44px; border: 0; border-radius: 12px; background: var(--porcelain); font: 600 1.25rem var(--font-ui); color: var(--ink); cursor: pointer; flex: none; }
+.stepper__button:hover { background: var(--sand); }
+input[type="number"].stepper__input { border: 0; min-height: 44px; width: 3.5em; text-align: center; font-size: 1.1rem; font-weight: 600; padding: 0; background: transparent; -moz-appearance: textfield; }
+.stepper__input::-webkit-outer-spin-button, .stepper__input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input.stepper__input:focus { box-shadow: none; }
+
+/* Guestbook */
+.guestbook { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 16px; }
+.guestbook li { display: flex; gap: 12px; align-items: flex-start; }
+.guestbook li > div { flex: 1; min-width: 0; }
+.guestbook p { margin: 4px 0 0; color: var(--ink-2); }
+.guestbook li.is-hidden { opacity: 0.55; }
+.guestbook-form textarea { min-height: 72px; }

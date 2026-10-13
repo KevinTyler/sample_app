@@ -1,0 +1,13 @@
+Your replies from the last day
+
+<% @by_event.each do |event, activities| -%>
+<%= event.title %>
+<% activities.each do |activity| -%>
+- <%= activity_sentence(activity) %>
+<% end -%>
+<% s = event.rsvp_summary -%>
+  Now: <%= s[:attending] %> attending · <%= s[:pending] %> awaiting — <%= event_guests_url(event, **Messaging.url_options) %>
+
+<% end -%>
+--
+Change how often we email you: <%= edit_account_url(**Messaging.url_options) %>

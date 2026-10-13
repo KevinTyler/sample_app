@@ -1,0 +1,26 @@
+<% summary = @event.rsvp_summary %>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+  <tr><td style="padding:28px 28px 8px;">
+    <p style="margin:0 0 6px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#8A6A2B;"><%= @event.title %></p>
+    <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.2;font-weight:normal;"><%= activity_sentence(@activity) %></h1>
+  </td></tr>
+  <tr><td style="padding:8px 28px;font-size:15px;line-height:1.6;color:#4D4A60;">
+    <% @guest.rsvp_answers.includes(:event_question).each do |a| %>
+      <div><strong style="color:#1C1A2E;"><%= a.event_question.prompt %>:</strong> <%= a.value %></div>
+    <% end %>
+    <% if @guest.guest_note.present? %><div style="margin-top:8px;font-style:italic;">“<%= @guest.guest_note %>”</div><% end %>
+  </td></tr>
+  <tr><td style="padding:12px 28px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" style="background:#F6F1E9;border-radius:12px;width:100%;">
+      <tr>
+        <% [ [ summary[:attending], "attending" ], [ summary[:maybe], "maybe" ], [ summary[:no], "can't" ], [ summary[:pending], "awaiting" ] ].each do |n, label| %>
+          <td style="padding:14px;text-align:center;"><div style="font-family:Georgia,serif;font-size:26px;"><%= n %></div><div style="font-size:12px;color:#6F6B82;"><%= label %></div></td>
+        <% end %>
+      </tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:16px 28px 28px;">
+    <a href="<%= @url %>" style="display:inline-block;background:#15132B;color:#FFFDF9;text-decoration:none;padding:12px 22px;border-radius:999px;font-weight:600;">See the guest list</a>
+    <p style="margin:18px 0 0;font-size:12px;color:#6F6B82;">You host this event on Cordially. <a href="<%= edit_account_url(**Messaging.url_options) %>" style="color:#6F6B82;">Change how often we email you</a>.</p>
+  </td></tr>
+</table>

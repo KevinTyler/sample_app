@@ -7,6 +7,8 @@ class Activity < ApplicationRecord
 
   scope :recent, -> { order(created_at: :desc, id: :desc) }
 
+  after_create_commit -> { HostNotifier.reply_recorded(self) }, if: -> { action.in?(HostNotifier::REPLY_ACTIONS) }
+
   def self.record(event:, action:, guest: nil, user: nil, data: {})
     create!(event: event, guest: guest, user: user, action: action, data: data)
   end

@@ -11,8 +11,11 @@ class RsvpSubmission
 
   attribute :status, :string
   attribute :party_size, :integer
+  attribute :adults, :integer
+  attribute :kids, :integer
   attribute :guest_note, :string
   attr_accessor :guest, :answers, :by_host, :user
+  attr_writer :plus_one_names
 
   validates :status, inclusion: { in: STATUSES, message: "Please choose a response" }
   validates :guest_note, length: { maximum: 1000 }
@@ -20,11 +23,29 @@ class RsvpSubmission
   validate :party_size_within_limits
   validate :rsvps_open, unless: :by_host
   validate :answers_valid
+  validate :plus_one_names_valid
 
   def self.from_guest(guest)
     new(guest: guest, status: guest.rsvp_pending? ? nil : guest.rsvp_status,
       party_size: guest.responded? ? guest.party_size : 1, guest_note: guest.guest_note,
+      adults: guest.responded? ? [ guest.adults_count, 1 ].max : 1, kids: guest.responded? ? guest.kids_count : 0,
+      plus_one_names: guest.plus_one_names,
       answers: guest.rsvp_answers.to_h { |a| [ a.event_question_id.to_s, a.value ] })
+  end
+
+  def plus_one_names
+    raw = @plus_one_names
+    raw = raw.values if raw.respond_to?(:values) # fields_for-style hash {"0" => "Sam"}
+    Array(raw).map { |n| n.to_s.squish }
+  end
+
+  # With adult/kid counts on, the party size is their sum.
+  def party_size
+    event_tracks_kids? && (adults || kids) ? adults.to_i + kids.to_i : super
+  end
+
+  def kids_count
+    status == "no" || !event_tracks_kids? ? 0 : kids.to_i
   end
 
   def event
@@ -57,8 +78,9 @@ class RsvpSubmission
         raise ActiveRecord::Rollback
       end
 
-      guest.update!(rsvp_status: status, party_size: effective_party_size, guest_note: guest_note.to_s.strip.presence,
-        responded_at: Time.current)
+      guest.update!(rsvp_status: status, party_size: effective_party_size, kids_count: kids_count,
+        plus_one_names: (status == "no" || !event.ask_plus_one_names? ? [] : plus_one_names.first([ effective_party_size - 1, 0 ].max)),
+        guest_note: guest_note.to_s.strip.presence, responded_at: Time.current)
       save_answers!
       Activity.record(event: event, guest: guest, user: (user if by_host),
         action: previous_status == "pending" ? "rsvp_submitted" : "rsvp_changed",
@@ -72,6 +94,10 @@ class RsvpSubmission
   end
 
   private
+    def event_tracks_kids?
+      guest&.event&.track_kids?
+    end
+
     def maybe_allowed
       errors.add(:status, "Maybe isn't an option for this event") if status == "maybe" && !event.allow_maybe
     end
@@ -79,7 +105,11 @@ class RsvpSubmission
     def party_size_within_limits
       return if status == "no" || status.blank?
 
-      if party_size.to_i < 1
+      if event_tracks_kids? && adults.to_i < 1
+        errors.add(:adults, "must include at least one adult")
+      elsif event_tracks_kids? && kids.to_i.negative?
+        errors.add(:kids, "can't be negative")
+      elsif party_size.to_i < 1
         errors.add(:party_size, "must be at least 1")
       elsif party_size.to_i > guest.max_party_size
         errors.add(:party_size, guest.max_party_size == 1 ? "must be 1 (this invitation is for one)" : "can be at most #{guest.max_party_size}")
@@ -94,6 +124,10 @@ class RsvpSubmission
       elsif !event.accepting_rsvps?
         errors.add(:base, "The RSVP deadline has passed. Please contact the host to change your response.")
       end
+    end
+
+    def plus_one_names_valid
+      errors.add(:base, "Please keep each name under 80 characters") if plus_one_names.any? { |n| n.length > 80 }
     end
 
     def answers_valid

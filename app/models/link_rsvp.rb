@@ -14,12 +14,18 @@ class LinkRsvp
   attribute :email, :string
   attribute :status, :string
   attribute :party_size, :integer
+  attribute :adults, :integer
+  attribute :kids, :integer
   attribute :guest_note, :string
-  attr_accessor :event, :answers
+  attr_accessor :event, :answers, :plus_one_names
   attr_reader :guest, :outcome
 
   validates :name, presence: true, length: { maximum: 100 }
   validates :email, presence: true, length: { maximum: 254 }, format: { with: EmailFormat::REGEXP }
+
+  def plus_one_names
+    Array(@plus_one_names)
+  end
 
   def answer_for(question)
     (answers || {}).to_h.stringify_keys[question.id.to_s]
@@ -36,7 +42,8 @@ class LinkRsvp
     end
 
     @guest = event.guests.new(name: name, email: email, source: "link", plus_ones_allowed: event.default_plus_ones)
-    rsvp = RsvpSubmission.new(guest: @guest, status: status, party_size: party_size, guest_note: guest_note, answers: answers)
+    rsvp = RsvpSubmission.new(guest: @guest, status: status, party_size: party_size, adults: adults, kids: kids,
+      plus_one_names: plus_one_names, guest_note: guest_note, answers: answers)
     return copy_errors(@guest) unless @guest.valid?
     return copy_errors(rsvp) unless rsvp.valid?
 

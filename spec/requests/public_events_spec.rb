@@ -20,9 +20,10 @@ RSpec.describe "Public share link", type: :request do
     guest = event.guests.find_by!(email: "robin@example.com")
     expect(guest).to have_attributes(source: "link", rsvp_status: "yes", party_size: 2)
     expect(response).to redirect_to(guest_invitation_path(guest.access_token))
-    mail = ActionMailer::Base.deliveries.sole
+    mail = ActionMailer::Base.deliveries.select { |m| m.to == [ "robin@example.com" ] }.sole
     expect(mail.subject).to eq("Your RSVP link: #{event.title}")
     expect(mail.text_part.body.to_s).to include(guest.access_token)
+    expect(ActionMailer::Base.deliveries.map(&:to)).to include([ event.owner.email_address ]) # host hears about the reply
   end
 
   it "never changes an existing guest's RSVP; it emails them their own link instead (throttled)" do

@@ -245,6 +245,21 @@ view, door), then implemented across every screen:
   guest pages carry a "Hosting something?" link back to Cordially.
 - Icons are drawn for the app (`IconHelper`); every page still passes the strict CSP (no inline styles).
 
+### ✅ Stage 8 — hosting essentials
+
+- **Adults & kids** (Settings → RSVPs): guests use steppers for adults and kids; the party size is
+  their sum and stays within the invitation's limit. **Plus-one names** optional per event.
+  Overview, guest list and CSV export show the breakdown and names.
+- **Host notifications** (account menu → *Settings*): an email per reply (default), one daily summary
+  (`HostDigestJob`, hourly in production, at most one summary per 20 hours), or off. Co-hosts get
+  them too; door staff don't; nobody is told about a reply they recorded themselves.
+- **Automatic reminders** (Settings → Automatic reminders): nudge non-responders N days before the
+  deadline, and remind everyone coming the day before, at 10am event time. They're scheduled
+  Messages kept in step with the dates (`AutoReminders`); cancelling one in Messages turns it off.
+- **Scheduled invitations**: *Send invitations → Later* sends to everyone still uninvited at that time.
+- **Guestbook**: invited guests leave notes for the host and each other on the invitation page
+  (never on the public share page); hosts hide notes from the Overview. Rate-limited per guest.
+
 ## Architecture
 
 | Area | Where |

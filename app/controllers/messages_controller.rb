@@ -56,6 +56,9 @@ class MessagesController < ApplicationController
   def destroy
     if @message.scheduled?
       @message.destroy!
+      # Cancelling an automatic reminder turns that reminder off, so a later date change won't revive it.
+      setting = { AutoReminders::NUDGE_KEY => :auto_nudge, AutoReminders::DAY_BEFORE_KEY => :auto_day_before }[@message.idempotency_key]
+      @event.update_columns(setting => false) if setting
       redirect_to event_messages_path(@event), notice: "Scheduled message cancelled.", status: :see_other
     else
       redirect_to event_message_path(@event, @message), alert: "Only scheduled messages can be cancelled."

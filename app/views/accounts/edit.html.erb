@@ -1,0 +1,29 @@
+<% content_for :title, "Your settings" %>
+<div class="container--form container--flush">
+  <header class="page-header mb-s">
+    <div>
+      <span class="eyebrow">Account</span>
+      <h1>Your <em>settings</em></h1>
+      <p class="page-header__meta">Signed in as <%= @user.email_address %></p>
+    </div>
+  </header>
+  <div class="panel mt-m">
+    <%= form_with model: @user, url: account_path, method: :patch, class: "form" do |f| %>
+      <%= form_errors(@user) %>
+      <div class="field">
+        <%= f.label :name, "Your name" %>
+        <%= f.text_field :name, required: true, maxlength: 80, autocomplete: "name" %>
+      </div>
+      <fieldset>
+        <legend>When guests reply</legend>
+        <div class="form">
+          <% User::RSVP_NOTIFICATION_OPTIONS.each do |value, label| %>
+            <label class="checkbox"><%= f.radio_button :rsvp_notifications, value %> <span><%= label %></span></label>
+          <% end %>
+          <p class="field__hint m-0">Applies to every event you host or co-host.</p>
+        </div>
+      </fieldset>
+      <div class="form-actions"><%= f.submit "Save settings", class: "btn btn--primary" %></div>
+    <% end %>
+  </div>
+</div>

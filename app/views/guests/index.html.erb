@@ -104,7 +104,10 @@
                 <% end %>
                 <% if guest.responded_at %><div class="table__secondary"><%= time_ago_in_words(guest.responded_at) %> ago</div><% end %>
               </td>
-              <td data-label="Party"><%= party_label(guest) %></td>
+              <td data-label="Party">
+                <%= party_label(guest) %>
+                <% if guest.plus_one_names.any? && (guest.rsvp_yes? || guest.rsvp_maybe?) %><div class="table__secondary">with <%= guest.plus_one_names.to_sentence %></div><% end %>
+              </td>
               <td data-label="Answers">
                 <% answers = guest.rsvp_answers.index_by(&:event_question_id) %>
                 <% if answers.any? || guest.guest_note.present? %>

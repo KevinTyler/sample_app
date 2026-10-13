@@ -5,7 +5,8 @@ module MessagesHelper
                       "failed" => "Failed", "bounced" => "Bounced" }.freeze
 
   def message_kind_badge(message)
-    tag.span(KIND_LABELS.fetch(message.kind, message.kind.humanize), class: "badge badge--#{message.kind == 'cancellation' ? 'cancelled' : 'sent'}")
+    badge = tag.span(KIND_LABELS.fetch(message.kind, message.kind.humanize), class: "badge badge--#{message.kind == 'cancellation' ? 'cancelled' : 'sent'}")
+    AutoReminders.auto?(message) ? safe_join([ badge, tag.span("Automatic", class: "tag") ], " ") : badge
   end
 
   def message_status_text(message)

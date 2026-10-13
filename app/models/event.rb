@@ -21,6 +21,7 @@ class Event < ApplicationRecord
   ARTWORK_MAX_SIZE = 8.megabytes
 
   has_many :payments, dependent: :destroy
+  has_many :guestbook_entries, dependent: :delete_all
   CURRENCIES = {
     "usd" => { symbol: "$", name: "US dollar" }, "cad" => { symbol: "$", name: "Canadian dollar" },
     "eur" => { symbol: "€", name: "Euro" }, "gbp" => { symbol: "£", name: "British pound" },
@@ -41,6 +42,7 @@ class Event < ApplicationRecord
   validates :cancellation_note, length: { maximum: 2000 }
   validates :capacity, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: 100_000 }, allow_nil: true
   validates :default_plus_ones, numericality: { only_integer: true, in: 0..20 }
+  validates :nudge_days_before, numericality: { only_integer: true, in: 1..14 }
   validates :video_url, length: { maximum: 500 },
     format: { with: %r{\Ahttps?://[^\s<>"']+\z}i, message: "must be a full link starting with http:// or https://" },
     allow_nil: true
@@ -58,6 +60,9 @@ class Event < ApplicationRecord
   validate :ticket_price_parses
 
   before_validation :resolve_local_times
+  after_commit :sync_auto_reminders, on: %i[create update], if: :reminder_inputs_changed?
+
+  REMINDER_INPUTS = %w[status rsvp_deadline starts_at time_zone auto_nudge nudge_days_before auto_day_before].freeze
 
   scope :upcoming, -> { where("starts_at IS NULL OR starts_at >= ?", 1.day.ago).order(Arel.sql("starts_at IS NULL, starts_at")) }
   scope :past, -> { where(starts_at: ...1.day.ago).order(starts_at: :desc) }
@@ -186,6 +191,7 @@ class Event < ApplicationRecord
       pending: counts.fetch("pending", 0),
       attending: attending_count,
       maybe_headcount: guests.where(rsvp_status: "maybe").sum(:party_size),
+      attending_kids: guests.where(rsvp_status: "yes").sum(:kids_count),
       viewed: guests.where.not(first_viewed_at: nil).count,
       sent: guests.where.not(invited_at: nil).count
     }
@@ -236,6 +242,14 @@ class Event < ApplicationRecord
   end
 
   private
+    def reminder_inputs_changed?
+      (saved_changes.keys & REMINDER_INPUTS).any?
+    end
+
+    def sync_auto_reminders
+      AutoReminders.sync(self)
+    end
+
     def resolve_local_times
       @unparseable_times = []
       LOCAL_TIME_FIELDS.each do |field|

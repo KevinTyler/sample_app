@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_030000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_000000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -144,6 +144,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_030000) do
     t.datetime "updated_at", null: false
     t.integer "ticket_price_cents"
     t.string "currency", default: "usd", null: false
+    t.boolean "track_kids", default: false, null: false
+    t.boolean "ask_plus_one_names", default: false, null: false
+    t.boolean "guestbook_enabled", default: true, null: false
+    t.boolean "auto_nudge", default: false, null: false
+    t.integer "nudge_days_before", default: 3, null: false
+    t.boolean "auto_day_before", default: false, null: false
     t.index ["owner_id"], name: "index_events_on_owner_id"
     t.index ["share_token"], name: "index_events_on_share_token", unique: true
     t.index ["status"], name: "index_events_on_status"
@@ -161,6 +167,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_030000) do
     t.datetime "updated_at", null: false
     t.index ["event_id"], name: "index_guest_imports_on_event_id"
     t.index ["user_id"], name: "index_guest_imports_on_user_id"
+  end
+
+  create_table "guestbook_entries", force: :cascade do |t|
+    t.integer "event_id", null: false
+    t.integer "guest_id"
+    t.string "author_name", null: false
+    t.text "body", null: false
+    t.datetime "hidden_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id", "created_at"], name: "index_guestbook_entries_on_event_id_and_created_at"
+    t.index ["event_id"], name: "index_guestbook_entries_on_event_id"
+    t.index ["guest_id"], name: "index_guestbook_entries_on_guest_id"
   end
 
   create_table "guests", force: :cascade do |t|
@@ -185,6 +204,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_030000) do
     t.datetime "unsubscribed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "kids_count", default: 0, null: false
+    t.json "plus_one_names", default: [], null: false
     t.index ["event_id", "email"], name: "index_guests_on_event_id_and_email", unique: true, where: "email IS NOT NULL"
     t.index ["event_id", "group_name"], name: "index_guests_on_event_id_and_group_name"
     t.index ["event_id", "rsvp_status"], name: "index_guests_on_event_id_and_rsvp_status"
@@ -270,6 +291,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_030000) do
     t.string "password_digest", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "rsvp_notifications", default: "instant", null: false
+    t.datetime "last_digest_at"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
@@ -289,6 +312,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_030000) do
   add_foreign_key "events", "users", column: "owner_id"
   add_foreign_key "guest_imports", "events"
   add_foreign_key "guest_imports", "users", on_delete: :nullify
+  add_foreign_key "guestbook_entries", "events"
+  add_foreign_key "guestbook_entries", "guests", on_delete: :nullify
   add_foreign_key "guests", "events"
   add_foreign_key "messages", "events"
   add_foreign_key "messages", "users", column: "author_id"

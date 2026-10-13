@@ -17,7 +17,7 @@ class GuestListExport
 
   private
     def header
-      [ "Name", "Email", "Phone", "Group", "Plus-ones allowed", "RSVP", "Party size", "Responded at",
+      [ "Name", "Email", "Phone", "Group", "Plus-ones allowed", "RSVP", "Party size", *([ "Adults", "Kids" ] if @event.track_kids?), "Plus-one names", "Responded at",
         "Invited at", "Opened at", *@questions.map(&:prompt), "Note from guest", "Host notes",
         "Checked in", "Source", *([ "Paid", "Amount due" ] if @event.ticketed?) ]
     end
@@ -27,6 +27,7 @@ class GuestListExport
       [
         guest.name, guest.email, guest.phone, guest.group_name, guest.plus_ones_allowed,
         RsvpHelper::STATUS_LABELS.fetch(guest.rsvp_status), guest.party_size,
+        *(@event.track_kids? ? [ guest.adults_count, guest.kids_count ] : []), guest.plus_one_names.join("; ").presence,
         time(guest.responded_at), time(guest.invited_at), time(guest.first_viewed_at),
         *@questions.map { |q| answers[q.id]&.value },
         guest.guest_note, guest.host_notes, guest.checked_in_count.positive? ? guest.checked_in_count : nil, guest.source,

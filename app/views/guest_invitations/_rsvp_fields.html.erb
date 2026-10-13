@@ -14,10 +14,39 @@
   <p class="small muted m-0" data-rsvp-form-target="attendingOnly">Tickets are <%= Money.format(event.ticket_price_cents, event.currency) %> per person, paid after you RSVP.</p>
 <% end %>
 
-<% if guest.max_party_size > 1 %>
-  <div class="field" data-rsvp-form-target="attendingOnly">
-    <%= f.label :party_size, "How many in your party (including you)?" %>
-    <%= f.select :party_size, (1..guest.max_party_size).to_a, {}, class: "party-select" %>
+<% max = guest.max_party_size %>
+<% if max > 1 || event.track_kids? %>
+  <div class="stack-s" data-rsvp-form-target="attendingOnly" data-controller="party" data-party-max-value="<%= max %>">
+    <% if event.track_kids? %>
+      <div class="party-steppers">
+        <% [ [ :adults, "Adults", 1, (rsvp.adults || 1) ], [ :kids, "Kids", 0, (rsvp.kids || 0) ] ].each do |field, label, min, value| %>
+          <div class="field">
+            <%= f.label field, label %>
+            <div class="stepper">
+              <button type="button" class="stepper__button" aria-label="Fewer <%= label.downcase %>" data-action="party#step" data-party-field-param="<%= field %>" data-party-delta-param="-1">−</button>
+              <%= f.number_field field, value: value, min: min, max: max, class: "stepper__input", data: { party_target: field, action: "input->party#update" } %>
+              <button type="button" class="stepper__button" aria-label="More <%= label.downcase %>" data-action="party#step" data-party-field-param="<%= field %>" data-party-delta-param="1">+</button>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="field">
+        <%= f.label :party_size, "How many in your party (including you)?" %>
+        <%= f.select :party_size, (1..max).to_a, {}, class: "party-select", data: { party_target: "size", action: "party#update" } %>
+      </div>
+    <% end %>
+    <% if max > 1 %><p class="field__hint">This invitation is for up to <%= pluralize(max, "person") %>.</p><% end %>
+    <% if event.ask_plus_one_names? && max > 1 %>
+      <% names = rsvp.respond_to?(:plus_one_names) ? rsvp.plus_one_names : [] %>
+      <div class="field" data-party-target="namesField">
+        <span class="field__label">Who's coming with you? <span class="field__optional">(names help with place cards)</span></span>
+        <% (max - 1).times do |i| %>
+          <%= text_field_tag "rsvp[plus_one_names][]", names[i], id: "rsvp_plus_one_name_#{i}", maxlength: 80,
+                placeholder: "Guest #{i + 2}'s name", aria: { label: "Name of guest #{i + 2}" }, data: { party_target: "name" } %>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 <% else %>
   <%= f.hidden_field :party_size, value: 1 %>

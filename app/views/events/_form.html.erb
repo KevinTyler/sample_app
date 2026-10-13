@@ -79,10 +79,26 @@
         </div>
       </div>
       <label class="checkbox"><%= f.check_box :allow_maybe %> Let guests answer “Maybe”</label>
+      <label class="checkbox"><%= f.check_box :track_kids %> Count adults and kids separately</label>
+      <label class="checkbox"><%= f.check_box :ask_plus_one_names %> Ask for the names of everyone coming</label>
+      <label class="checkbox"><%= f.check_box :guestbook_enabled %> Guestbook: invited guests can leave a note for you and each other</label>
       <label class="checkbox"><%= f.check_box :show_guest_count %> Show guests how many people are coming</label>
       <label class="checkbox"><%= f.check_box :allow_link_rsvp %>
         <span>Anyone with the share link can RSVP <span class="field__hint">— they enter their name and email and are added to your guest list. Leave off for invite-only events.</span></span>
       </label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Automatic reminders</legend>
+    <div class="form">
+      <p class="field__hint m-0">Cordially schedules these for you and adjusts them if the date or deadline changes. They appear in Messages, where you can edit or cancel them.</p>
+      <div class="cluster">
+        <label class="checkbox"><%= f.check_box :auto_nudge %> Nudge guests who haven't replied</label>
+        <%= f.label :nudge_days_before, "days before the deadline", class: "visually-hidden" %>
+        <%= f.select :nudge_days_before, (1..14).map { |d| [ "#{pluralize(d, 'day')} before the reply deadline", d ] }, {}, class: "w-auto" %>
+      </div>
+      <label class="checkbox"><%= f.check_box :auto_day_before %> Remind everyone coming the day before</label>
     </div>
   </fieldset>
 

@@ -1,0 +1,21 @@
+<%= activity_sentence(@activity) %>
+
+<%= @event.title %><% if @event.starts_at %> · <%= event_date_short(@event) %><% end %>
+<% if (answers = @guest.rsvp_answers.includes(:event_question)).any? -%>
+
+<% answers.each do |a| -%>
+<%= a.event_question.prompt %>: <%= a.value %>
+<% end -%>
+<% end -%>
+<% if @guest.guest_note.present? -%>
+
+Note: <%= @guest.guest_note %>
+<% end -%>
+
+<% summary = @event.rsvp_summary -%>
+So far: <%= summary[:attending] %> attending · <%= summary[:maybe] %> maybe · <%= summary[:no] %> can't make it · <%= summary[:pending] %> awaiting
+
+See the guest list: <%= @url %>
+
+--
+You're getting this because you host this event on Cordially. Change how often we email you: <%= edit_account_url(**Messaging.url_options) %>

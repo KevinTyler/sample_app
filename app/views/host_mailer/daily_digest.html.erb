@@ -1,0 +1,14 @@
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+  <tr><td style="padding:28px 28px 8px;">
+    <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:normal;">Your replies from the last day</h1>
+  </td></tr>
+  <% @by_event.each do |event, activities| %>
+    <% s = event.rsvp_summary %>
+    <tr><td style="padding:16px 28px 4px;">
+      <p style="margin:0 0 6px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#8A6A2B;"><%= event.title %></p>
+      <% activities.each do |activity| %><div style="font-size:15px;line-height:1.7;"><%= activity_sentence(activity) %></div><% end %>
+      <p style="margin:8px 0 0;font-size:13px;color:#6F6B82;">Now <%= s[:attending] %> attending · <%= s[:pending] %> awaiting · <a href="<%= event_guests_url(event, **Messaging.url_options) %>" style="color:#8E2B4F;">Guest list</a></p>
+    </td></tr>
+  <% end %>
+  <tr><td style="padding:20px 28px 28px;font-size:12px;color:#6F6B82;"><a href="<%= edit_account_url(**Messaging.url_options) %>" style="color:#6F6B82;">Change how often we email you</a></td></tr>
+</table>

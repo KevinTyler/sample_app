@@ -30,7 +30,7 @@ module RsvpHelper
   def party_label(guest)
     return "—" unless guest.rsvp_yes? || guest.rsvp_maybe?
 
-    guest.party_size.to_s
+    guest.party_breakdown
   end
 
   def activity_sentence(activity)
@@ -47,6 +47,7 @@ module RsvpHelper
     when "message_sent" then "#{name} sent #{data['kind'] == 'invitation' ? 'invitations' : "a#{data['kind'] == 'update' ? 'n' : ''} #{data['kind']}"} to #{pluralize(data['recipients'], 'guest')}"
     when "guests_imported" then "#{name} imported #{pluralize(data['created'], 'guest')}"
     when "cohost_joined" then "#{name} joined as #{EventMembership::ROLES.dig(data['role'], :name).to_s.downcase}"
+    when "guestbook_signed" then "#{name} signed the guestbook"
     when "check_in_undone" then "#{name}'s check-in was undone"
     when "payment_received" then "#{name} paid #{Money.format(data['amount'], data['currency'])}"
     when "checked_in" then "#{name} checked in#{data['count'].to_i > 1 ? " (party of #{data['count']})" : ''}"

@@ -12,6 +12,13 @@ class User < ApplicationRecord
     format: { with: EmailFormat::REGEXP }, uniqueness: true
   validates :password, length: { minimum: 10, maximum: 72 }, allow_nil: true
 
+  RSVP_NOTIFICATION_OPTIONS = {
+    "instant" => "Email me each reply as it arrives",
+    "daily" => "One summary email a day",
+    "off" => "Don't email me about replies"
+  }.freeze
+  validates :rsvp_notifications, inclusion: { in: RSVP_NOTIFICATION_OPTIONS.keys }
+
   # Every event this user may open in the host dashboard: owned or co-hosted.
   def accessible_events
     Event.where(owner_id: id).or(Event.where(id: event_memberships.select(:event_id)))

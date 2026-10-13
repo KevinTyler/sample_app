@@ -28,7 +28,8 @@
                   <strong><%= current_user.name %></strong>
                   <div class="small faint"><%= current_user.email_address %></div>
                 </div>
-                <%= button_to "Sign out", session_path, method: :delete, class: "btn btn--small btn--block" %>
+                <%= link_to "Settings", edit_account_path, class: "btn btn--small btn--block" %>
+                <%= button_to "Sign out", session_path, method: :delete, class: "btn btn--small btn--block btn--ghost" %>
               </div>
             </details>
           <% else %>

@@ -54,6 +54,7 @@
       <span class="reply-hero__number"><%= @summary[:attending] %></span>
       <span class="reply-hero__label">
         <strong><%= @summary[:attending] == 1 ? "person attending" : "people attending" %></strong>
+        <% if @event.track_kids? && @summary[:attending] > 0 %><span class="small"><%= pluralize(@summary[:attending] - @summary[:attending_kids], "adult") %> · <%= pluralize(@summary[:attending_kids], "kid") %></span><% end %>
         <span class="muted small"><%= pluralize(@summary[:invited], "guest") %> on the list<% if @event.capacity %> · <%= @event.spots_remaining %> of <%= @event.capacity %> spots left<% end %></span>
       </span>
     </div>
@@ -112,6 +113,18 @@
             <label class="checkbox"><%= check_box_tag "channels[]", "sms", false, id: "invite_channel_sms" %> Text message (guests with a phone number)</label>
           </div>
         <% end %>
+        <fieldset class="send-when" data-controller="schedule-toggle">
+          <legend class="field__label">When</legend>
+          <div class="cluster">
+            <label class="checkbox"><%= radio_button_tag :send_at, "now", true, data: { action: "schedule-toggle#update" } %> Now</label>
+            <label class="checkbox"><%= radio_button_tag :send_at, "later", false, data: { action: "schedule-toggle#update" } %> Later</label>
+          </div>
+          <div class="field mt-s" data-schedule-toggle-target="when" hidden>
+            <%= label_tag :scheduled_for_local, "Send on (#{@event.zone.tzinfo.abbreviation})" %>
+            <%= datetime_local_field_tag :scheduled_for_local, nil, min: Time.current.in_time_zone(@event.zone).strftime("%Y-%m-%dT%H:%M") %>
+            <p class="field__hint">Everyone not yet invited at that moment gets their invitation, including guests you add before then.</p>
+          </div>
+        </fieldset>
         <div class="form-actions"><%= f.submit Messaging.sms_enabled? ? "Send invitations" : "Send #{pluralize(@uninvited_count, 'invitation')}", class: "btn btn--wax", data: { turbo_submits_with: "Sending…" } %></div>
       <% end %>
     </section>
@@ -189,4 +202,24 @@
       </ul>
     <% end %>
   </section>
+
+  <% if @event.guestbook_enabled? && (entries = @event.guestbook_entries.recent.limit(6)).any? %>
+    <section class="panel" id="guestbook" aria-labelledby="guestbook-heading">
+      <div class="panel__header"><h2 id="guestbook-heading" class="panel__title">Guestbook</h2></div>
+      <ul class="guestbook">
+        <% entries.each do |entry| %>
+          <li class="<%= 'is-hidden' if entry.hidden? %>">
+            <span class="monogram monogram--small" aria-hidden="true"><%= initials(entry.author_name) %></span>
+            <div class="guestbook__text">
+              <strong><%= entry.author_name %></strong> <span class="faint small"><%= time_ago_in_words(entry.created_at) %> ago<%= " · hidden from guests" if entry.hidden? %></span>
+              <p class="pre-line"><%= entry.body %></p>
+            </div>
+            <% if policy.can?(:edit) %>
+              <%= button_to (entry.hidden? ? "Show" : "Hide"), event_guestbook_entry_path(@event, entry), method: :patch, params: { hidden: entry.hidden? ? "0" : "1" }, class: "btn btn--small btn--ghost" %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
 </div>

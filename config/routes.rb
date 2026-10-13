@@ -8,6 +8,9 @@ Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
 
+  # Host account settings
+  resource :account, only: %i[edit update]
+
   # Host dashboard
   resources :events do
     member do
@@ -35,6 +38,7 @@ Rails.application.routes.draw do
       collection { get :template }
     end
     resource :invitation_send, only: :create
+    resources :guestbook_entries, only: :update
     resources :cohosts, only: %i[index create update destroy] do
       collection { delete :leave }
     end
@@ -65,6 +69,7 @@ Rails.application.routes.draw do
     get "calendar.ics", action: :calendar, as: :calendar, format: false
     post "unsubscribe", action: :unsubscribe, as: :unsubscribe
     post "pay", action: :pay, as: :pay
+    post "guestbook", action: :sign_guestbook, as: :guestbook
   end
 
   # Public share link: the invitation without personal data; optional open RSVP.
