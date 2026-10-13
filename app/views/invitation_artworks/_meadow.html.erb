@@ -1,0 +1,20 @@
+<%# Wildflower Meadow — stems and simple blooms along the foot of the card. %>
+<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <% rng = Random.new(5) %>
+  <% 16.times do |i| %>
+    <% x = 20 + i * 30 + rng.rand(-8..8) %>
+    <% top = rng.rand(560..630) %>
+    <path class="art-line-ink" stroke-width="1.6" d="M<%= x %> 700 Q <%= x + rng.rand(-14..14) %> <%= (700 + top) / 2 %> <%= x %> <%= top %>"/>
+    <path class="art-soft" d="M<%= x %> <%= top + 40 %> q 14 -8 18 -22 q -14 4 -18 22 z"/>
+    <% if i.even? %>
+      <% 5.times do |p| %>
+        <% a = p * 72 * Math::PI / 180 %>
+        <circle class="art-accent" cx="<%= (x + Math.cos(a) * 6).round(1) %>" cy="<%= (top + Math.sin(a) * 6).round(1) %>" r="5"/>
+      <% end %>
+      <circle class="art-bg" cx="<%= x %>" cy="<%= top %>" r="3"/>
+    <% else %>
+      <ellipse class="art-soft" cx="<%= x %>" cy="<%= top - 4 %>" rx="5" ry="9"/>
+    <% end %>
+  <% end %>
+  <path class="art-line" stroke-width="1.6" d="M60 60 q 10 -14 20 0 M86 48 q 8 -10 16 0"/>
+</svg>

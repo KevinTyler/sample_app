@@ -1,0 +1,13 @@
+<%# Balloon Bunch — balloons drifting up the left and right edges. %>
+<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <% [ [ 60, 560, 34, "art-accent" ], [ 30, 470, 26, "art-soft" ], [ 95, 430, 22, "art-accent" ], [ 440, 600, 36, "art-soft" ],
+       [ 470, 500, 26, "art-accent" ], [ 410, 450, 20, "art-accent" ], [ 455, 120, 24, "art-soft" ], [ 50, 110, 20, "art-soft" ] ].each do |x, y, r, cls| %>
+    <path class="art-line-ink" stroke-width="1.3" d="M<%= x %> <%= y + r * 1.2 %> q <%= r / 3 %> 40 -<%= r / 4 %> 80 t <%= r / 5 %> 70"/>
+    <ellipse class="<%= cls %>" cx="<%= x %>" cy="<%= y %>" rx="<%= r %>" ry="<%= (r * 1.2).round %>"/>
+    <path class="<%= cls %>" d="M<%= x - 5 %> <%= y + r * 1.2 + 6 %> l5 -7 l5 7 z"/>
+    <ellipse class="art-bg" opacity="0.55" cx="<%= x - r / 3 %>" cy="<%= y - r / 2 %>" rx="<%= (r / 6.0).round(1) %>" ry="<%= (r / 3.0).round(1) %>"/>
+  <% end %>
+  <% [ [ 160, 70 ], [ 340, 640 ], [ 380, 80 ], [ 130, 650 ] ].each do |x, y| %>
+    <path class="art-line" stroke-width="3" d="M<%= x %> <%= y - 8 %> v16 M<%= x - 8 %> <%= y %> h16"/>
+  <% end %>
+</svg>

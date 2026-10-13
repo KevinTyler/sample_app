@@ -33,6 +33,22 @@ class InvitationDesign
     "inset" => "Round inset"
   }.freeze
 
+  # Envelope and page colors are picked from curated sets ("auto" follows the card's accent).
+  ENVELOPES = {
+    "auto" => [ "Match the card", nil ], "berry" => [ "Berry", "#8E2B4F" ], "midnight" => [ "Midnight", "#1F1D3D" ],
+    "sage" => [ "Sage", "#6E8B74" ], "blush" => [ "Blush", "#E3B9C3" ], "kraft" => [ "Kraft", "#B48C62" ],
+    "ivory" => [ "Ivory", "#F1E8D8" ], "sky" => [ "Sky", "#9DB8D3" ], "gold" => [ "Gold", "#C8A45A" ]
+  }.freeze
+  BACKDROPS = {
+    "auto" => [ "Match the card", nil ], "porcelain" => [ "Porcelain", "#F3EEE6" ], "blush" => [ "Blush", "#F3DFE5" ],
+    "sage" => [ "Sage", "#DCE5DD" ], "sky" => [ "Sky", "#DDE6F0" ], "sand" => [ "Sand", "#EADFCC" ], "night" => [ "Night", "#1F1D3D" ]
+  }.freeze
+  DARK_ENVELOPES = %w[berry midnight sage kraft].freeze
+  LINERS = { "plain" => "Plain", "stripe" => "Stripe", "dots" => "Dots", "foil" => "Foil", "check" => "Check",
+             "night" => "Starry", "confetti" => "Confetti" }.freeze
+  STAMPS = { "none" => "No stamp", "heart" => "Heart", "star" => "Star", "flower" => "Flower", "champagne" => "Cheers",
+             "cake" => "Cake", "moon" => "Moon", "leaf" => "Leaf" }.freeze
+
   HEX_COLOR = /\A#[0-9a-fA-F]{6}\z/
   TEXT_LIMITS = { headline: 80, tagline: 120, message: 600 }.freeze
 
@@ -48,6 +64,10 @@ class InvitationDesign
   attribute :message, :string
   attribute :show_artwork, :boolean
   attribute :photo_style, :string, default: "banner"
+  attribute :envelope, :string, default: "auto"
+  attribute :liner, :string, default: "dots"
+  attribute :stamp, :string, default: "none"
+  attribute :backdrop, :string, default: "auto"
 
   %w[background_color text_color accent_color].each do |color|
     define_method(:"#{color}=") { |value| super(value.to_s.strip.upcase.presence) }
@@ -58,6 +78,10 @@ class InvitationDesign
   validates :heading_font, :body_font, inclusion: { in: FONTS.keys }
   validates :layout, inclusion: { in: LAYOUTS.keys }
   validates :photo_style, inclusion: { in: PHOTO_STYLES.keys }
+  validates :envelope, inclusion: { in: ENVELOPES.keys }
+  validates :backdrop, inclusion: { in: BACKDROPS.keys }
+  validates :liner, inclusion: { in: LINERS.keys }
+  validates :stamp, inclusion: { in: STAMPS.keys }
   validates :headline, length: { maximum: TEXT_LIMITS[:headline] }
   validates :tagline, length: { maximum: TEXT_LIMITS[:tagline] }
   validates :message, length: { maximum: TEXT_LIMITS[:message] }
@@ -76,7 +100,7 @@ class InvitationDesign
     params = params.to_h.stringify_keys.slice(*attribute_names)
     current = self.for(event)
     base = if params["template"].present? && params["template"] != current.template && (tpl = InvitationTemplate.find(params["template"]))
-      tpl.design_defaults.merge("message" => current.message, "photo_style" => current.photo_style)
+      tpl.design_defaults.merge(current.attributes.slice("message", "photo_style", "envelope", "liner", "stamp", "backdrop"))
     else
       current.attributes
     end
@@ -105,8 +129,23 @@ class InvitationDesign
       "--card-ink" => text_color,
       "--card-accent" => accent_color,
       "--card-heading-font" => heading_font_record.stack,
-      "--card-body-font" => body_font_record.stack
-    }
+      "--card-body-font" => body_font_record.stack,
+      "--envelope" => ENVELOPES.dig(envelope, 1),
+      "--backdrop" => BACKDROPS.dig(backdrop, 1)
+    }.compact
+  end
+
+  # The guest page background: the chosen backdrop, or a soft tint of the card's accent.
+  def backdrop_css
+    BACKDROPS.dig(backdrop, 1) || "color-mix(in srgb, #{accent_color} 16%, #f3efe8)"
+  end
+
+  def envelope_tone
+    envelope.in?(DARK_ENVELOPES) ? "dark" : "light"
+  end
+
+  def dark_backdrop?
+    backdrop == "night"
   end
 
   # Safe because every value is validated (colors) or comes from FONTS (font stacks).

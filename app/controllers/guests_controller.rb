@@ -74,7 +74,7 @@ class GuestsController < ApplicationController
     return redirect_to(event_path(@event), alert: "#{@guest.name} has no email address (or has unsubscribed).") unless @guest.emailable?
 
     message = @event.messages.idempotent_create!(idempotency_key: params[:idempotency_key].presence || SecureRandom.uuid,
-      kind: "invitation", author: current_user, channels: %w[email], audience: { "guest_ids" => [ @guest.id ], "resend" => true })
+      kind: @event.card_type, author: current_user, channels: %w[email], audience: { "guest_ids" => [ @guest.id ], "resend" => true })
     message.dispatch! unless message.status == "dispatched"
     redirect_to event_guests_path(@event), notice: "Invitation re-sent to #{@guest.name}."
   end
@@ -100,7 +100,7 @@ class GuestsController < ApplicationController
       return redirect_to(event_path(@event), alert: "Publish the event before sending invitations.") unless @event.published?
 
       message = @event.messages.idempotent_create!(idempotency_key: params[:idempotency_key].presence || SecureRandom.uuid,
-        kind: "invitation", author: current_user, channels: %w[email], audience: { "guest_ids" => guests.ids })
+        kind: @event.card_type, author: current_user, channels: %w[email], audience: { "guest_ids" => guests.ids })
       message.dispatch! unless message.status == "dispatched"
       skipped = guests.count - message.recipients_count
       "Sending #{message.recipients_count} #{'invitation'.pluralize(message.recipients_count)}." +

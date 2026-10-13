@@ -1,0 +1,23 @@
+<%# Festival Lights — paper lanterns and a string of lights hanging from the top edge. %>
+<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <path class="art-line" stroke-width="2" d="M0 28 Q 125 88 250 40 T 500 34"/>
+  <% [ [ 40, 44 ], [ 90, 60 ], [ 140, 66 ], [ 190, 56 ], [ 300, 44 ], [ 350, 46 ], [ 400, 42 ], [ 455, 36 ] ].each do |x, y| %>
+    <circle class="art-accent" cx="<%= x %>" cy="<%= y + 6 %>" r="4"/>
+    <circle class="art-soft" cx="<%= x %>" cy="<%= y + 6 %>" r="10"/>
+  <% end %>
+  <% [ [ 70, 0, 120, 1.0 ], [ 430, 0, 150, 1.15 ], [ 250, 0, 70, 0.75 ] ].each do |x, top, len, s| %>
+    <path class="art-line-ink" stroke-width="1.5" d="M<%= x %> <%= top %> V<%= top + len %>"/>
+    <g transform="translate(<%= x %> <%= top + len %>) scale(<%= s %>)">
+      <rect class="art-ink-soft" x="-9" y="0" width="18" height="8" rx="2"/>
+      <path class="art-accent" d="M-26 34 C -26 14, 26 14, 26 34 V58 C 26 78, -26 78, -26 58 Z"/>
+      <path class="art-line-bg" stroke-width="2" d="M-12 18 V74 M0 14 V78 M12 18 V74"/>
+      <rect class="art-ink-soft" x="-9" y="76" width="18" height="7" rx="2"/>
+      <path class="art-line" stroke-width="2" d="M-6 86 V104 M0 86 V108 M6 86 V104"/>
+    </g>
+  <% end %>
+  <% rng = Random.new(11) %>
+  <% 24.times do %>
+    <% x, y = rng.rand(0..500), rng.rand(560..700) %>
+    <circle class="<%= rng.rand < 0.5 ? 'art-soft' : 'art-accent' %>" cx="<%= x %>" cy="<%= y %>" r="<%= (rng.rand * 2 + 1).round(1) %>"/>
+  <% end %>
+</svg>

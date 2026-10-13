@@ -8,7 +8,7 @@ const PHOTO_STYLES = ["banner", "background", "inset"]
 const HEX = /^#[0-9a-f]{6}$/i
 
 export default class extends Controller {
-  static targets = ["card", "headline", "tagline", "message", "frame", "contrast", "viewportButton"]
+  static targets = ["card", "headline", "tagline", "message", "frame", "contrast", "viewportButton", "envelope", "stamp"]
   static values = { templates: Object, fonts: Object }
 
   connect() {
@@ -89,9 +89,11 @@ export default class extends Controller {
     for (const [property, value] of Object.entries(colors)) {
       if (HEX.test(value || "")) card.style.setProperty(property, value)
     }
-    if (HEX.test(colors["--card-accent"] || "")) {
-      this.element.style.setProperty("--studio-backdrop", `color-mix(in srgb, ${colors["--card-accent"]} 16%, #f3efe8)`)
-    }
+    const accent = HEX.test(colors["--card-accent"] || "") ? colors["--card-accent"] : null
+    const backdropHex = this.checkedHex("backdrop")
+    if (backdropHex) this.element.style.setProperty("--studio-backdrop", backdropHex)
+    else if (accent) this.element.style.setProperty("--studio-backdrop", `color-mix(in srgb, ${accent} 16%, #f3efe8)`)
+    this.renderEnvelope(accent)
 
     const headingFont = this.read("heading_font")
     const bodyFont = this.read("body_font")
@@ -112,6 +114,31 @@ export default class extends Controller {
   }
 
   // --- Rendering ------------------------------------------------------------
+
+  checkedHex(name) {
+    const field = this.inputs(name).find((f) => f.checked)
+    const hex = field?.dataset.hex
+    return HEX.test(hex || "") ? hex : null
+  }
+
+  renderEnvelope(accent) {
+    if (!this.hasEnvelopeTarget) return
+    const envelope = this.envelopeTarget
+    if (accent) envelope.style.setProperty("--card-accent", accent)
+    const envelopeField = this.inputs("envelope").find((f) => f.checked)
+    if (envelopeField) envelope.dataset.tone = envelopeField.dataset.tone || "light"
+    const envelopeHex = this.checkedHex("envelope")
+    if (envelopeHex) envelope.style.setProperty("--envelope", envelopeHex)
+    else envelope.style.removeProperty("--envelope")
+    const liner = this.read("liner")
+    if (liner) envelope.dataset.liner = liner
+    const stamp = this.read("stamp")
+    if (this.hasStampTarget && stamp !== this.stampTarget.dataset.current) {
+      const source = document.querySelector(`template[data-stamp-template="${stamp}"]`)
+      this.stampTarget.replaceChildren(...(source ? [source.content.cloneNode(true)] : []))
+      this.stampTarget.dataset.current = stamp
+    }
+  }
 
   setText(element, value) {
     element.textContent = value || ""

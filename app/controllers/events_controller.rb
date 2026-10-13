@@ -26,6 +26,7 @@ class EventsController < ApplicationController
 
   def create
     @event = current_user.owned_events.new(event_params)
+    @event.design = { "tagline" => "Save the date" } if @event.save_the_date? && @event.design.blank?
     if @event.save
       Activity.record(event: @event, user: current_user, action: "event_created")
       redirect_to edit_event_design_path(@event), notice: "Event created as a draft. Next, make the invitation yours."
@@ -94,6 +95,12 @@ class EventsController < ApplicationController
     redirect_to event_path(@event), notice: "New share link created. The old link no longer works."
   end
 
+  # Print-at-home: the card front and back at 5×7 inches (or "Save as PDF" from the print dialog).
+  def printable
+    authorize! :view
+    render layout: "print"
+  end
+
   # The host's view of the guest-facing invitation, using a sample guest.
   def preview
     authorize! :view
@@ -109,7 +116,7 @@ class EventsController < ApplicationController
       permitted = params.expect(event: %i[
         title host_name description starts_at_local ends_at_local time_zone location_name address video_url
         rsvp_deadline_local capacity allow_maybe default_plus_ones allow_link_rsvp show_guest_count ticket_price currency
-        track_kids ask_plus_one_names guestbook_enabled auto_nudge nudge_days_before auto_day_before
+        track_kids ask_plus_one_names guestbook_enabled auto_nudge nudge_days_before auto_day_before card_type show_ride_links
       ])
       # Only the owner decides whether and what guests pay.
       permitted = permitted.except(:ticket_price, :currency) if @event&.persisted? && !policy.can?(:manage_payments)
@@ -117,7 +124,7 @@ class EventsController < ApplicationController
     end
 
     def invitation_preview
-      @event.messages.new(kind: "invitation", channels: Messaging.sms_enabled? ? %w[email sms] : %w[email], audience: {})
+      @event.messages.new(kind: @event.card_type, channels: Messaging.sms_enabled? ? %w[email sms] : %w[email], audience: {})
     end
 
     def update_notice

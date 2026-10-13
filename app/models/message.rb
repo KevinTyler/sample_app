@@ -10,7 +10,9 @@
 #   an earlier message, unless the host explicitly asks to resend.
 # * Each Delivery is claimed atomically before sending (see Delivery#deliver_now!).
 class Message < ApplicationRecord
-  KINDS = %w[invitation update reminder cancellation rsvp_confirmation].freeze
+  KINDS = %w[invitation save_the_date announcement update reminder cancellation rsvp_confirmation].freeze
+  # The card itself, in its three forms (Event#card_type). Each guest gets each at most once.
+  CARD_KINDS = %w[invitation save_the_date announcement].freeze
   CHANNELS = %w[email sms].freeze
   STATUSES = %w[draft scheduled dispatching dispatched].freeze
 
@@ -60,12 +62,12 @@ class Message < ApplicationRecord
     scope = audience.guests.and(reachable_guests)
     # Updates, reminders and cancellations only go to people who know about the event:
     # guests who were sent an invitation or who have responded.
-    unless kind.in?(%w[invitation rsvp_confirmation])
+    unless kind.in?(CARD_KINDS + %w[rsvp_confirmation])
       scope = scope.where.not(invited_at: nil).or(scope.where.not(rsvp_status: "pending"))
     end
-    if kind == "invitation" && !audience.resend?
+    if kind.in?(CARD_KINDS) && !audience.resend?
       already = Delivery.joins(:message)
-        .where(messages: { event_id: event_id, kind: "invitation" })
+        .where(messages: { event_id: event_id, kind: kind })
         .where(status: Delivery::LIVE_STATUSES)
         .select(:guest_id)
       scope = scope.where.not(id: already)
@@ -128,6 +130,8 @@ class Message < ApplicationRecord
   def default_subject
     case kind
     when "invitation" then "You're invited: #{event.title}"
+    when "save_the_date" then "Save the date: #{event.title}"
+    when "announcement" then "#{event.title} — news from #{event.display_host_name}"
     when "cancellation" then "Cancelled: #{event.title}"
     when "reminder" then "Reminder: #{event.title}"
     when "rsvp_confirmation" then "Your RSVP link: #{event.title}"
@@ -169,7 +173,7 @@ class Message < ApplicationRecord
     end
 
     def log_activity
-      return if kind == "rsvp_confirmation" || (kind == "invitation" && recipients_count.zero?)
+      return if kind == "rsvp_confirmation" || (kind.in?(CARD_KINDS) && recipients_count.zero?)
 
       Activity.record(event: event, user: author, action: "message_sent",
         data: { kind: kind, message_id: id, recipients: recipients_count })

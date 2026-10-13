@@ -20,11 +20,16 @@ if birthday.new_record?
     rsvp_deadline: 2.weeks.from_now.in_time_zone("America/New_York").change(hour: 23, min: 59),
     location_name: "The Greenhouse", address: "12 Garden Street, Brooklyn, NY",
     description: "Dinner, cake and dancing. Dress code: garden party.\nStreet parking is easiest after 7pm.",
-    capacity: 40, default_plus_ones: 1,
-    design: InvitationTemplate.find("confetti-burst").design_defaults.merge("message" => "Bring your best dance moves!")
+    capacity: 40, default_plus_ones: 1, track_kids: true, ask_plus_one_names: true, auto_nudge: true, auto_day_before: true,
+    design: InvitationTemplate.find("confetti-burst").design_defaults.merge("message" => "Bring your best dance moves!",
+      "envelope" => "berry", "liner" => "stripe", "stamp" => "heart")
   )
   birthday.save!
   birthday.publish
+
+  birthday.links.create!(url: "https://www.opentable.com/r/the-greenhouse-brooklyn")
+  birthday.links.create!(url: "https://open.spotify.com/playlist/example", label: "Add a song to the playlist")
+  birthday.links.create!(url: "https://www.amazon.com/registries/example")
 
   meal = birthday.questions.create!(prompt: "Dinner choice", kind: "choice", options: [ "Roast chicken", "Mushroom risotto", "Kids' pasta" ], required: true)
   birthday.questions.create!(prompt: "Any allergies we should know about?", kind: "short_text")
@@ -40,9 +45,12 @@ if birthday.new_record?
     guest = birthday.guests.create!(name: name, email: email, group_name: group, plus_ones_allowed: plus)
     next if status == "pending"
 
-    RsvpSubmission.new(guest: guest, status: status, party_size: party,
+    RsvpSubmission.new(guest: guest, status: status, adults: [ party, 1 ].max, kids: 0,
       answers: dinner ? { meal.id.to_s => dinner } : {}).save
   end
+
+  birthday.guestbook_entries.create!(guest: birthday.guests.find_by(name: "Lee Park"), author_name: "Lee Park",
+    body: "Thirty looks good on you. Saving a dance!")
 
   # Send the invitations for real (into the dev outbox at /dev/outbox), leaving one guest uninvited
   # so the "Send invitations" panel has something to do.

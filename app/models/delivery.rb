@@ -60,7 +60,7 @@ class Delivery < ApplicationRecord
   def mark_sent!(receipt)
     update!(status: "sent", sent_at: Time.current, provider: receipt.provider,
       provider_message_id: receipt.message_id, error_message: nil)
-    guest.update_column(:invited_at, sent_at) if message.kind == "invitation" && guest.invited_at.nil?
+    guest.update_column(:invited_at, sent_at) if message.kind.in?(Message::CARD_KINDS) && guest.invited_at.nil?
   end
 
   def mark_failed!(error)

@@ -1,0 +1,43 @@
+<%# locals: (event:, design:, card_id:, private_details: true) %>
+<%# The back of the card: the practical details and the host's links, in the card's own palette. %>
+<%= render "invitations/design_style", design: design, selector: "##{card_id}" %>
+<% links = event.links.to_a %>
+<%= tag.article id: card_id, class: "invite-back", data: { heading_font: design.heading_font }, aria: { label: "Details for #{event.title}" } do %>
+  <div class="invite-back__inner">
+    <p class="invite-back__eyebrow"><%= event.save_the_date? ? "Save the date" : "The details" %></p>
+    <% if event.starts_at %>
+      <div class="invite-back__item">
+        <span class="invite-back__label">When</span>
+        <span><%= event_when(event) %></span>
+      </div>
+    <% end %>
+    <% if event.in_person? %>
+      <div class="invite-back__item">
+        <span class="invite-back__label">Where</span>
+        <span><%= event_where(event) %></span>
+        <% if event.show_ride_links? && (directions = directions_links(event)).any? %>
+          <span class="invite-back__chips">
+            <% directions.each do |label, url| %><%= link_to label, url, class: "invite-back__chip", target: "_blank", rel: "noopener noreferrer" %><% end %>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+    <% if event.online? && private_details %>
+      <div class="invite-back__item">
+        <span class="invite-back__label">Join online</span>
+        <%= link_to "Video call link", event.video_url, target: "_blank", rel: "noopener noreferrer" %>
+      </div>
+    <% end %>
+    <% if event.description.present? %>
+      <div class="invite-back__item invite-back__note"><%= simple_format(event.description.truncate(420)) %></div>
+    <% end %>
+    <% if links.any? %>
+      <div class="invite-back__links">
+        <% links.each do |link| %>
+          <%= link_to link.url, class: "invite-back__link", target: "_blank", rel: "noopener noreferrer" do %><%= icon(link.icon, size: 16) %><%= link.button_text %><% end %>
+        <% end %>
+      </div>
+    <% end %>
+    <p class="invite-back__host">With love, <%= event.display_host_name %></p>
+  </div>
+<% end %>

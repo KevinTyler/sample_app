@@ -1,0 +1,10 @@
+<%# Seaside — a low sun and layered waves along the foot of the card. %>
+<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <circle class="art-soft" cx="390" cy="586" r="70"/>
+  <circle class="art-accent" opacity="0.55" cx="390" cy="586" r="46"/>
+  <% [ [ 600, "art-softer" ], [ 628, "art-soft" ], [ 656, "art-accent" ] ].each_with_index do |(y, cls), i| %>
+    <path class="<%= cls %>" d="M0 <%= y %> <% 6.times do |k| %>q 21 <%= -14 + i * 2 %> 42 0 t 42 0 <% end %>V700 H0 Z"/>
+  <% end %>
+  <path class="art-line" stroke-width="2.4" d="M70 90 q 10 -10 20 0 q 10 -10 20 0 M120 120 q 8 -8 16 0 q 8 -8 16 0"/>
+  <path class="art-line-ink" stroke-width="1.5" d="M30 40 H470"/>
+</svg>

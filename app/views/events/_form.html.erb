@@ -5,6 +5,17 @@
     <legend>The basics</legend>
     <div class="form">
       <div class="field">
+        <span class="field__label">What are you sending?</span>
+        <div class="choice-cards" role="radiogroup" aria-label="Card type">
+          <% Event::CARD_TYPES.each do |key, type| %>
+            <label class="choice-card">
+              <%= f.radio_button :card_type, key, class: "visually-hidden" %>
+              <span class="choice-card__box"><strong><%= type[:name] %></strong><span class="small muted"><%= type[:summary] %></span></span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+      <div class="field">
         <%= f.label :title, "Event name" %>
         <%= f.text_field :title, required: true, maxlength: 120, placeholder: "e.g. Maya's 30th Birthday", autofocus: event.new_record? %>
       </div>

@@ -22,6 +22,15 @@ class Event < ApplicationRecord
 
   has_many :payments, dependent: :destroy
   has_many :guestbook_entries, dependent: :delete_all
+  has_many :links, class_name: "EventLink", dependent: :delete_all
+  has_many_attached :photos
+
+  CARD_TYPES = {
+    "invitation" => { name: "Invitation", summary: "Guests reply yes, no or maybe" },
+    "save_the_date" => { name: "Save the date", summary: "Mark calendars now; send the invitation later" },
+    "announcement" => { name: "Announcement", summary: "Share news — no replies needed" }
+  }.freeze
+  MAX_PHOTOS = 12
   CURRENCIES = {
     "usd" => { symbol: "$", name: "US dollar" }, "cad" => { symbol: "$", name: "Canadian dollar" },
     "eur" => { symbol: "€", name: "Euro" }, "gbp" => { symbol: "£", name: "British pound" },
@@ -46,7 +55,9 @@ class Event < ApplicationRecord
   validates :video_url, length: { maximum: 500 },
     format: { with: %r{\Ahttps?://[^\s<>"']+\z}i, message: "must be a full link starting with http:// or https://" },
     allow_nil: true
-  validates :starts_at, presence: { message: "is required before publishing" }, unless: :draft?
+  validates :starts_at, presence: { message: "is required before publishing" }, unless: -> { draft? || announcement? }
+  validates :card_type, inclusion: { in: CARD_TYPES.keys }
+  validate :photos_are_acceptable
   validate :time_zone_must_exist
   validate :local_times_must_parse
   validate :ends_after_start
@@ -161,12 +172,33 @@ class Event < ApplicationRecord
 
   # --- RSVPs -----------------------------------------------------------------
 
+  def invitation?
+    card_type == "invitation"
+  end
+
+  def save_the_date?
+    card_type == "save_the_date"
+  end
+
+  def announcement?
+    card_type == "announcement"
+  end
+
+  # Only invitations collect replies; save-the-dates and announcements are one-way.
+  def collects_replies?
+    invitation?
+  end
+
+  def card_type_name
+    CARD_TYPES.dig(card_type, :name) || "Invitation"
+  end
+
   def rsvp_closes_at
     rsvp_deadline || starts_at
   end
 
   def accepting_rsvps?(now = Time.current)
-    published? && (rsvp_closes_at.nil? || now <= rsvp_closes_at)
+    collects_replies? && published? && (rsvp_closes_at.nil? || now <= rsvp_closes_at)
   end
 
   def attending_count(excluding: nil)
@@ -293,6 +325,18 @@ class Event < ApplicationRecord
         errors.add(:artwork, "must be a PNG, JPEG, WebP or GIF image")
       end
       errors.add(:artwork, "must be smaller than 8 MB") if artwork.blob.byte_size > ARTWORK_MAX_SIZE
+    end
+
+    def photos_are_acceptable
+      return unless photos.attached?
+
+      errors.add(:photos, "can be at most #{MAX_PHOTOS}") if photos.size > MAX_PHOTOS
+      photos.each do |photo|
+        next unless photo.blob
+
+        errors.add(:photos, "must be PNG, JPEG, WebP or GIF images") unless photo.blob.content_type.in?(ARTWORK_TYPES)
+        errors.add(:photos, "must each be smaller than 8 MB") if photo.blob.byte_size > ARTWORK_MAX_SIZE
+      end
     end
 
     def payments_available

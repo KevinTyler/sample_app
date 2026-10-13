@@ -8,7 +8,7 @@ class InvitationSendsController < ApplicationController
   def create
     return redirect_to(event_path(@event), alert: "Publish the event before sending invitations.") unless @event.published?
 
-    attributes = { kind: "invitation", author: current_user, channels: channels, audience: {},
+    attributes = { kind: @event.card_type, author: current_user, channels: channels, audience: {},
                    body: params[:personal_note].to_s.strip.first(1000).presence }
     return schedule(attributes) if params[:send_at] == "later"
 

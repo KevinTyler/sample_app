@@ -1,8 +1,5 @@
 <% content_for :title, @event.title %>
 <% design = @event.design_settings %>
-<% content_for :head do %>
-  <style nonce="<%= content_security_policy_nonce %>">.guest-body { --guest-backdrop: color-mix(in srgb, <%= design.valid? ? design.accent_color : "#6b6fd8" %> 14%, #f3efe8); }</style>
-<% end %>
 
 <% if @event.cancelled? %>
   <div class="guest-banner guest-banner--cancelled" role="status">
@@ -11,7 +8,7 @@
   </div>
 <% end %>
 
-<%= render "invitations/card", event: @event, design: design, card_id: "public-card" %>
+<%= render "invitations/stage", event: @event, design: design, card_id: "public-card", private_details: false %>
 
 <section class="guest-panel" id="rsvp" aria-labelledby="rsvp-heading" data-controller="rsvp-form">
   <% if open_rsvp? %>
@@ -51,3 +48,5 @@
 <%= render "guest_invitations/details", event: @event, private_details: false,
       calendar: CalendarInvite.new(@event, url: public_event_url(params[:share_token]), include_private: false),
       ics_path: public_event_calendar_path(params[:share_token]) %>
+
+<%= render "invitations/gallery", event: @event %>

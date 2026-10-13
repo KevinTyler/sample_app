@@ -8,7 +8,7 @@
             <% if @message.kind == "invitation" %>
               <p style="margin:0 0 8px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:<%= accent %>;"><%= @event.display_host_name %> invited you</p>
             <% else %>
-              <p style="margin:0 0 8px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:<%= accent %>;"><%= { "update" => "An update", "reminder" => "A reminder", "cancellation" => "Event cancelled", "rsvp_confirmation" => "Your RSVP link" }[@message.kind] %></p>
+              <p style="margin:0 0 8px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:<%= accent %>;"><%= { "save_the_date" => "Save the date", "announcement" => "News from #{@event.display_host_name}", "update" => "An update", "reminder" => "A reminder", "cancellation" => "Event cancelled", "rsvp_confirmation" => "Your RSVP link" }[@message.kind] %></p>
             <% end %>
             <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.2;font-weight:normal;"><%= @event.title %></h1>
             <% if @event.starts_at %>
@@ -26,6 +26,10 @@
               <div style="margin:0 0 20px;white-space:pre-line;"><%= @message.body %></div>
             <% elsif @message.kind == "invitation" %>
               <p style="margin:0 0 20px;">You're invited! Open your invitation to see the details and let <%= @event.display_host_name %> know if you can make it.</p>
+            <% elsif @message.kind == "save_the_date" %>
+              <p style="margin:0 0 20px;"><%= @event.display_host_name %> would love you to save the date. A formal invitation will follow.</p>
+            <% elsif @message.kind == "announcement" %>
+              <p style="margin:0 0 20px;"><%= @event.display_host_name %> has news to share with you.</p>
             <% elsif @message.kind == "cancellation" %>
               <p style="margin:0 0 20px;">Unfortunately this event has been cancelled.</p>
             <% end %>
@@ -34,13 +38,13 @@
                 <tr>
                   <td style="border-radius:999px;background:#15132B;">
                     <a href="<%= @url %>" style="display:inline-block;padding:14px 28px;color:#FFFFFF;text-decoration:none;font-weight:bold;font-size:16px;border-radius:999px;background:#15132B;">
-                      <%= { "invitation" => "View invitation & RSVP", "rsvp_confirmation" => "View or change your RSVP" }.fetch(@message.kind, "View invitation") %>
+                      <%= { "invitation" => "View invitation & RSVP", "save_the_date" => "View the save-the-date", "announcement" => "Open the card", "rsvp_confirmation" => "View or change your RSVP" }.fetch(@message.kind, @event.collects_replies? ? "View invitation" : "Open the card") %>
                     </a>
                   </td>
                 </tr>
               </table>
             <% end %>
-            <p style="margin:0;font-size:13px;color:#6F6B82;">This link is personal to you — please don't forward it. You can use it to change your RSVP later.</p>
+            <p style="margin:0;font-size:13px;color:#6F6B82;">This link is personal to you — please don't forward it.<% if @event.collects_replies? %> You can use it to change your RSVP later.<% end %></p>
           </td>
         </tr>
         <tr>

@@ -157,7 +157,7 @@ class Guest < ApplicationRecord
 
   # Latest invitation delivery, for the host's "delivery status" column.
   def invitation_delivery
-    deliveries.joins(:message).where(messages: { kind: "invitation" }).order(:created_at).last
+    deliveries.joins(:message).where(messages: { kind: Message::CARD_KINDS }).order(:created_at).last
   end
 
   private

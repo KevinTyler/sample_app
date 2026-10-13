@@ -18,7 +18,9 @@
       <button type="button" class="studio__tab" role="tab" id="studio-tab-templates" aria-controls="studio-templates" aria-selected="true" tabindex="0" data-tabs-target="tab" data-action="tabs#select keydown->tabs#keydown"><%= icon(:overview, size: 22) %>Templates</button>
       <button type="button" class="studio__tab" role="tab" id="studio-tab-words" aria-controls="studio-words" aria-selected="false" tabindex="-1" data-tabs-target="tab" data-action="tabs#select keydown->tabs#keydown"><%= icon(:type, size: 22) %>Words</button>
       <button type="button" class="studio__tab" role="tab" id="studio-tab-style" aria-controls="studio-style" aria-selected="false" tabindex="-1" data-tabs-target="tab" data-action="tabs#select keydown->tabs#keydown"><%= icon(:palette, size: 22) %>Style</button>
-      <button type="button" class="studio__tab" role="tab" id="studio-tab-photo" aria-controls="studio-photo" aria-selected="false" tabindex="-1" data-tabs-target="tab" data-action="tabs#select keydown->tabs#keydown"><%= icon(:image, size: 22) %>Photo</button>
+      <button type="button" class="studio__tab" role="tab" id="studio-tab-photo" aria-controls="studio-photo" aria-selected="false" tabindex="-1" data-tabs-target="tab" data-action="tabs#select keydown->tabs#keydown"><%= icon(:image, size: 22) %>Photos</button>
+      <button type="button" class="studio__tab" role="tab" id="studio-tab-envelope" aria-controls="studio-envelope" aria-selected="false" tabindex="-1" data-tabs-target="tab" data-action="tabs#select keydown->tabs#keydown"><%= icon(:mail, size: 22) %>Envelope</button>
+      <button type="button" class="studio__tab" role="tab" id="studio-tab-back" aria-controls="studio-back" aria-selected="false" tabindex="-1" data-tabs-target="tab" data-action="tabs#select keydown->tabs#keydown"><%= icon(:link, size: 22) %>Back</button>
     </div>
     <div class="studio__body">
       <%= form_errors(@event) %>
@@ -123,6 +125,99 @@
         <label for="design_photo_style">Placement</label>
         <%= select_tag "design[photo_style]", options_for_select(InvitationDesign::PHOTO_STYLES.invert, @design.photo_style), id: "design_photo_style", data: { action: "design-editor#refresh" } %>
       </div>
+      <h3 class="studio__subheading">Photo gallery</h3>
+      <p class="field__hint">Up to <%= Event::MAX_PHOTOS %> photos, shown to guests below the card.</p>
+      <% photos = @event.photos.attachments.select(&:persisted?) %>
+      <% if photos.any? %>
+        <div class="gallery-manage">
+          <% photos.each do |photo| %>
+            <label class="gallery-manage__item">
+              <%= image_tag url_for(photo), alt: "" %>
+              <span class="checkbox small"><%= check_box_tag "remove_photo_ids[]", photo.id, false, id: "remove_photo_#{photo.id}" %> Remove</span>
+            </label>
+          <% end %>
+        </div>
+      <% end %>
+      <div class="field">
+        <label for="photos">Add photos</label>
+        <%= file_field_tag "photos[]", id: "photos", multiple: true, accept: Event::ARTWORK_TYPES.join(",") %>
+      </div>
+      </section>
+
+      <section class="studio__panel" role="tabpanel" id="studio-envelope" aria-labelledby="studio-tab-envelope" data-tabs-target="panel" hidden>
+        <h2 class="studio__heading">The envelope</h2>
+        <p class="field__hint m-0">Guests see it sealed with their name the first time they open the invitation.</p>
+        <h3 class="studio__subheading">Color</h3>
+        <div class="swatch-options" role="radiogroup" aria-label="Envelope color">
+          <% InvitationDesign::ENVELOPES.each do |key, (name, hex)| %>
+            <label class="swatch-option">
+              <%= radio_button_tag "design[envelope]", key, @design.envelope == key, class: "visually-hidden", data: { action: "design-editor#refresh", hex: hex, tone: key.in?(InvitationDesign::DARK_ENVELOPES) ? "dark" : "light" } %>
+              <span class="swatch-option__sample swatch-sample--envelope-<%= key %>"></span><%= name %>
+            </label>
+          <% end %>
+        </div>
+        <h3 class="studio__subheading">Liner</h3>
+        <div class="swatch-options" role="radiogroup" aria-label="Envelope liner">
+          <% InvitationDesign::LINERS.each do |key, name| %>
+            <label class="swatch-option">
+              <%= radio_button_tag "design[liner]", key, @design.liner == key, class: "visually-hidden", data: { action: "design-editor#refresh" } %>
+              <span class="swatch-option__sample liner-sample" data-liner="<%= key %>"></span><%= name %>
+            </label>
+          <% end %>
+        </div>
+        <h3 class="studio__subheading">Stamp</h3>
+        <div class="swatch-options" role="radiogroup" aria-label="Stamp">
+          <% InvitationDesign::STAMPS.each do |key, name| %>
+            <label class="swatch-option">
+              <%= radio_button_tag "design[stamp]", key, @design.stamp == key, class: "visually-hidden", data: { action: "design-editor#refresh" } %>
+              <span class="swatch-option__sample stamp-sample"><%= envelope_stamp(key) %></span><%= name %>
+            </label>
+          <% end %>
+        </div>
+        <h3 class="studio__subheading">Page backdrop</h3>
+        <div class="swatch-options" role="radiogroup" aria-label="Page backdrop">
+          <% InvitationDesign::BACKDROPS.each do |key, (name, hex)| %>
+            <label class="swatch-option">
+              <%= radio_button_tag "design[backdrop]", key, @design.backdrop == key, class: "visually-hidden", data: { action: "design-editor#refresh", hex: hex } %>
+              <span class="swatch-option__sample swatch-sample--backdrop-<%= key %>"></span><%= name %>
+            </label>
+          <% end %>
+        </div>
+      </section>
+
+      <section class="studio__panel" role="tabpanel" id="studio-back" aria-labelledby="studio-tab-back" data-tabs-target="panel" hidden>
+        <h2 class="studio__heading">The back of the card</h2>
+        <p class="field__hint m-0">Guests flip the card for the details and your links: book a table on OpenTable, Resy or Tock, a registry, a playlist, a photo album. Paste any web address — we'll label well-known services for you.</p>
+        <% links = @links || @event.links.to_a %>
+        <div class="link-rows">
+          <% (links + Array.new([ 2, EventLink::MAX_PER_EVENT - links.size ].min) { EventLink.new }).each_with_index do |link, i| %>
+            <fieldset class="link-row">
+              <legend class="visually-hidden">Link <%= i + 1 %></legend>
+              <% if link.persisted? %><%= hidden_field_tag "links[#{i}][id]", link.id, id: nil %><% end %>
+              <div class="field">
+                <%= label_tag "links_#{i}_url", "Web address" %>
+                <%= url_field_tag "links[#{i}][url]", link.url, id: "links_#{i}_url", maxlength: 500, placeholder: "https://www.opentable.com/r/…" %>
+              </div>
+              <div class="form-row form-row--2">
+                <div class="field">
+                  <%= label_tag "links_#{i}_kind", "Type" %>
+                  <%= select_tag "links[#{i}][kind]", options_for_select([ [ "Detect automatically", "" ] ] + EventLink::KINDS.map { |k, v| [ v[:name], k ] }, link.persisted? ? link.kind : ""), id: "links_#{i}_kind" %>
+                </div>
+                <div class="field">
+                  <%= label_tag "links_#{i}_label" do %>Button text <span class="field__optional">(optional)</span><% end %>
+                  <%= text_field_tag "links[#{i}][label]", link.label, id: "links_#{i}_label", maxlength: 60, placeholder: link.persisted? ? link.button_text : "Book a table" %>
+                </div>
+              </div>
+              <% if link.persisted? %><label class="checkbox small"><%= check_box_tag "links[#{i}][_destroy]", "1", false, id: "links_#{i}_destroy" %> Remove this link</label><% end %>
+              <% link.errors.full_messages.each do |msg| %><p class="field__hint text-danger m-0"><%= msg %></p><% end %>
+            </fieldset>
+          <% end %>
+        </div>
+        <label class="checkbox">
+          <%= hidden_field_tag "event[show_ride_links]", "0", id: nil %>
+          <%= check_box_tag "event[show_ride_links]", "1", @event.show_ride_links?, id: "event_show_ride_links" %>
+          <span>Show directions and a ride (Google Maps, Apple Maps, Uber) under the address</span>
+        </label>
       </section>
       <div class="studio__savebar">
         <%= f.submit "Save design", class: "btn btn--wax" %>
@@ -145,9 +240,21 @@
         </div>
       </div>
     </div>
+    <figure class="studio-envelope-wrap">
+      <%= render "invitations/design_style", design: @design, selector: ".studio-envelope" %>
+      <div class="studio-envelope" data-liner="<%= @design.liner %>" data-tone="<%= @design.envelope_tone %>" data-design-editor-target="envelope" aria-hidden="true">
+        <div class="envelope__back"></div>
+        <div class="envelope__flap"></div>
+        <div class="envelope__front"><span data-design-editor-target="stamp"><%= envelope_stamp(@design.stamp) %></span><span class="envelope__name">Dana Whitfield</span></div>
+      </div>
+      <figcaption class="small faint">How it arrives</figcaption>
+    </figure>
   </div>
 <% end %>
 
 <% InvitationTemplate.all.filter_map(&:artwork).uniq.each do |artwork| %>
   <template data-artwork-template="<%= artwork %>"><%= render "invitation_artworks/#{artwork}" %></template>
+<% end %>
+<% InvitationDesign::STAMPS.each_key do |key| %>
+  <template data-stamp-template="<%= key %>"><%= envelope_stamp(key) %></template>
 <% end %>

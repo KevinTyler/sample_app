@@ -1,8 +1,5 @@
 <% content_for :title, @event.title %>
 <% design = InvitationDesign.for(@event) %>
-<% content_for :head do %>
-  <style nonce="<%= content_security_policy_nonce %>">.guest-body { --guest-backdrop: color-mix(in srgb, <%= design.valid? ? design.accent_color : "#8e2b4f" %> 16%, #f3efe8); }</style>
-<% end %>
 
 <% if @preview %>
   <div class="guest-banner guest-banner--preview">Preview — this is what <%= @guest.name.downcase == "guest name" ? "a guest" : @guest.name %> sees. Nothing you do here is saved.</div>
@@ -14,18 +11,10 @@
   </div>
 <% end %>
 
-<div class="envelope-stage" data-controller="envelope" data-envelope-key-value="<%= Digest::SHA256.hexdigest(@guest.token_key.to_s).first(12) %>" data-action="click->envelope#open">
-  <%= render "invitations/design_style", design: design, selector: "#guest-envelope" %>
-  <%= render "invitations/card", event: @event, design: design, card_id: "guest-card" %>
-  <% unless @preview || flash.any? || @show_form %>
-    <div class="envelope" id="guest-envelope" data-envelope-target="envelope" aria-hidden="true">
-      <div class="envelope__back"></div>
-      <div class="envelope__flap"></div>
-      <div class="envelope__front"><span class="envelope__name"><%= @guest.name %></span></div>
-    </div>
-  <% end %>
-</div>
-
+<%= render "invitations/stage", event: @event, design: design, card_id: "guest-card",
+      envelope_name: (@guest.name unless @preview || flash.any? || @show_form),
+      envelope_key: Digest::SHA256.hexdigest(@guest.token_key.to_s).first(12) %>
+<% if @event.collects_replies? %>
 <section class="guest-panel" id="rsvp" aria-labelledby="rsvp-heading" data-controller="rsvp-form">
   <% if @guest.responded? && !@show_form %>
     <% icon = { "yes" => "✓", "no" => "✕", "maybe" => "?" }[@guest.rsvp_status] %>
@@ -69,6 +58,13 @@
     <p class="muted m-0">The RSVP deadline has passed. Reply to your invitation email to reach the host.</p>
   <% end %>
 </section>
+<% elsif @event.save_the_date? && !@event.cancelled? %>
+  <section class="guest-panel save-date" aria-labelledby="save-heading">
+    <span class="eyebrow">Save the date</span>
+    <h2 id="save-heading"><%= @event.starts_at ? @event.local(@event.starts_at).strftime("%A, %B %-d, %Y") : "Date to be announced" %></h2>
+    <p class="muted m-0">A formal invitation will follow<%= " from #{@event.display_host_name}" %>. Add it to your calendar so you don't double-book.</p>
+  </section>
+<% end %>
 
 <% if !@preview && @event.ticketed? && @guest.rsvp_yes? %>
   <section class="guest-panel" aria-labelledby="payment-heading">
@@ -99,6 +95,8 @@
 <%= render "guest_invitations/details", event: @event,
       calendar: (@preview ? nil : CalendarInvite.new(@event, url: guest_invitation_url(params[:token]))),
       ics_path: (@preview ? nil : guest_calendar_path(params[:token])) %>
+
+<%= render "invitations/gallery", event: @event %>
 
 <% if @updates.any? %>
   <section class="guest-panel" aria-labelledby="updates-heading">

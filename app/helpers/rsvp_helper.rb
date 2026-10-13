@@ -1,5 +1,7 @@
 module RsvpHelper
   STATUS_LABELS = { "pending" => "Awaiting reply", "yes" => "Attending", "no" => "Declined", "maybe" => "Maybe" }.freeze
+  SENT_PHRASES = { "invitation" => "invitations", "save_the_date" => "save-the-dates", "announcement" => "the announcement",
+                   "update" => "an update", "reminder" => "a reminder", "cancellation" => "a cancellation notice" }.freeze
   REPLY_PHRASES = { "yes" => "is coming", "no" => "can't make it", "maybe" => "might come", "pending" => "hasn't decided" }.freeze
   GUEST_CHOICE_LABELS = { "yes" => "Joyfully accepts", "maybe" => "Maybe", "no" => "Regretfully declines" }.freeze
 
@@ -9,7 +11,7 @@ module RsvpHelper
 
   # The host-facing delivery column: what happened to this guest's invitation?
   def delivery_badge(guest)
-    delivery = guest.deliveries.select { |d| d.message&.kind == "invitation" }.max_by(&:created_at)
+    delivery = guest.deliveries.select { |d| d.message&.kind.in?(Message::CARD_KINDS) }.max_by(&:created_at)
     if guest.first_viewed_at
       tag.span("Opened", class: "badge badge--opened", title: "First opened #{time_ago_in_words(guest.first_viewed_at)} ago")
     elsif delivery.nil?
@@ -44,7 +46,7 @@ module RsvpHelper
     when "event_created" then "#{name} created the event"
     when "event_published" then "#{name} published the event"
     when "event_cancelled" then "#{name} cancelled the event"
-    when "message_sent" then "#{name} sent #{data['kind'] == 'invitation' ? 'invitations' : "a#{data['kind'] == 'update' ? 'n' : ''} #{data['kind']}"} to #{pluralize(data['recipients'], 'guest')}"
+    when "message_sent" then "#{name} sent #{SENT_PHRASES.fetch(data['kind'], "a #{data['kind']}")} to #{pluralize(data['recipients'], 'guest')}"
     when "guests_imported" then "#{name} imported #{pluralize(data['created'], 'guest')}"
     when "cohost_joined" then "#{name} joined as #{EventMembership::ROLES.dig(data['role'], :name).to_s.downcase}"
     when "guestbook_signed" then "#{name} signed the guestbook"

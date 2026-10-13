@@ -119,6 +119,8 @@ class RsvpSubmission
     def rsvps_open
       if event.cancelled?
         errors.add(:base, "This event has been cancelled.")
+      elsif !event.collects_replies?
+        errors.add(:base, "This card doesn't take replies.")
       elsif !event.published?
         errors.add(:base, "This event isn't accepting responses yet.")
       elsif !event.accepting_rsvps?

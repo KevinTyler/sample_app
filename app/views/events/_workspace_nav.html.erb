@@ -13,7 +13,7 @@
   <% if policy.can?(:send_messages) %>
     <%= workspace_link "Messages", event_messages_path(event), :mail, section %>
   <% end %>
-  <% if policy.can?(:edit) %>
+  <% if policy.can?(:edit) && event.collects_replies? %>
     <%= workspace_link "RSVP form", event_questions_path(event), :form, section, count: event.questions.size %>
   <% end %>
   <% if policy.can?(:check_in) && !event.draft? %>

@@ -1,0 +1,14 @@
+<%# locals: (event:) %>
+<% photos = event.photos.attachments.select { |a| a.blob&.persisted? } %>
+<% if photos.any? %>
+  <section class="guest-panel" aria-labelledby="photos-heading">
+    <h2 id="photos-heading">Photos</h2>
+    <div class="photo-strip">
+      <% photos.each_with_index do |photo, i| %>
+        <%= link_to url_for(photo), class: "photo-strip__item", target: "_blank", rel: "noopener" do %>
+          <%= image_tag url_for(photo), alt: "Photo #{i + 1} of #{photos.size}", loading: "lazy" %>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+<% end %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_010000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -90,6 +90,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_000000) do
     t.index ["status"], name: "index_deliveries_on_status"
   end
 
+  create_table "event_links", force: :cascade do |t|
+    t.integer "event_id", null: false
+    t.string "kind", null: false
+    t.string "label"
+    t.string "url", limit: 500, null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_event_links_on_event_id"
+  end
+
   create_table "event_memberships", force: :cascade do |t|
     t.integer "event_id", null: false
     t.integer "user_id", null: false
@@ -150,6 +161,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_000000) do
     t.boolean "auto_nudge", default: false, null: false
     t.integer "nudge_days_before", default: 3, null: false
     t.boolean "auto_day_before", default: false, null: false
+    t.string "card_type", default: "invitation", null: false
+    t.boolean "show_ride_links", default: true, null: false
     t.index ["owner_id"], name: "index_events_on_owner_id"
     t.index ["share_token"], name: "index_events_on_share_token", unique: true
     t.index ["status"], name: "index_events_on_status"
@@ -305,6 +318,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_000000) do
   add_foreign_key "cohost_invitations", "users", column: "invited_by_id", on_delete: :nullify
   add_foreign_key "deliveries", "guests"
   add_foreign_key "deliveries", "messages"
+  add_foreign_key "event_links", "events"
   add_foreign_key "event_memberships", "events"
   add_foreign_key "event_memberships", "users"
   add_foreign_key "event_memberships", "users", column: "invited_by_id", on_delete: :nullify

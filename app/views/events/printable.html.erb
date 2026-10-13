@@ -1,0 +1,11 @@
+<% content_for :title, "Print · #{@event.title}" %>
+<% design = InvitationDesign.for(@event) %>
+<div class="print-toolbar" data-controller="print">
+  <%= link_to "← Back to #{@event.title}", event_path(@event), class: "btn btn--small btn--ghost" %>
+  <span class="small muted">Prints at 5 × 7 in — front, then back. Choose “Save as PDF” to send to a print shop.</span>
+  <button type="button" class="btn btn--primary btn--small" data-action="print#print">Print or save as PDF</button>
+</div>
+<div class="print-sheet">
+  <section class="print-page" aria-label="Front"><%= render "invitations/card", event: @event, design: design, card_id: "print-front" %></section>
+  <section class="print-page" aria-label="Back"><%= render "invitations/back", event: @event, design: design, card_id: "print-back" %></section>
+</div>

@@ -1,5 +1,5 @@
 module MessagesHelper
-  KIND_LABELS = { "invitation" => "Invitation", "update" => "Update", "reminder" => "Reminder",
+  KIND_LABELS = { "invitation" => "Invitation", "save_the_date" => "Save the date", "announcement" => "Announcement", "update" => "Update", "reminder" => "Reminder",
                   "cancellation" => "Cancellation", "rsvp_confirmation" => "RSVP link" }.freeze
   DELIVERY_LABELS = { "queued" => "Queued", "sending" => "Sending", "sent" => "Sent", "delivered" => "Delivered",
                       "failed" => "Failed", "bounced" => "Bounced" }.freeze

@@ -1,0 +1,13 @@
+<%# Bubbles — champagne bubbles rising up both sides, with a few sparkles. %>
+<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <% rng = Random.new(23) %>
+  <% 70.times do %>
+    <% side = rng.rand < 0.5 ? rng.rand(8..96) : rng.rand(404..492) %>
+    <% y = rng.rand(0..700) %>
+    <% r = (rng.rand * (y / 70.0) + 1.5).round(1) %>
+    <circle class="art-line" stroke-width="1.4" cx="<%= side %>" cy="<%= y %>" r="<%= r %>"/>
+  <% end %>
+  <% [ [ 120, 70, 9 ], [ 390, 640, 11 ], [ 380, 90, 6 ], [ 110, 630, 7 ] ].each do |x, y, r| %>
+    <path class="art-accent" d="M<%= x %> <%= y - r %> Q <%= x %> <%= y %> <%= x + r %> <%= y %> Q <%= x %> <%= y %> <%= x %> <%= y + r %> Q <%= x %> <%= y %> <%= x - r %> <%= y %> Q <%= x %> <%= y %> <%= x %> <%= y - r %> Z"/>
+  <% end %>
+</svg>

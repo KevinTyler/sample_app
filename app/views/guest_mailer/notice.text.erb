@@ -1,5 +1,7 @@
 <% if @message.kind == "invitation" -%>
 <%= @event.display_host_name %> invited you: <%= @event.title %>
+<% elsif @message.kind == "save_the_date" -%>
+Save the date! <%= @event.display_host_name %>: <%= @event.title %>
 <% else -%>
 <%= @message.subject_line %>
 <% end -%>
@@ -17,12 +19,16 @@ Hi <%= @guest.first_name %>,
 <%= @message.body %>
 <% elsif @message.kind == "invitation" -%>
 You're invited! Open your invitation to see the details and RSVP.
+<% elsif @message.kind == "save_the_date" -%>
+Please save the date — a formal invitation will follow.
+<% elsif @message.kind == "announcement" -%>
+<%= @event.display_host_name %> has news to share with you.
 <% elsif @message.kind == "cancellation" -%>
 Unfortunately this event has been cancelled.
 <% end -%>
 
 Your invitation: <%= @url %>
-(This link is personal to you. You can use it to change your RSVP later.)
+(This link is personal to you.<% if @event.collects_replies? %> You can use it to change your RSVP later.<% end %>)
 
 --
 Sent with Cordially on behalf of <%= @event.display_host_name %>. Reply to reach the host.

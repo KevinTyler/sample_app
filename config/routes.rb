@@ -20,6 +20,7 @@ Rails.application.routes.draw do
       post :duplicate
       get :preview
       post :regenerate_share_link
+      get "print", action: :printable, as: :print
     end
 
     resource :design, only: %i[edit update], controller: "event_designs"
@@ -104,4 +105,8 @@ Rails.application.routes.draw do
   end
 
   get "up" => "rails/health#show", as: :rails_health_check
+
+  # Installable app (hosts and door staff can add Cordially to their home screen).
+  get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
+  get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 end

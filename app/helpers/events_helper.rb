@@ -49,6 +49,19 @@ module EventsHelper
     "https://www.openstreetmap.org/search?#{ { query: [ event.location_name, event.address ].compact_blank.join(', ') }.to_query }"
   end
 
+  # Directions and a ride to the venue — plain links, no API keys or partner deals needed.
+  def directions_links(event)
+    destination = [ event.location_name, event.address ].compact_blank.join(", ")
+    return [] if destination.blank?
+
+    query = ERB::Util.url_encode(destination)
+    [
+      [ "Google Maps", "https://www.google.com/maps/dir/?api=1&destination=#{query}" ],
+      [ "Apple Maps", "https://maps.apple.com/?daddr=#{query}" ],
+      [ "Uber", "https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff%5Bformatted_address%5D=#{query}" ]
+    ]
+  end
+
   def deadline_text(event)
     return unless event.rsvp_deadline
 

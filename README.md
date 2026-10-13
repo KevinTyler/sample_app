@@ -260,6 +260,22 @@ view, door), then implemented across every screen:
 - **Guestbook**: invited guests leave notes for the host and each other on the invitation page
   (never on the public share page); hosts hide notes from the Overview. Rate-limited per guest.
 
+### ✅ Stage 9 — richer cards
+
+- **Card back**: guests flip the card for the details, directions (Google Maps, Apple Maps) and a ride
+  (Uber), plus the host's links — book a table (OpenTable, Resy, Tock, SevenRooms), registries (Zola,
+  Amazon, Target, Babylist, Honeyfund…), a playlist, a photo album. Links are plain URLs (no partner
+  API needed); well-known services are recognized and labeled (`EventLink::PROVIDERS`). Studio → *Back*.
+- **Envelope**: color, liner (stripe, dots, foil, check, starry, confetti), stamp and page backdrop
+  (Studio → *Envelope*). The envelope arrives sealed with the guest's name; the flap opens to show the liner.
+- **Photo gallery** (Studio → *Photos*): up to 12 photos below the card.
+- **Six new templates**: Festival Lights, Balloon Bunch, Seaside, Bubbles, Wildflower Meadow, Trailhead.
+- **Card types** (Settings): *Invitation*, *Save the date* (no replies; send the invitation to the same
+  list later) or *Announcement* (no date required).
+- **Print at home** (Overview → *Print*): front and back at 5 × 7 in, or *Save as PDF* for a print shop.
+- **Installable app**: web app manifest + service worker (offline page), so hosts and door staff can
+  add Cordially to their home screen.
+
 ## Architecture
 
 | Area | Where |

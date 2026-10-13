@@ -11,6 +11,7 @@
   </div>
   <div class="page-header__actions">
     <%= link_to preview_event_path(@event), class: "btn", target: "_blank", rel: "noopener" do %><%= icon(:eye, size: 18) %>Preview as guest<% end %>
+    <%= link_to "Print", print_event_path(@event), class: "btn btn--ghost" %>
     <% if @event.draft? && policy.can?(:publish) %>
       <%= button_to "Publish", publish_event_path(@event), class: "btn btn--wax" %>
     <% end %>
@@ -99,7 +100,7 @@
 <div class="grid grid--2 grid--top">
   <% if @event.published? && policy.can?(:send_messages) && @uninvited_count > 0 %>
     <section class="panel panel--accent" aria-labelledby="send-heading">
-      <div class="panel__header"><h2 id="send-heading" class="panel__title">Send invitations</h2></div>
+      <div class="panel__header"><h2 id="send-heading" class="panel__title">Send <%= @event.invitation? ? "invitations" : @event.card_type_name.downcase.pluralize %></h2></div>
       <%= form_with url: event_invitation_send_path(@event), method: :post, class: "form" do |f| %>
         <%= f.hidden_field :idempotency_key, value: SecureRandom.uuid %>
         <p class="small m-0"><strong><%= pluralize(@uninvited_count, "guest") %></strong> <%= @uninvited_count == 1 ? "hasn't" : "haven't" %> been invited yet. Each gets a personal link to reply — guests already invited won't get a second copy.</p>
@@ -125,17 +126,17 @@
             <p class="field__hint">Everyone not yet invited at that moment gets their invitation, including guests you add before then.</p>
           </div>
         </fieldset>
-        <div class="form-actions"><%= f.submit Messaging.sms_enabled? ? "Send invitations" : "Send #{pluralize(@uninvited_count, 'invitation')}", class: "btn btn--wax", data: { turbo_submits_with: "Sending…" } %></div>
+        <div class="form-actions"><%= f.submit Messaging.sms_enabled? ? "Send" : "Send #{pluralize(@uninvited_count, @event.invitation? ? 'invitation' : @event.card_type_name.downcase)}", class: "btn btn--wax", data: { turbo_submits_with: "Sending…" } %></div>
       <% end %>
     </section>
   <% elsif policy.can?(:edit) %>
     <% steps = [
          [ "Make the invitation yours", @event.design_settings.present? || @event.artwork.attached?, edit_event_design_path(@event) ],
          [ "Add your guests", @summary[:invited] > 0, (policy.can?(:manage_guests) ? event_guests_path(@event) : nil) ],
-         [ "Ask what you need to know", @questions.any?, event_questions_path(@event) ],
+         ([ "Ask what you need to know", @questions.any?, event_questions_path(@event) ] if @event.collects_replies?),
          [ "Publish", !@event.draft?, nil ],
-         [ "Send the invitations", @summary[:sent] > 0, nil ]
-       ] %>
+         [ "Send #{@event.invitation? ? 'the invitations' : @event.card_type_name.downcase.pluralize}", @summary[:sent] > 0, nil ]
+       ].compact %>
     <section class="panel" aria-labelledby="ready-heading">
       <div class="panel__header">
         <h2 id="ready-heading" class="panel__title">Getting ready</h2>
