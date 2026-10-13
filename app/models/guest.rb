@@ -9,6 +9,8 @@ class Guest < ApplicationRecord
   has_many :deliveries, dependent: :destroy
   has_many :activities, dependent: :nullify
   has_many :payments, dependent: :nullify
+  has_many :gifts, dependent: :nullify
+  has_many :thank_yous, dependent: :nullify
 
   enum :rsvp_status, RSVP_STATUSES.index_by(&:itself), default: "pending", prefix: :rsvp, validate: true
 

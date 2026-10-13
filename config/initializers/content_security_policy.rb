@@ -8,6 +8,7 @@ Rails.application.configure do
     policy.default_src :self
     policy.font_src    :self, :data
     policy.img_src     :self, :data, :blob
+    policy.media_src   :self, :blob # thank-you videos (served through the app) and local previews
     policy.object_src  :none
     policy.script_src  :self
     policy.style_src   :self

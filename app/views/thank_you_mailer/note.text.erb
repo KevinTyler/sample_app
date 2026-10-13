@@ -1,0 +1,16 @@
+<%= @thank_you.headline %>
+
+<% if @thank_you.media.attached? -%>
+<%= @thank_you.video? ? "There's a video" : "There's a photo" %> waiting for you.
+<% end -%>
+<% if @thank_you.message.present? -%>
+<%= @thank_you.message %>
+<% end -%>
+<% if @thank_you.signed.present? -%>
+— <%= @thank_you.signed %>
+<% end -%>
+
+Open your thank-you: <%= @url %>
+
+--
+Sent with Cordially on behalf of <%= @event.display_host_name %>. Reply to reach them.

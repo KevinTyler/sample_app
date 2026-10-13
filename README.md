@@ -285,6 +285,22 @@ view, door), then implemented across every screen:
   links, no replies; only from events where you can see contact details).
 - New guests and imported lists can be saved to contacts as you go (on by default, per form).
 
+### ✅ Stage 11 — thank-yous
+
+Designed on the canvas first (row "Thank-yous & texting"), then built:
+
+- **Gift log** (event sidebar → *Thank-yous*): add each gift and who it's from (a guest, or anyone).
+- **Kids record a thank-you per gift**: *Video* and *Photo* open the phone's camera directly
+  (`capture`), or pick from the library; parents add a note (shown in handwriting) and a sign-off.
+  Photos/videos up to 100 MB, validated by type; previewed before upload.
+- **Written thank-yous** for anyone (helpers, everyone who came), with or without a gift.
+- **Sending**: text it from Cordially (SMS adapter), email it, or **share from your own phone**
+  (Messages/WhatsApp open with the text and link ready) and mark it sent. *Send N ready* sends every
+  finished one. Each thank-you is sent at most once by Cordially (atomic claim; released on failure).
+- **The guest's view** (`/t/<token>`, private link like an invitation): the card in the event's
+  palette, the video or photo, the note; *Send a heart back* and *Save video*. Opens and hearts show up
+  in the Overview's activity. Media is served through the app (CSP-friendly, range requests for video).
+
 ## Architecture
 
 | Area | Where |

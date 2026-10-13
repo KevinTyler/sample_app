@@ -1,0 +1,120 @@
+<% content_for :title, "Thank-yous · #{@event.title}" %>
+<% items = @gifts.map { |g| [ g, g.thank_you ] } + @extra.map { |t| [ nil, t ] } %>
+<% done = items.count { |_, t| t&.ready? } %>
+<% unsent = items.count { |_, t| t&.ready? && !t.sent? } %>
+<header class="door-header thank-header">
+  <div class="cluster door-header__top">
+    <div>
+      <span class="eyebrow mk-eyebrow">Thank-yous</span>
+      <h1 class="door-header__title">Every gift, <em>thanked</em></h1>
+      <span class="small door-header__when">Kids can record a photo or video for each gift; you add a note and send.</span>
+    </div>
+    <% if unsent > 0 && policy.can?(:send_messages) %>
+      <%= button_to "Send #{unsent} ready", deliver_all_event_thank_yous_path(@event), class: "btn btn--foil ml-auto", form: { data: { turbo_confirm: "Send every ready thank-you by text or email?" } } %>
+    <% end %>
+  </div>
+  <% if items.any? %>
+    <div class="door-header__count">
+      <span class="door-header__number"><%= done %></span>
+      <span class="door-header__label">of <%= items.size %> thanked</span>
+    </div>
+    <div class="meter meter--thin" role="img" aria-label="<%= done %> of <%= items.size %> thanked"><span class="meter__bar meter__bar--foil" data-width="<%= percent(done, items.size) %>"></span></div>
+  <% end %>
+</header>
+
+<div class="grid grid--sidebar">
+  <section aria-label="Gifts and thank-yous">
+    <% if items.empty? %>
+      <div class="empty-state">
+        <h2>Log the gifts as you open them</h2>
+        <p class="muted">Add each gift and who it's from. Then, one by one, record a little thank-you — a photo, a video, or a few words.</p>
+      </div>
+    <% else %>
+      <ul class="gift-list">
+        <% items.each do |gift, thank_you| %>
+          <% label, tone = thank_you_status(thank_you) %>
+          <li class="gift-row <%= 'is-done' if thank_you&.ready? %>" id="<%= gift ? "gift-#{gift.id}" : dom_id(thank_you) %>">
+            <div class="gift-row__thumb">
+              <% if thank_you&.image? %>
+                <%= image_tag rails_storage_proxy_path(thank_you.media), alt: "", loading: "lazy" %>
+              <% elsif thank_you&.video? %>
+                <span class="gift-row__play" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+              <% else %>
+                <%= icon(:gift, size: 24) %>
+              <% end %>
+            </div>
+            <div class="gift-row__text">
+              <strong><%= gift ? gift.description : "Thank-you note" %></strong>
+              <span class="small muted">from <%= gift ? gift.giver_name : thank_you.recipient_name %></span>
+              <span class="badge badge--<%= tone %>"><%= label %></span>
+            </div>
+            <div class="gift-row__actions">
+              <% if thank_you %>
+                <%= link_to (thank_you.ready? ? "Redo" : "Record"), edit_event_thank_you_path(@event, thank_you), class: "btn btn--small #{thank_you.ready? ? '' : 'btn--primary'}" %>
+              <% else %>
+                <%= link_to new_event_thank_you_path(@event, gift_id: gift.id), class: "btn btn--small btn--primary" do %><%= icon(:video, size: 16) %>Record<% end %>
+              <% end %>
+              <% if thank_you&.ready? %>
+                <details class="menu">
+                  <summary class="btn btn--small btn--ghost">Send</summary>
+                  <div class="menu__panel">
+                    <% if policy.can?(:send_messages) && !thank_you.sent? %>
+                      <% if thank_you.recipient_phone.present? && Messaging.sms_enabled? %>
+                        <%= button_to "Text it from Cordially", deliver_event_thank_you_path(@event, thank_you, channel: "sms"), class: "btn btn--small btn--block btn--primary" %>
+                      <% end %>
+                      <% if thank_you.recipient_email.present? %>
+                        <%= button_to "Email it", deliver_event_thank_you_path(@event, thank_you, channel: "email"), class: "btn btn--small btn--block" %>
+                      <% end %>
+                    <% end %>
+                    <span class="small faint">Or share from your phone:</span>
+                    <div class="cluster">
+                      <% thank_you_share_links(thank_you).each do |name, href| %>
+                        <%= link_to name, href, class: "btn btn--small", target: (name == "WhatsApp" ? "_blank" : nil), rel: "noopener noreferrer" %>
+                      <% end %>
+                    </div>
+                    <div class="copy-field" data-controller="clipboard">
+                      <label class="visually-hidden" for="ty-link-<%= thank_you.id %>">Thank-you link</label>
+                      <input id="ty-link-<%= thank_you.id %>" type="text" readonly value="<%= thank_you_page_url(thank_you.token) %>" data-clipboard-target="source">
+                      <button type="button" class="btn btn--small" data-action="clipboard#copy" data-clipboard-target="button">Copy</button>
+                    </div>
+                    <% unless thank_you.sent? %><%= button_to "I sent it myself", mark_sent_event_thank_you_path(@event, thank_you), method: :patch, class: "btn btn--small btn--ghost btn--block" %><% end %>
+                  </div>
+                </details>
+              <% end %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+
+  <aside class="stack" aria-label="Add">
+    <section class="panel">
+      <h2 class="panel__title mb-s">Add a gift</h2>
+      <%= form_with model: [ @event, @event.gifts.new ], class: "form" do |f| %>
+        <div class="field">
+          <%= f.label :description, "What was it?" %>
+          <%= f.text_field :description, required: true, maxlength: 120, placeholder: "Dinosaur Lego set" %>
+        </div>
+        <div class="field">
+          <%= f.label :guest_id, "From" %>
+          <%= f.select :guest_id, @guests.map { |g| [ g.name, g.id ] }, { include_blank: "Someone not on the list…" } %>
+        </div>
+        <div class="field">
+          <%= f.label :giver_name do %>Their name <span class="field__optional">(if not on the list)</span><% end %>
+          <%= f.text_field :giver_name, maxlength: 100 %>
+        </div>
+        <div><%= f.submit "Add gift", class: "btn btn--primary" %></div>
+      <% end %>
+    </section>
+    <section class="panel">
+      <h2 class="panel__title mb-s">Thank someone for coming</h2>
+      <p class="small muted">A note without a gift — for helpers, hosts, or everyone who came.</p>
+      <%= form_with url: new_event_thank_you_path(@event), method: :get, class: "cluster" do |f| %>
+        <%= f.label :guest_id, "Guest", class: "visually-hidden" %>
+        <%= f.select :guest_id, @guests.map { |g| [ g.name, g.id ] }, {}, class: "w-auto" %>
+        <%= f.submit "Write a note", class: "btn btn--small", name: nil %>
+      <% end %>
+    </section>
+  </aside>
+</div>

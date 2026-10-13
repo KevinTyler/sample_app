@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_020000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_030000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -183,6 +183,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_020000) do
     t.index ["status"], name: "index_events_on_status"
   end
 
+  create_table "gifts", force: :cascade do |t|
+    t.integer "event_id", null: false
+    t.integer "guest_id"
+    t.string "giver_name", null: false
+    t.string "description", null: false
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_gifts_on_event_id"
+    t.index ["guest_id"], name: "index_gifts_on_guest_id"
+  end
+
   create_table "guest_imports", force: :cascade do |t|
     t.integer "event_id", null: false
     t.integer "user_id"
@@ -313,6 +325,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_020000) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "thank_yous", force: :cascade do |t|
+    t.integer "event_id", null: false
+    t.integer "guest_id"
+    t.integer "gift_id"
+    t.string "recipient_name", null: false
+    t.string "recipient_email"
+    t.string "recipient_phone"
+    t.text "message"
+    t.string "signed", limit: 80
+    t.string "token_key", null: false
+    t.datetime "sent_at"
+    t.string "sent_via"
+    t.datetime "viewed_at"
+    t.datetime "hearted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_thank_yous_on_event_id"
+    t.index ["gift_id"], name: "index_thank_yous_on_gift_id", unique: true, where: "gift_id IS NOT NULL"
+    t.index ["guest_id"], name: "index_thank_yous_on_guest_id"
+    t.index ["token_key"], name: "index_thank_yous_on_token_key", unique: true
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "name", null: false
     t.string "email_address", null: false
@@ -340,6 +374,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_020000) do
   add_foreign_key "event_memberships", "users", column: "invited_by_id", on_delete: :nullify
   add_foreign_key "event_questions", "events"
   add_foreign_key "events", "users", column: "owner_id"
+  add_foreign_key "gifts", "events"
+  add_foreign_key "gifts", "guests", on_delete: :nullify
   add_foreign_key "guest_imports", "events"
   add_foreign_key "guest_imports", "users", on_delete: :nullify
   add_foreign_key "guestbook_entries", "events"
@@ -352,4 +388,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_020000) do
   add_foreign_key "rsvp_answers", "event_questions"
   add_foreign_key "rsvp_answers", "guests"
   add_foreign_key "sessions", "users"
+  add_foreign_key "thank_yous", "events"
+  add_foreign_key "thank_yous", "gifts", on_delete: :nullify
+  add_foreign_key "thank_yous", "guests", on_delete: :nullify
 end

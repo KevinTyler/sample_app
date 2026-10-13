@@ -1,0 +1,66 @@
+<%# locals: (event:, thank_you:) %>
+<%= form_with model: [ event, thank_you ], multipart: true, class: "form", data: { controller: "media-preview" } do |f| %>
+  <%= form_errors(thank_you) %>
+  <%= f.hidden_field :gift_id if thank_you.new_record? && thank_you.gift %>
+  <%= f.hidden_field :guest_id if thank_you.new_record? && thank_you.guest %>
+
+  <div class="capture">
+    <div class="capture__preview" data-media-preview-target="stage">
+      <% if thank_you.stored_media? && thank_you.video? %>
+        <video src="<%= rails_storage_proxy_path(thank_you.media) %>" controls playsinline preload="metadata" data-media-preview-target="current"></video>
+      <% elsif thank_you.stored_media? && thank_you.image? %>
+        <%= image_tag rails_storage_proxy_path(thank_you.media), alt: "Current thank-you photo", data: { media_preview_target: "current" } %>
+      <% else %>
+        <div class="capture__empty" data-media-preview-target="current">
+          <%= icon(:image, size: 34) %>
+          <strong>Record a thank-you</strong>
+          <span class="small">A quick video or a photo with the gift</span>
+        </div>
+      <% end %>
+    </div>
+    <div class="capture__buttons">
+      <label class="btn btn--primary capture__button">
+        <%= icon(:video, size: 18) %>Video
+        <%= file_field_tag :media_video, accept: "video/*", capture: "user", class: "visually-hidden", data: { action: "media-preview#show", capture: true } %>
+      </label>
+      <label class="btn capture__button">
+        <%= icon(:camera, size: 18) %>Photo
+        <%= file_field_tag :media_photo, accept: "image/*", capture: "environment", class: "visually-hidden", data: { action: "media-preview#show", capture: true } %>
+      </label>
+      <label class="btn btn--ghost capture__button">
+        <%= icon(:upload, size: 18) %>From library
+        <%= file_field_tag :media_library, accept: ThankYou::MEDIA_TYPES.join(","), class: "visually-hidden", data: { action: "media-preview#show", capture: true } %>
+      </label>
+    </div>
+    <p class="field__hint m-0">Photos or videos up to 100 MB. On a phone, Video and Photo open the camera.</p>
+    <% if thank_you.stored_media? %><label class="checkbox small"><%= check_box_tag :remove_media, "1", false %> Remove the photo or video</label><% end %>
+  </div>
+
+  <div class="field">
+    <%= f.label :message do %>A note <span class="field__optional">(optional — kids can dictate!)</span><% end %>
+    <%= f.text_area :message, rows: 4, maxlength: 2000, class: "handwritten", placeholder: "Thank you for the dinosaur Lego!! I built the T. rex already." %>
+  </div>
+  <div class="field">
+    <%= f.label :signed, "Signed" %>
+    <%= f.text_field :signed, maxlength: 80, placeholder: "Love, Jonah" %>
+  </div>
+
+  <details class="disclosure">
+    <summary>To: <%= thank_you.recipient_name.presence || "someone" %></summary>
+    <div class="form mt-s">
+      <div class="field"><%= f.label :recipient_name, "Name" %><%= f.text_field :recipient_name, required: true, maxlength: 100 %></div>
+      <div class="form-row form-row--2">
+        <div class="field"><%= f.label :recipient_phone, "Mobile" %><%= f.telephone_field :recipient_phone, maxlength: 30 %></div>
+        <div class="field"><%= f.label :recipient_email, "Email" %><%= f.email_field :recipient_email, maxlength: 254 %></div>
+      </div>
+    </div>
+  </details>
+
+  <div class="form-actions">
+    <%= f.submit "Save thank-you", class: "btn btn--wax btn--large", data: { turbo_submits_with: "Saving…" } %>
+    <%= link_to "Cancel", event_thank_yous_path(event), class: "btn btn--ghost" %>
+    <% if thank_you.persisted? %>
+      <%= link_to "Delete", event_thank_you_path(event, thank_you), class: "btn btn--danger ml-auto", data: { turbo_method: :delete, turbo_confirm: "Delete this thank-you?" } %>
+    <% end %>
+  </div>
+<% end %>

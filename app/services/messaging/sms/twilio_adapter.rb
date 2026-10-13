@@ -15,23 +15,29 @@ module Messaging
       end
 
       def deliver(delivery)
+        send_text(to: delivery.recipient, body: SmsComposer.new(delivery).body, status_callback: status_callback_url)
+      end
+
+      # Any one-off text. media_urls (public https URLs) make it an MMS where the carrier supports it.
+      def send_text(to:, body:, media_urls: [], metadata: {}, status_callback: nil)
         raise NotConfigured, "Twilio credentials are missing" unless configured?
-        raise Delivery::PermanentError, "Phone number must start with + and a country code" unless delivery.recipient.start_with?("+")
+        raise Delivery::PermanentError, "Phone number must start with + and a country code" unless to.to_s.start_with?("+")
 
         uri = URI("#{API_BASE}/Accounts/#{account_sid}/Messages.json")
         request = Net::HTTP::Post.new(uri)
         request.basic_auth(account_sid, auth_token)
-        params = { "To" => delivery.recipient, "Body" => SmsComposer.new(delivery).body }
-        messaging_service_sid.present? ? params["MessagingServiceSid"] = messaging_service_sid : params["From"] = from_number
-        params["StatusCallback"] = status_callback_url if status_callback_url
+        params = [ [ "To", to ], [ "Body", body ] ]
+        params << (messaging_service_sid.present? ? [ "MessagingServiceSid", messaging_service_sid ] : [ "From", from_number ])
+        params << [ "StatusCallback", status_callback ] if status_callback
+        media_urls.first(10).each { |url| params << [ "MediaUrl", url ] }
         request.set_form_data(params)
 
         response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 5, read_timeout: 10) { |http| http.request(request) }
-        body = JSON.parse(response.body) rescue {}
+        parsed = JSON.parse(response.body) rescue {}
 
         case response.code.to_i
-        when 200..299 then Receipt.new(provider: "twilio", message_id: body["sid"])
-        when 400..499 then raise Delivery::PermanentError, "Twilio rejected the message: #{body['message'] || response.code}"
+        when 200..299 then Receipt.new(provider: "twilio", message_id: parsed["sid"])
+        when 400..499 then raise Delivery::PermanentError, "Twilio rejected the message: #{parsed['message'] || response.code}"
         else raise "Twilio error #{response.code}"
         end
       end

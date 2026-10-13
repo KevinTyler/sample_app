@@ -1,0 +1,30 @@
+<% content_for :title, "A thank-you for #{@thank_you.first_name}" %>
+<% design = InvitationDesign.for(@event) %>
+<% content_for :head do %>
+  <style nonce="<%= content_security_policy_nonce %>">.guest-body { --guest-backdrop: <%= design.valid? ? design.backdrop_css : "#ebdce1" %>; }</style>
+<% end %>
+<%= render "invitations/design_style", design: design, selector: "#thank-you-card" %>
+<article id="thank-you-card" class="thank-card" data-heading-font="<%= design.heading_font %>" aria-label="Thank-you card">
+  <p class="thank-card__to">For <%= @thank_you.recipient_name %></p>
+  <h1 class="thank-card__title">Thank <em>you!</em></h1>
+  <% if @thank_you.video? %>
+    <video class="thank-card__media" src="<%= rails_storage_proxy_path(@thank_you.media) %>" controls playsinline preload="metadata" aria-label="Thank-you video"></video>
+  <% elsif @thank_you.image? %>
+    <%= image_tag rails_storage_proxy_path(@thank_you.media), alt: "Thank-you photo#{" with the #{@thank_you.gift.description.downcase_first}" if @thank_you.gift}", class: "thank-card__media" %>
+  <% end %>
+  <% if @thank_you.gift %><p class="thank-card__gift">for the <strong><%= @thank_you.gift.description.downcase_first %></strong></p><% end %>
+  <% if @thank_you.message.present? %><p class="thank-card__note handwritten"><%= @thank_you.message %></p><% end %>
+  <% if @thank_you.signed.present? %><p class="thank-card__signed handwritten"><%= @thank_you.signed %></p><% end %>
+</article>
+
+<div class="thank-actions">
+  <% if @thank_you.hearted_at %>
+    <p class="badge badge--seen m-0">You sent a heart</p>
+  <% else %>
+    <%= button_to guest_heart_path_for(@thank_you), class: "btn btn--primary" do %><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7-4.4-7-10.2A4 4 0 0 1 12 8a4 4 0 0 1 7 2.8C19 16.6 12 21 12 21z"/></svg>Send a heart back<% end %>
+  <% end %>
+  <% if @thank_you.media.attached? %>
+    <%= link_to "Save #{@thank_you.video? ? 'video' : 'photo'}", rails_storage_proxy_path(@thank_you.media, disposition: "attachment"), class: "btn", data: { turbo: false } %>
+  <% end %>
+</div>
+<p class="thank-from">From <%= @event.display_host_name %>, after <%= @event.title %></p>

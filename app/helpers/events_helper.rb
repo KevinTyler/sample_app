@@ -81,7 +81,7 @@ module EventsHelper
   SECTIONS = {
     "events" => { "show" => :overview, "edit" => :settings, "update" => :settings, "cancellation" => :settings },
     "guests" => :guests, "guest_imports" => :guests, "event_designs" => :design, "messages" => :mail,
-    "questions" => :form, "check_ins" => :scan, "cohosts" => :cohosts
+    "questions" => :form, "check_ins" => :scan, "cohosts" => :cohosts, "thank_yous" => :gift, "gifts" => :gift
   }.freeze
 
   def workspace_section

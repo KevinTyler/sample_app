@@ -1,0 +1,11 @@
+<% content_for :title, "Thank-you for #{@thank_you.recipient_name}" %>
+<div class="form-width">
+  <%= link_to "Thank-yous", event_thank_yous_path(@event), class: "back-link" %>
+  <header class="page-header mb-s">
+    <div>
+      <span class="eyebrow"><%= @thank_you.gift ? "For the #{@thank_you.gift.description.downcase_first}" : "Thank-you" %></span>
+      <h1>Thank you, <em><%= @thank_you.recipient_name.to_s.split.first || "friend" %></em></h1>
+    </div>
+  </header>
+  <div class="panel mt-m"><%= render "form", event: @event, thank_you: @thank_you %></div>
+</div>

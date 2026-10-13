@@ -694,3 +694,24 @@ input[type="color"] { width: 100%; height: 48px; padding: 4px; border: 1px solid
 .link-rows { display: grid; gap: 12px; }
 .link-row { border: 1px solid var(--line); border-radius: var(--radius-m); padding: 14px; display: grid; gap: 10px; background: var(--porcelain); }
 .text-danger { color: var(--danger) !important; }
+
+/* ---------- Thank-yous ---------- */
+.handwritten { font-family: "Caveat", "Comic Sans MS", cursive; font-size: 1.45rem; line-height: 1.25; }
+textarea.handwritten { font-size: 1.35rem; }
+.gift-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.gift-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding: 12px; border-radius: 18px; background: var(--paper); border: 1px solid var(--line); }
+.gift-row.is-done { border-color: #bfdccb; }
+.gift-row__thumb { flex: none; width: 64px; height: 64px; border-radius: 14px; background: var(--wax-tint); color: var(--wax); display: grid; place-items: center; overflow: hidden; }
+.gift-row.is-done .gift-row__thumb { background: var(--night); color: var(--paper); }
+.gift-row__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.gift-row__text { flex: 1 1 160px; min-width: 0; display: grid; gap: 2px; justify-items: start; }
+.gift-row__actions { display: flex; gap: 6px; align-items: center; }
+.gift-row__actions .menu__panel { min-width: 280px; }
+.capture { display: grid; gap: 12px; }
+.capture__preview { border-radius: var(--radius-l); overflow: hidden; background: var(--night); aspect-ratio: 4 / 5; max-height: 460px; display: grid; place-items: center; }
+.capture__preview video, .capture__preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.capture__empty { display: grid; justify-items: center; gap: 6px; color: var(--night-text); text-align: center; padding: 24px; }
+.capture__empty strong { font-family: var(--font-display); font-weight: 400; font-size: 1.8rem; color: var(--porcelain); }
+.capture__buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.capture__button { position: relative; min-height: 52px; }
+.btn svg { flex: none; }

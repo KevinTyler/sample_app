@@ -365,3 +365,20 @@ input.stepper__input:focus { box-shadow: none; }
   .print-page .invite-back__chip, .print-page .invite-back__link { border-color: currentColor; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* ---------- Thank-you card (guest view) ---------- */
+.thank-card {
+  background: var(--card-bg, #fffdf9); color: var(--card-ink, #1c1a2e);
+  font-family: var(--card-body-font, var(--font-ui));
+  border-radius: 6px; box-shadow: 0 22px 46px rgba(21, 19, 43, 0.18);
+  padding: 30px 22px 26px; display: grid; justify-items: center; gap: 14px; text-align: center; margin-bottom: 20px;
+}
+.thank-card__to { margin: 0; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--card-accent); }
+.thank-card__title { margin: 0; font-family: var(--card-heading-font, var(--font-display)); font-weight: 400; font-size: clamp(2.8rem, 2rem + 4vw, 3.6rem); line-height: 0.95; }
+.thank-card__media { width: 100%; max-height: 70vh; border-radius: 16px; background: #15132b; object-fit: cover; }
+.thank-card__gift { margin: 0; color: color-mix(in srgb, var(--card-ink) 75%, transparent); }
+.thank-card__note { margin: 0; font-size: 1.7rem; white-space: pre-line; }
+.thank-card__signed { margin: 0; font-size: 1.5rem; color: var(--card-accent); }
+.thank-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.thank-from { text-align: center; color: var(--ink-2); font-size: 0.9rem; margin: 18px 0 0; }
+.guest-body--dark .thank-from { color: #cfcadf; }

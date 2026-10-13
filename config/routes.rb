@@ -46,6 +46,14 @@ Rails.application.routes.draw do
     end
     resource :invitation_send, only: :create
     resources :guestbook_entries, only: :update
+    resources :gifts, only: %i[create update destroy]
+    resources :thank_yous, except: :show do
+      member do
+        post :deliver
+        patch :mark_sent
+      end
+      collection { post :deliver_all }
+    end
     resources :cohosts, only: %i[index create update destroy] do
       collection { delete :leave }
     end
@@ -77,6 +85,12 @@ Rails.application.routes.draw do
     post "unsubscribe", action: :unsubscribe, as: :unsubscribe
     post "pay", action: :pay, as: :pay
     post "guestbook", action: :sign_guestbook, as: :guestbook
+  end
+
+  # A thank-you note: like a guest's link, the token is the only credential.
+  scope "t/:token", constraints: { token: /[A-Za-z0-9_-]{40}/ }, controller: "thank_you_pages", as: :thank_you_page do
+    get "/", action: :show, as: ""
+    post "heart", action: :heart, as: :heart
   end
 
   # Public share link: the invitation without personal data; optional open RSVP.

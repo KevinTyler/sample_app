@@ -23,6 +23,8 @@ class Event < ApplicationRecord
   has_many :payments, dependent: :destroy
   has_many :guestbook_entries, dependent: :delete_all
   has_many :links, class_name: "EventLink", dependent: :delete_all
+  has_many :gifts, dependent: :destroy
+  has_many :thank_yous, dependent: :destroy
   has_many_attached :photos
 
   CARD_TYPES = {

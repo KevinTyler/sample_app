@@ -68,5 +68,28 @@ dinner = host.owned_events.find_or_create_by!(title: "Autumn Supper Club") do |e
   e.ticket_price = "45" if Payments.enabled? # a ticketed event (test checkout in development)
 end
 
+# A party that already happened, ready for thank-yous.
+party = host.owned_events.find_or_initialize_by(title: "Jonah's 5th Birthday")
+if party.new_record?
+  party.assign_attributes(host_name: "The Riveras", time_zone: "America/New_York", location_name: "Lakeside Park pavilion",
+    starts_at: 2.days.ago.in_time_zone("America/New_York").change(hour: 14), track_kids: true,
+    design: InvitationTemplate.find("balloon-bunch").design_defaults.merge("envelope" => "sky", "liner" => "confetti", "stamp" => "star"))
+  party.status = "published"
+  party.published_at = 3.weeks.ago
+  party.save!(validate: false)
+  guests = [
+    [ "Dana Whitfield", "dana@example.com", "+15550100", "Dinosaur Lego set" ],
+    [ "Grandma Rose", nil, "+15550101", "Picture books" ],
+    [ "The Morenos", "moreno@example.com", nil, "Art easel" ],
+    [ "Lee Park", "lee@example.com", "+15550111", "Soccer ball" ]
+  ].map do |name, email, phone, gift|
+    guest = party.guests.create!(name: name, email: email, phone: phone, rsvp_status: "yes", party_size: 2, kids_count: 1)
+    party.gifts.create!(guest: guest, description: gift)
+    guest
+  end
+  party.thank_yous.create!(gift: party.gifts.find_by(description: "Picture books"), guest: guests[1],
+    message: "Thank you for the books Grandma! We read the dragon one three times.", signed: "Love, Jonah")
+end
+
 puts "Seeded #{User.count} host, #{Event.count} events, #{Guest.count} guests. Sign in: demo@cordially.test / cordially-demo-1"
 puts "Draft event to publish: #{dinner.title}"

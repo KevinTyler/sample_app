@@ -1,0 +1,20 @@
+<% bg = @design.background_color; ink = @design.text_color; accent = @design.accent_color %>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F1E9;padding:24px 12px;">
+  <tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:<%= bg %>;color:<%= ink %>;border-radius:14px;overflow:hidden;">
+      <tr><td style="padding:40px 32px 12px;text-align:center;">
+        <p style="margin:0 0 8px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:<%= accent %>;">For <%= @thank_you.recipient_name %></p>
+        <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:34px;line-height:1.15;font-weight:normal;"><%= @thank_you.headline %></h1>
+      </td></tr>
+      <% if @thank_you.message.present? %>
+        <tr><td style="padding:8px 32px;text-align:center;font-size:17px;line-height:1.55;white-space:pre-line;"><%= @thank_you.message %></td></tr>
+      <% end %>
+      <tr><td style="padding:20px 32px 36px;text-align:center;">
+        <a href="<%= @url %>" style="display:inline-block;background:#15132B;color:#FFFFFF;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:bold;">
+          <%= @thank_you.video? ? "Watch the video" : (@thank_you.image? ? "See the photo" : "Open your thank-you") %>
+        </a>
+        <% if @thank_you.signed.present? %><p style="margin:18px 0 0;font-style:italic;"><%= @thank_you.signed %></p><% end %>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
