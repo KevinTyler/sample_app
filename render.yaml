@@ -1,0 +1,55 @@
+# Render Blueprint for Cordially: one web service on Render's native Ruby runtime, with a persistent
+# disk for the SQLite databases (app, cache, job queue) and uploaded files. Background jobs (sending,
+# the agent's replies and hourly check-ins) run inside the web process. See README → "Deploying on Render".
+#
+# A disk keeps the service to one instance and makes each deploy pause the site briefly; Render
+# snapshots the disk daily. Settings marked "sync: false" are asked for when you create the Blueprint
+# (leave any you don't have yet blank and add them later under Environment).
+services:
+  - type: web
+    name: cordially
+    runtime: ruby
+    plan: starter
+    region: oregon
+    buildCommand: bundle install && bin/rails assets:precompile && bin/rails assets:clean
+    # The disk only exists at runtime, so the databases are prepared as the server starts.
+    startCommand: bin/rails db:prepare && bin/rails server
+    healthCheckPath: /up
+    autoDeployTrigger: commit
+    disk:
+      name: cordially-storage
+      mountPath: /opt/render/project/src/storage
+      sizeGB: 5
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: RACK_ENV
+        value: production
+      - key: BUNDLE_WITHOUT
+        value: development:test
+      - key: SECRET_KEY_BASE # also signs guest links: never change it once guests have links
+        generateValue: true
+      - key: SOLID_QUEUE_IN_PUMA
+        value: "1"
+      - key: SOLID_QUEUE_MODE # jobs on threads in the web process (fits the 512 MB plan)
+        value: async
+      - key: WEB_CONCURRENCY
+        value: "0"
+      - key: RAILS_LOG_LEVEL
+        value: info
+      # Test mode: every email and text is captured at /dev/outbox (password below) instead of sent.
+      # Remove ENABLE_OUTBOX once SMTP is set up to send for real.
+      - key: ENABLE_OUTBOX
+        value: "1"
+      - key: OUTBOX_PASSWORD
+        generateValue: true
+      - key: MAIL_FROM
+        sync: false
+      - key: SMTP_ADDRESS
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false

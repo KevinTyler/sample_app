@@ -515,11 +515,34 @@ SMS is a channel adapter with the same interface as email (`deliver(delivery) �
 
 Without a provider in production, the ticket price field is hidden and events stay free.
 
-### Deploying
+### Deploying on Render
 
-The generated `Dockerfile` builds a production image (Puma + Thruster). Mount a volume at
-`/rails/storage` so the SQLite databases and uploads persist, set the variables above, and run Solid
-Queue either in Puma (`SOLID_QUEUE_IN_PUMA=1`) or as a separate `bin/jobs` process.
+`render.yaml` is a Render Blueprint: one web service (native Ruby runtime, `starter` plan) with a 5 GB
+persistent disk at `storage/` for the SQLite databases and uploads. Background jobs — sending, the
+agent's replies, its hourly check-ins — run on threads inside the web process (`SOLID_QUEUE_IN_PUMA=1`,
+`SOLID_QUEUE_MODE=async`), so there's nothing else to run.
+
+1. In Render: **New → Blueprint**, connect this GitHub repository and pick the branch to deploy from.
+   Render reads `render.yaml` and asks for the optional settings (mail, Anthropic key) — leave any blank
+   you don't have yet. **Apply.** The first build takes a few minutes.
+2. Open the `….onrender.com` address Render shows, sign up, and try it. It starts in **test mode**
+   (`ENABLE_OUTBOX=1`): nothing is emailed or texted; everything is captured at `/dev/outbox`, and
+   `/dev/assistant` stands in for a phone. Both ask for a login: user `outbox`, password =
+   `OUTBOX_PASSWORD` from the service's **Environment** tab.
+3. To send real email: add `MAIL_FROM` and the `SMTP_*` settings from your email provider (with your
+   domain verified there), then delete `ENABLE_OUTBOX`. For the plain-language agent, add
+   `ANTHROPIC_API_KEY`. Saving environment changes redeploys.
+4. Your own domain: **Settings → Custom Domains** in Render, then set `APP_HOST` to it (until then
+   links use Render's hostname).
+5. Texting: see "Texting assistant & WhatsApp" above; the webhook URLs use your Render address or domain.
+
+Good to know: a service with a disk runs as one instance and pauses briefly during each deploy; Render
+snapshots the disk daily (kept at least seven days). Never change `SECRET_KEY_BASE` once guests have
+links — it signs them. `config/database.yml` sizes the connection pool for web plus job threads
+(`DB_POOL` to override).
+
+Elsewhere, the generated `Dockerfile` builds a production image (Puma + Thruster): mount a volume at
+`/rails/storage`, set the variables above, and run Solid Queue in Puma or as a separate `bin/jobs` process.
 
 ---
 

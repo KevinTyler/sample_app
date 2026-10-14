@@ -27,9 +27,10 @@ module Messaging
       end
 
       def status_callback_url
-        return unless ENV["APP_HOST"].present?
+        host = ENV["APP_HOST"].presence || ENV["RENDER_EXTERNAL_HOSTNAME"].presence
+        return unless host
 
-        Rails.application.routes.url_helpers.webhooks_twilio_status_url(host: ENV["APP_HOST"], protocol: "https")
+        Rails.application.routes.url_helpers.webhooks_twilio_status_url(host: host, protocol: "https")
       end
 
       def account_sid = ENV["TWILIO_ACCOUNT_SID"]

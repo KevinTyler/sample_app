@@ -6,7 +6,8 @@
 #
 default: &default
   adapter: sqlite3
-  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  # Web threads plus, when jobs run inside the web process, the job workers' threads.
+  max_connections: <%= ENV.fetch("DB_POOL") { ENV.fetch("RAILS_MAX_THREADS", 3).to_i + 7 } %>
   timeout: 5000
 
 development:

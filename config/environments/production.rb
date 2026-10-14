@@ -56,15 +56,18 @@ Rails.application.configure do
   # Guest email goes out over SMTP (works with Postmark, SES, SendGrid, Mailgun, ...).
   # Without SMTP_ADDRESS, deliveries fail visibly in the dashboard instead of being dropped.
   config.action_mailer.raise_delivery_errors = true
-  config.action_mailer.default_url_options = { host: ENV.fetch("APP_HOST", "example.com"), protocol: "https" }
+  # Your domain once you add one; until then Render's own hostname (RENDER_EXTERNAL_HOSTNAME).
+  config.action_mailer.default_url_options = {
+    host: ENV["APP_HOST"].presence || ENV["RENDER_EXTERNAL_HOSTNAME"].presence || "example.com", protocol: "https"
+  }
   if ENV["SMTP_ADDRESS"].present?
     config.action_mailer.delivery_method = :smtp
     config.action_mailer.smtp_settings = {
       address: ENV["SMTP_ADDRESS"],
-      port: ENV.fetch("SMTP_PORT", 587).to_i,
+      port: (ENV["SMTP_PORT"].presence || 587).to_i,
       user_name: ENV["SMTP_USERNAME"],
       password: ENV["SMTP_PASSWORD"],
-      authentication: ENV.fetch("SMTP_AUTHENTICATION", "plain").to_sym,
+      authentication: (ENV["SMTP_AUTHENTICATION"].presence || "plain").to_sym,
       enable_starttls_auto: true
     }
   elsif ENV["ENABLE_OUTBOX"] == "1"

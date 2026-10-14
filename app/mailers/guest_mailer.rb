@@ -35,7 +35,7 @@ class GuestMailer < ApplicationMailer
 
   private
     def sender_address
-      Mail::Address.new(ENV.fetch("MAIL_FROM", "invitations@cordially.localhost")).address
+      Mail::Address.new(ApplicationMailer.from_address).address
     end
 
     def message_id_domain

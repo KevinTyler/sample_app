@@ -2,6 +2,7 @@
 # pipeline as real texts; replies land in the dev outbox and show in the thread.
 class Dev::AssistantController < ApplicationController
   allow_unauthenticated_access
+  include OutboxProtection
 
   def show
     @phone = phone
