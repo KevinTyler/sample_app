@@ -16,6 +16,12 @@ services:
     startCommand: bin/rails db:prepare && bin/rails server
     healthCheckPath: /up
     autoDeployTrigger: commit
+    # Docs and tests don't change the running app, so pushing only those doesn't redeploy (or pause) it.
+    buildFilter:
+      ignoredPaths:
+        - docs/**
+        - "**/*.md"
+        - spec/**
     disk:
       name: cordially-storage
       mountPath: /opt/render/project/src/storage
@@ -38,9 +44,10 @@ services:
       - key: RAILS_LOG_LEVEL
         value: info
       # Test mode: every email and text is captured at /dev/outbox (password below) instead of sent.
-      # Remove ENABLE_OUTBOX once SMTP is set up to send for real.
+      # Set to 1 when the service was created; delete it in the dashboard once SMTP is set up.
+      # "sync: false" means later Blueprint syncs never put it back.
       - key: ENABLE_OUTBOX
-        value: "1"
+        sync: false
       - key: OUTBOX_PASSWORD
         generateValue: true
       - key: MAIL_FROM
